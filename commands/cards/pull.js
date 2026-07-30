@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 // Import the card pool and the visual settings
 // Adjust this path based on where pull.js is relative to your data folder!
-const { cards, rankConfig, resolveStat } = require('../../data/cards'); 
+const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards'); 
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,14 +20,19 @@ module.exports = {
     // and use Math.floor() to round down, giving us a random valid index (0, 1, 2, etc.)
     const pulledCard = cards[Math.floor(Math.random() * cards.length)];
 
-    // 2. Grab the visual settings for this card's Base (M1) rank
-    // If the card is rank 'B', this grabs rankConfig['B'].M1
-    const visualSettings = rankConfig[pulledCard.rank].M1;
+    // 2. Grab the visual settings for this card's Base (M1) rank.
+    // safeRank falls back to 'D' if the card has a missing/invalid rank,
+    // so the bot keeps running and logs a warning instead of crashing.
+    const rank = safeRank(pulledCard.rank);
+    if (rank !== pulledCard.rank) {
+      console.warn(`[Pull] Card "${pulledCard.name}" has invalid rank "${pulledCard.rank}". Displaying with fallback rank D.`);
+    }
+    const visualSettings = rankConfig[rank].M1;
 
     // 3. Build the embed dynamically using the pulled card's M1 stats
-    const resolvedPower = resolveStat(pulledCard.rank, 'power', pulledCard.power);
-    const resolvedHealth = resolveStat(pulledCard.rank, 'health', pulledCard.health);
-    const resolvedSpeed = resolveStat(pulledCard.rank, 'speed', pulledCard.speed);
+    const resolvedPower = resolveStat(rank, 'power', safeStat(pulledCard.power));
+    const resolvedHealth = resolveStat(rank, 'health', safeStat(pulledCard.health));
+    const resolvedSpeed = resolveStat(rank, 'speed', safeStat(pulledCard.speed));
     
     const embed = {
       title: pulledCard.name,

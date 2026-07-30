@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { cards, rankConfig, resolveStat } = require('../../data/cards'); // Adjust path if needed!
+const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards'); // Adjust path if needed!
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('info')
     .setDescription('Check info about a cards base version')
     .addStringOption(option => 
-      option.setName('query').setDescription('Name, title, or alias').setRequired(true)
+      option.setName('query').setDescription('Name or alias').setRequired(true)
     ),
     
   name: 'info',
@@ -34,12 +34,11 @@ module.exports = {
     // Convert their search to lowercase for matching
     const search = query.toLowerCase();
 
-    // Find the first card that matches ANY of their text
+    // Find the first card that matches by name or alias only.
+    // Title is intentionally excluded — searching by title is not supported.
     const foundCard = cards.find(c => 
       c.name.toLowerCase().includes(search) ||
-      c.aliases.some(alias => alias.toLowerCase().includes(search)) ||
-      (c.M2 && c.M2.title.toLowerCase().includes(search)) ||
-      (c.M3 && c.M3.title.toLowerCase().includes(search))
+      c.aliases.some(alias => alias.toLowerCase().includes(search))
     );
 
     if (!foundCard) {
@@ -56,10 +55,15 @@ module.exports = {
 
       // This looks at the specific card's rank (D, C, B, etc.) 
       // AND its current mastery level (M1, M2, M3) to grab the exact visual settings
-      const resolvedPower = resolveStat(cardData.rank, 'power', cardData.power);
-      const resolvedHealth = resolveStat(cardData.rank, 'health', cardData.health);
-      const resolvedSpeed = resolveStat(cardData.rank, 'speed', cardData.speed);
-      const visual = rankConfig[cardData.rank][`M${masteryLevel}`];
+      // Use safeRank/safeStat so a bad card field logs a warning instead of crashing
+      const rank = safeRank(cardData.rank);
+      if (rank !== cardData.rank) {
+        console.warn(`[Info] Card "${foundCard.name}" (M${masteryLevel}) has invalid rank "${cardData.rank}". Displaying with fallback rank D.`);
+      }
+      const resolvedPower = resolveStat(rank, 'power', safeStat(cardData.power));
+      const resolvedHealth = resolveStat(rank, 'health', safeStat(cardData.health));
+      const resolvedSpeed = resolveStat(rank, 'speed', safeStat(cardData.speed));
+      const visual = rankConfig[rank][`M${masteryLevel}`];
 
       return {
         title: foundCard.name,

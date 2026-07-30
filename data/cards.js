@@ -86,17 +86,59 @@ const rankConfig = {
 };
 
 // --- STAT RESOLVER HELPER ---
+// Stat filter order (lowest → highest): --, -, =, +, ++
 function resolveStat(rank, statType, value) {
   if (typeof value === 'number') return value;
   const range = statRanges[rank]?.[statType];
   if (!range) return 0;
   const { min, max } = range;
-  const third = (max - min) / 3;
+  const fifth = (max - min) / 5;
 
-  if (value === '-') return Math.round(min + third * 0.5);
-  if (value === '=') return Math.round(min + (max - min) / 2);
-  if (value === '+') return Math.round(max - third * 0.5);
-  return min;
+  if (value === '--') return Math.round(min + fifth * 0.5);
+  if (value === '-')  return Math.round(min + fifth * 1.5);
+  if (value === '=')  return Math.round(min + fifth * 2.5);
+  if (value === '+')  return Math.round(min + fifth * 3.5);
+  if (value === '++') return Math.round(min + fifth * 4.5);
+  return min; // fallback for unrecognised filter values
+}
+
+// --- CARD VALIDATION ---
+const VALID_RANKS = new Set(['D', 'C', 'B', 'A', 'S', 'SS', 'UR']);
+const VALID_STAT_FILTERS = new Set(['--', '-', '=', '+', '++']);
+
+function validateCardData(cardName, data, label) {
+  if (!data.rank || !VALID_RANKS.has(data.rank)) {
+    console.warn(`[Card Validation] "${cardName}" (${label}) — invalid rank: "${data.rank}". A placeholder rank will be used.`);
+  }
+  for (const stat of ['health', 'power', 'speed']) {
+    const val = data[stat];
+    if (typeof val !== 'number' && !VALID_STAT_FILTERS.has(val)) {
+      console.warn(`[Card Validation] "${cardName}" (${label}) — invalid ${stat}: "${val}". A placeholder stat will be used.`);
+    }
+  }
+}
+
+function validateAllCards(cardList) {
+  for (const card of cardList) {
+    const name = card.name || '(unnamed)';
+    if (!card.name) {
+      console.warn(`[Card Validation] A card has no name field. Check cards.js.`);
+    }
+    validateCardData(name, card, 'M1');
+    if (card.M2) validateCardData(name, card.M2, 'M2');
+    if (card.M3) validateCardData(name, card.M3, 'M3');
+  }
+}
+
+// Safely resolves a rank — falls back to 'D' so the bot never crashes on bad data
+function safeRank(rank) {
+  return VALID_RANKS.has(rank) ? rank : 'D';
+}
+
+// Safely resolves a stat value — falls back to '=' so the bot never crashes on bad data
+function safeStat(value) {
+  if (typeof value === 'number') return value;
+  return VALID_STAT_FILTERS.has(value) ? value : '=';
 }
 
 // --- RANK CONFIG & CARDS ... (keep your existing rankConfig and cards array here) ---
@@ -1602,6 +1644,9 @@ const cards = [
   
 ];
 
+// Run validation once at startup — logs warnings for any bad card data
+validateAllCards(cards);
+
 // --- 3. EXPORT ---
 // This allows other files (like your gacha command) to read this data
-module.exports = { rankConfig, cards, resolveStat };
+module.exports = { rankConfig, cards, resolveStat, safeRank, safeStat };
