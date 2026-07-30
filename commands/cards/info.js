@@ -1,42 +1,55 @@
+// discord.js components we need for this command
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards'); // Adjust path if needed!
+
+// Card data and helper functions from the central card library
+const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
+
+// The User model so we can look up how many copies the player owns
+const User = require('../../models/user');
 
 module.exports = {
+  // --- SLASH COMMAND DEFINITION ---
+  // This is what shows up when a user types /info in Discord
   data: new SlashCommandBuilder()
     .setName('info')
-    .setDescription('Check info about a cards base version')
-    .addStringOption(option => 
+    .setDescription('Check info about a card')
+    .addStringOption(option =>
       option.setName('query').setDescription('Name or alias').setRequired(true)
     ),
-    
+
+  // --- PREFIX COMMAND DEFINITION ---
   name: 'info',
-  aliases: ['i'],
-  
+  aliases: ['i'], // 'op i luffy' works the same as 'op info luffy'
+
   async execute(interactionOrMessage, args) {
+    // Works for both slash commands (/info luffy) and prefix commands (op info luffy)
     const user = interactionOrMessage.user || interactionOrMessage.author;
 
-    // Get the search text whether they used slash or prefix
+    // --- STEP 1: Figure out what the user searched for ---
     let query = '';
-   if (interactionOrMessage.isChatInputCommand?.()) {
+    if (interactionOrMessage.isChatInputCommand?.()) {
+      // Slash command: Discord gives us the option value directly
       query = interactionOrMessage.options.getString('query');
     } else {
-      // If index.js didn't pass 'args', we extract the search term manually
+      // Prefix command: we have to extract the search term from the message text
       if (args) {
-        query = args.join(' '); 
+        query = args.join(' ');
       } else {
-        // This takes "op info luffy", splits it by spaces, removes "op" and "info", and joins the rest!
+        // "op info monkey d luffy" → remove "op" and "info", keep "monkey d luffy"
         query = interactionOrMessage.content.split(' ').slice(2).join(' ');
       }
     }
+
     if (!query) {
-      return interactionOrMessage.reply("Please provide a valid card name.");
+      return interactionOrMessage.reply('Please provide a valid card name.');
     }
-    // Convert their search to lowercase for matching
+
+    // Convert to lowercase so the search isn't case-sensitive
     const search = query.toLowerCase();
 
-    // Find the first card that matches by name or alias only.
-    // Title is intentionally excluded — searching by title is not supported.
-    const foundCard = cards.find(c => 
+    // --- STEP 2: Find the card ---
+    // Searches by name or alias only (titles are intentionally not searchable)
+    const foundCard = cards.find(c =>
       c.name.toLowerCase().includes(search) ||
       c.aliases.some(alias => alias.toLowerCase().includes(search))
     );
@@ -44,25 +57,43 @@ module.exports = {
     if (!foundCard) {
       return interactionOrMessage.reply(`**${query}** is not a valid card.`);
     }
-    let currentMastery = 1;
-    let ownedAmount = 0; // We will link this to MongoDB later!
 
-    // Helper function to build the embed based on mastery level
+    // --- STEP 3: Look up how many copies the user owns ---
+    // Fetch the user's save data from the database
+    const userData = await User.findOne({ userId: user.id });
+    // Find this specific card in their collection (if they have it at all)
+    const copyEntry = userData?.cardCopies?.find(c => c.cardName === foundCard.name);
+    // If they have copies, use that number — otherwise show 0
+    const ownedCopies = copyEntry?.amount || 0;
+
+    // --- STEP 4: Set up the mastery tracker ---
+    // currentMastery tracks which version (M1/M2/M3) is being shown right now.
+    // The Previous/Next buttons change this value.
+    let currentMastery = 1;
+
+    // --- STEP 5: Helper — build the embed for a given mastery level ---
+    // An embed is the fancy card Discord shows with colours, images, and fields.
+    // This function is called once when the command first runs, then again each
+    // time the user clicks Previous or Next.
     const generateEmbed = (masteryLevel) => {
-      let cardData = foundCard; // Defaults to M1 stats
+      // Pick the right stat block: M1 is the base card, M2/M3 are upgraded versions
+      let cardData = foundCard;              // defaults to M1
       if (masteryLevel === 2) cardData = foundCard.M2;
       if (masteryLevel === 3) cardData = foundCard.M3;
 
-      // This looks at the specific card's rank (D, C, B, etc.) 
-      // AND its current mastery level (M1, M2, M3) to grab the exact visual settings
-      // Use safeRank/safeStat so a bad card field logs a warning instead of crashing
+      // safeRank makes sure we never crash if a card has a typo in its rank field
       const rank = safeRank(cardData.rank);
       if (rank !== cardData.rank) {
         console.warn(`[Info] Card "${foundCard.name}" (M${masteryLevel}) has invalid rank "${cardData.rank}". Displaying with fallback rank D.`);
       }
-      const resolvedPower = resolveStat(rank, 'power', safeStat(cardData.power));
+
+      // resolveStat converts filter values like '+' or '--' into real numbers.
+      // safeStat catches completely broken values so the bot doesn't crash.
+      const resolvedPower  = resolveStat(rank, 'power',  safeStat(cardData.power));
       const resolvedHealth = resolveStat(rank, 'health', safeStat(cardData.health));
-      const resolvedSpeed = resolveStat(rank, 'speed', safeStat(cardData.speed));
+      const resolvedSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed));
+
+      // Grab the colour and thumbnail icon for this rank + mastery level from rankConfig
       const visual = rankConfig[rank][`M${masteryLevel}`];
 
       return {
@@ -74,40 +105,41 @@ module.exports = {
           `**Health:** ${resolvedHealth}`,
           `**Power:** ${resolvedPower}`,
           `**Speed:** ${resolvedSpeed}`,
-          `**Owned:** ${ownedAmount}`
+          `**Copies:** ${ownedCopies}`
         ].join('\n'),
         footer: {
-            icon_url: user.displayAvatarURL({ dynamic: true }),
-             text: `Mastery ${masteryLevel}/3` },
-        color: visual.color,
-        thumbnail: {
-          url: visual.icon // This pulls the Catbox thumbnail link for this specific Mastery!
+          icon_url: user.displayAvatarURL({ dynamic: true }),
+          text: `Mastery ${masteryLevel}/3`
         },
+        color: visual.color,
+        thumbnail: { url: visual.icon },
         image: { url: cardData.image }
       };
     };
 
-    // Helper function to build the Next/Prev buttons
+    // --- STEP 6: Helper — build the Previous/Next buttons ---
+    // Buttons are disabled when they'd go out of bounds (can't go below M1 or above M3)
     const generateButtons = (masteryLevel) => {
       return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('prev_mastery')
           .setLabel('Previous')
           .setStyle(ButtonStyle.Secondary)
-          .setDisabled(masteryLevel === 1), 
+          .setDisabled(masteryLevel === 1), // Disable "Previous" when already on M1
         new ButtonBuilder()
           .setCustomId('next_mastery')
           .setLabel('Next')
           .setStyle(ButtonStyle.Primary)
-          .setDisabled(masteryLevel === 3)  
+          .setDisabled(masteryLevel === 3)  // Disable "Next" when already on M3
       );
     };
 
-    // Send the default M1 message and save the response to attach the collector
+    // --- STEP 7: Send the initial embed (M1) ---
+    // fetchReply: true lets us save the sent message so we can attach a button collector
     const payload = {
       embeds: [generateEmbed(currentMastery)],
       components: [generateButtons(currentMastery)],
-      fetchReply: true // Important: Allows us to attach the button collector!
+      fetchReply: true
     };
 
     let response;
@@ -117,29 +149,30 @@ module.exports = {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // Listen for button clicks for 60 seconds
+    // --- STEP 8: Listen for button clicks ---
+    // A "collector" watches for button interactions on this message for 60 seconds.
     const collector = response.createMessageComponentCollector({ time: 60000 });
 
     collector.on('collect', async (interaction) => {
-      // Prevent other users from clicking the buttons
+      // Only the person who ran the command can click the buttons
       if (interaction.user.id !== user.id) {
         return interaction.reply({ content: "This isn't yours.", flags: 64 });
       }
 
-      // Change the mastery level
+      // Move one mastery level up or down depending on which button was clicked
       if (interaction.customId === 'next_mastery') currentMastery++;
       if (interaction.customId === 'prev_mastery') currentMastery--;
 
-      // Update the original message with the new embed and buttons
+      // Update the message with the new mastery's embed and buttons
       await interaction.update({
         embeds: [generateEmbed(currentMastery)],
         components: [generateButtons(currentMastery)]
       });
     });
 
+    // After 60 seconds, remove the buttons so the message stays clean
     collector.on('end', () => {
-      // When 60 seconds pass, remove the buttons so the chat stays clean
       response.edit({ components: [] }).catch(() => {});
     });
-  } // <-- This closes the execute() function!
-}; // <-- This closes the module.exports!
+  }
+};

@@ -86,27 +86,65 @@ const rankConfig = {
 };
 
 // --- STAT RESOLVER HELPER ---
-// Stat filter order (lowest → highest): --, -, =, +, ++
-// Each filter maps to a zone within the rank's stat range.
-// A random value is chosen within that zone so two cards with the
-// same rank and filter will still have slightly different stats.
+// This function turns a card's stat filter (like '-', '=', '++') into a real number.
+//
+// HOW THE ZONES WORK:
+//   Each rank has a stat range (e.g. B-rank health is 100–250).
+//   That range is split into 5 equal zones:
+//     -- = bottom zone  (lowest possible)
+//     -  = second zone
+//     =  = middle zone
+//     +  = fourth zone
+//     ++ = top zone     (highest possible)
+//   A RANDOM value is picked inside the matching zone, so two cards
+//   with the same rank and filter will still have slightly different stats.
+//
+// SPECIAL RULE FOR HEALTH:
+//   Health values are always rounded UP to the nearest 5 (e.g. 173 → 175).
+//   This keeps HP clean and avoids awkward numbers like 173 or 181.
 function resolveStat(rank, statType, value) {
+  // If the stat is already a plain number, just return it as-is
   if (typeof value === 'number') return value;
-  const range = statRanges[rank]?.[statType];
-  if (!range) return 0;
-  const { min, max } = range;
-  const fifth = (max - min) / 5;
 
+  // Look up the min/max range for this rank + stat type
+  const range = statRanges[rank]?.[statType];
+  if (!range) return 0; // If the rank/stat doesn't exist, return 0 as a safe default
+
+  const { min, max } = range;
+  const fifth = (max - min) / 5; // Size of each of the 5 zones
+
+  // Figure out which zone the filter maps to
   let zoneMin, zoneMax;
   if      (value === '--') { zoneMin = min;             zoneMax = min + fifth; }
   else if (value === '-')  { zoneMin = min + fifth;     zoneMax = min + 2 * fifth; }
   else if (value === '=')  { zoneMin = min + 2 * fifth; zoneMax = min + 3 * fifth; }
   else if (value === '+')  { zoneMin = min + 3 * fifth; zoneMax = min + 4 * fifth; }
   else if (value === '++') { zoneMin = min + 4 * fifth; zoneMax = max; }
-  else return min; // fallback for unrecognised filter values
+  else return min; // Unknown filter — fall back to the minimum value
 
-  return Math.round(Math.random() * (zoneMax - zoneMin) + zoneMin);
+  // Pick a random number within the zone and round it to the nearest whole number
+  let result = Math.round(Math.random() * (zoneMax - zoneMin) + zoneMin);
+
+  // Health is always rounded UP to the nearest 5 for cleaner numbers (e.g. 173 → 175)
+  if (statType === 'health') result = Math.ceil(result / 5) * 5;
+
+  return result;
 }
+
+// --- RANK EMOJIS ---
+// These emojis appear next to card ranks in the copies command.
+// Fill in your custom Discord emoji strings here.
+// Example format: '<:ur_rank:1234567890123456789>' or just a plain emoji like '💜'
+// Leave blank ('') and the emoji simply won't show — nothing will break.
+const rankEmojis = {
+  UR: '', // ← paste your UR emoji here
+  SS: '', // ← paste your SS emoji here
+  S:  '', // ← paste your S  emoji here
+  A:  '', // ← paste your A  emoji here
+  B:  '', // ← paste your B  emoji here
+  C:  '', // ← paste your C  emoji here
+  D:  ''  // ← paste your D  emoji here
+};
 
 // --- CARD VALIDATION ---
 const VALID_RANKS = new Set(['D', 'C', 'B', 'A', 'S', 'SS', 'UR']);
@@ -1655,4 +1693,5 @@ validateAllCards(cards);
 
 // --- 3. EXPORT ---
 // This allows other files (like your gacha command) to read this data
-module.exports = { rankConfig, cards, resolveStat, safeRank, safeStat };
+// Export everything so other command files can import what they need
+module.exports = { rankConfig, cards, resolveStat, safeRank, safeStat, rankEmojis };
