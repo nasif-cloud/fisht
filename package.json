@@ -1,7 +1,7 @@
 {
   "name": "fisht",
   "version": "1.0.0",
-  "description": "Discord fishing bot scaffold built with Discord.js v14.",
+  "description": "One piece discord bot.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,7 +21,6 @@
   "dependencies": {
     "discord.js": "^14.27.0",
     "dotenv": "^17.4.2",
-    "mongoose": "^9.8.1",
-    "node.js": "^0.0.1-security"
+    "mongoose": "^9.8.1"
   }
 }

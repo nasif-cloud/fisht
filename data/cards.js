@@ -87,6 +87,9 @@ const rankConfig = {
 
 // --- STAT RESOLVER HELPER ---
 // Stat filter order (lowest → highest): --, -, =, +, ++
+// Each filter maps to a zone within the rank's stat range.
+// A random value is chosen within that zone so two cards with the
+// same rank and filter will still have slightly different stats.
 function resolveStat(rank, statType, value) {
   if (typeof value === 'number') return value;
   const range = statRanges[rank]?.[statType];
@@ -94,12 +97,15 @@ function resolveStat(rank, statType, value) {
   const { min, max } = range;
   const fifth = (max - min) / 5;
 
-  if (value === '--') return Math.round(min + fifth * 0.5);
-  if (value === '-')  return Math.round(min + fifth * 1.5);
-  if (value === '=')  return Math.round(min + fifth * 2.5);
-  if (value === '+')  return Math.round(min + fifth * 3.5);
-  if (value === '++') return Math.round(min + fifth * 4.5);
-  return min; // fallback for unrecognised filter values
+  let zoneMin, zoneMax;
+  if      (value === '--') { zoneMin = min;             zoneMax = min + fifth; }
+  else if (value === '-')  { zoneMin = min + fifth;     zoneMax = min + 2 * fifth; }
+  else if (value === '=')  { zoneMin = min + 2 * fifth; zoneMax = min + 3 * fifth; }
+  else if (value === '+')  { zoneMin = min + 3 * fifth; zoneMax = min + 4 * fifth; }
+  else if (value === '++') { zoneMin = min + 4 * fifth; zoneMax = max; }
+  else return min; // fallback for unrecognised filter values
+
+  return Math.round(Math.random() * (zoneMax - zoneMin) + zoneMin);
 }
 
 // --- CARD VALIDATION ---
@@ -268,7 +274,7 @@ const cards = [
       title: 'Swordsman - MONSTERS',
       rank: 'B', 
       health: '=',
-      power: '+',
+      power: '++',
       speed: '+',
       image: 'https://files.catbox.moe/53ggt1.webp'
     },
@@ -334,7 +340,7 @@ const cards = [
       title: 'Thriller Bark Zombie',
       rank: 'S', 
       health: '=',
-      power: '+',
+      power: '++',
       speed: '+',
       image: 'https://files.catbox.moe/2ua0en.webp'
     },
@@ -424,7 +430,7 @@ const cards = [
       title: 'Zoro\'s Friend',
       rank: 'C', 
       health: '=',
-      power: '+',
+      power: '++',
       speed: '+',
       image: 'https://files.catbox.moe/sxai2t.webp'
     }, 
@@ -473,26 +479,26 @@ const cards = [
 
     title: 'Shell\'s Town Bartender',
     rank: 'D',
-    health: '=',
-    power: '=',
-    speed: '=',
+    health: '-',
+    power: '-',
+    speed: '-',
     image: 'https://files.catbox.moe/1p1q2l.webp', 
     
     M2: {
       title: 'Rika\'s Mother',
       rank: 'D', 
-      health: '+',
-      power: '+',
-      speed: '+',
+      health: '=',
+      power: '=',
+      speed: '=',
       image: 'https://files.catbox.moe/lp6zrk.webp'
     }, 
   
     M3: {
       title: 'Rika\'s Mother',
       rank: 'D',
-      health: '-',
-      power: '-',
-      speed: '-',
+      health: '+',
+      power: '+',
+      speed: '+',
       image: 'https://files.catbox.moe/hb598j.webp',
     }
   },
@@ -811,7 +817,7 @@ const cards = [
     M2: {
     title: 'Red Hair Pirates',
     rank: 'B',
-    health: '+',
+    health: '++',
     power: '+',
     speed: '=',
     image: 'https://files.catbox.moe/ri2f40.webp', 
@@ -1023,9 +1029,9 @@ const cards = [
     M3: {
     title: 'Marine Seasman Recruit',
     rank: 'D',
-    health: '+',
-    power: '+',
-    speed: '+',
+    health: '++',
+    power: '++',
+    speed: '++',
     image: 'https://files.catbox.moe/g4vgzs.webp', 
     }
   },
@@ -1111,7 +1117,7 @@ const cards = [
     title: 'Higuma Bandits leader',
     rank: 'C',
     health: '+',
-    power: '+',
+    power: '++',
     speed: '+',
     image: 'https://files.catbox.moe/lqktfv.webp', 
     }
@@ -1169,7 +1175,7 @@ const cards = [
     title: 'Red Hair Pirates',
     rank: 'S',
     health: '=',
-    power: '+',
+    power: '++',
     speed: '+',
     image: 'https://files.catbox.moe/ho9b7z.webp', 
     }
