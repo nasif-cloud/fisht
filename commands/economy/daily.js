@@ -1,22 +1,27 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-// Make sure to adjust this relative path to match where your User model is located!
+
+// The User model lets us read and update the player's balance and claim timestamp
 const User = require('../../models/user');
 
+// How many Berries the player earns per daily claim
+const DAILY_REWARD = 1000;
+
 module.exports = {
+  // --- SLASH COMMAND DEFINITION ---
   data: new SlashCommandBuilder()
     .setName('daily')
-    .setDescription('Claim your daily rewards.'),
+    .setDescription('Claim your daily Berries reward.'),
 
+  // --- PREFIX COMMAND DEFINITION ---
   name: 'daily',
   aliases: ['d'],
   description: 'Claim your daily rewards.',
 
   async execute(interactionOrMessage) {
-    // 1. Get the user who ran the command
-    const user = interactionOrMessage.author || interactionOrMessage.user;
+    const user   = interactionOrMessage.author || interactionOrMessage.user;
     const userId = user.id;
 
-    // Helper function to send messages for both slash & prefix commands
+    // Helper: send an embed for both slash and prefix commands without repeating code
     const sendMessage = async (embed) => {
       if (interactionOrMessage.isChatInputCommand?.()) {
         if (interactionOrMessage.replied || interactionOrMessage.deferred) {
@@ -29,38 +34,48 @@ module.exports = {
       }
     };
 
-    // 2. Fetch or create the user's data in MongoDB
-    let userData = await User.findOne({ userId: userId });
+    // Load the user's save data from MongoDB
+    let userData = await User.findOne({ userId });
     if (!userData) {
-      userData = await User.create({ userId: userId, balance: 0 });
+      // This shouldn't happen (index.js creates the account first), but just in case:
+      userData = new User({ userId });
     }
 
-    const now = new Date();
-    const cooldown = 24 * 60 * 60 * 1000; // 24 hours in ms
+    const now      = new Date();
+    const cooldown = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-    // 3. Check if user is still on cooldown
+    // Check if the player has already claimed today
     if (userData.lastDailyClaim && (now - userData.lastDailyClaim) < cooldown) {
-      const remainingMs = cooldown - (now - userData.lastDailyClaim);
+      const remainingMs    = cooldown - (now - userData.lastDailyClaim);
       const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const remainingMins  = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
       const cooldownEmbed = new EmbedBuilder()
-        .setColor(0xffffff)
-        .setDescription(`You already claimed your daily! Wait **${remainingHours}** hours.`);
+        .setColor(0xFFFFFF)
+        .setDescription(
+          `You already claimed your daily! Come back in **${remainingHours}h ${remainingMins}m**.`
+        );
 
-      return await sendMessage(cooldownEmbed);
+      return sendMessage(cooldownEmbed);
     }
 
-    // 4. Update MongoDB balance and lastDailyClaim timestamp
-    userData.balance += 1000;
+    // Award the daily Berries and update the claim timestamp
+    userData.balance      += DAILY_REWARD;
     userData.lastDailyClaim = now;
     await userData.save();
 
-    // 5. Send success response
-    const embed = new EmbedBuilder()
-      .setColor(0xffffff)
-      .setTitle('Claimed Daily Rewards')
-      .setDescription('You receive 1,000 berries!\n Next claim in `24 hours`');
+    // Format the new balance with commas for display (e.g. 2500 → "2,500")
+    const newBalance = userData.balance.toLocaleString('en-US');
 
-    await sendMessage(embed);
+    const successEmbed = new EmbedBuilder()
+      .setColor(0xFFFFFF)
+      .setTitle('Daily Claimed!')
+      .setDescription(
+        `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:money:1532532493578928178> Berries!\n` +
+        `<:whitearrow:1532531439445344547> New balance: **${newBalance}** <:money:1532532493578928178>\n\n` +
+        `Next claim available in **24 hours**.`
+      );
+
+    await sendMessage(successEmbed);
   }
 };

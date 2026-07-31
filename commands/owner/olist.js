@@ -1,0 +1,35 @@
+// Owner-only prefix command: list all owner commands
+// Usage: op olist
+
+const OWNER_ID = '1257718161298690119';
+
+module.exports = {
+  name: 'olist',
+
+  async execute(message) {
+    if (message.author.id !== OWNER_ID) return;
+
+    // Plain-text list — no embed needed, just useful and readable
+    const list = [
+      '─── OWNER COMMANDS ───',
+      '',
+      'op obeli @user [amount]         — give Berries to a user',
+      'op nobeli @user [amount]        — remove Berries from a user',
+      'op omeat @user [amount]         — give Meat to a user',
+      'op nomeat @user [amount]        — remove Meat from a user',
+      'op ocard @user [cardname] [amount]   — give card copies (name/alias search)',
+      'op nocard @user [cardname] [amount]  — remove card copies (name/alias search)',
+      'op olist                         — show this list',
+      '',
+      'Notes:',
+      '• All commands are prefix-only.',
+      '• Success = green ✅ reaction, no reply.',
+      '• Failure = no-ping reply with the error message.',
+      '• Cards are searched by name/alias, not mastery title.',
+      '• Balance/meat cannot go below 0.',
+    ].join('\n');
+
+    // Reply without pinging
+    await message.reply({ content: `\`\`\`\n${list}\n\`\`\``, allowedMentions: { repliedUser: false } });
+  }
+};

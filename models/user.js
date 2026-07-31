@@ -2,26 +2,35 @@ const mongoose = require('mongoose');
 
 // This file defines what a user's profile looks like in the database.
 // Every time someone uses a bot command for the first time, a new User document
-// gets created here automatically. Think of it like a save file for each player.
+// gets created and they receive their starter rewards.
+// Think of it like a save file for each player.
 
 const userSchema = new mongoose.Schema({
 
-  // The user's Discord ID (a unique number Discord gives every account).
-  // This is how we look up the right save file when someone uses a command.
+  // The user's Discord ID — a unique number Discord gives every account.
+  // This is how we find the right save file when someone runs a command.
   userId: { type: String, required: true, unique: true },
 
-  // How much in-game currency the user has.
+  // In-game Berries (currency). Displayed as "Berries" to the player.
+  // The field is called "balance" internally for historical reasons.
   balance: { type: Number, default: 0 },
 
+  // In-game Meat resource. Spent with the eat command to reset pull count.
+  meat: { type: Number, default: 0 },
+
+  // Whether this user has already received their welcome DM and starter rewards.
+  // Set to true the first time they run any command, so rewards are only given once.
+  accountCreated: { type: Boolean, default: false },
+
   // The last time the user claimed their daily reward.
-  // null means they've never claimed it.
+  // null means they have never claimed it before.
   lastDailyClaim: { type: Date, default: null },
 
   // How many card pulls the user has used in the current reset window.
-  // This resets automatically when a new reset period starts (6:30 AM / 2:30 PM / 10:30 PM ET).
+  // Resets automatically when 6:30 AM / 2:30 PM / 10:30 PM ET passes.
   pullsUsed: { type: Number, default: 0 },
 
-  // The timestamp of the last reset that was applied to this user.
+  // The timestamp of the last global reset applied to this user.
   // Used to detect when a new reset window has started since their last pull.
   lastPullReset: { type: Date, default: null },
 
@@ -29,18 +38,15 @@ const userSchema = new mongoose.Schema({
   // Used to enforce the 3-second cooldown between pulls.
   lastPullTime: { type: Date, default: null },
 
-  // A list of every card the user has collected, along with how many copies they have.
+  // A list of every card the user has collected, with how many copies they own.
   // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, lastObtained: <date> }
   cardCopies: [{
-    // The card's name — used to look up its rank, image, etc. from data/cards.js
     cardName:     { type: String, required: true },
-    // How many copies of this card the user has
     amount:       { type: Number, default: 1 },
-    // The last time the user got a copy of this card (used for "By date" sorting)
-    lastObtained: { type: Date, default: Date.now }
+    lastObtained: { type: Date,   default: Date.now }
   }]
 
 });
 
-// Export so other files (like pull.js, info.js, copies.js) can read and update user data
+// Export the model so other files (pull.js, balance.js, eat.js, etc.) can use it
 module.exports = mongoose.model('User', userSchema);
