@@ -95,7 +95,7 @@ function getLastDailyReset(now) {
 }
 
 // ─────────────────────────────────────────────
-// FORMAT HELPER
+// FORMAT HELPERS
 // ─────────────────────────────────────────────
 // Converts a millisecond duration into a "Xh Ym" string.
 // If the time is 0 or negative, returns "Ready" instead of a countdown.
@@ -107,6 +107,18 @@ function formatTimeLeft(ms) {
   if (hours === 0) return `${mins}m`;
   return `${hours}h ${mins}m`;
 }
+
+// Converts a millisecond duration into a "Xm Ys" string (used for short cooldowns).
+// Returns "Ready" if the time has already passed.
+function formatMinSec(ms) {
+  if (ms <= 0) return 'Ready';
+  const mins = Math.floor(ms / 60000);
+  const secs = Math.floor((ms % 60000) / 1000);
+  return `${mins}m ${secs}s`;
+}
+
+// The manga command has a 20-minute rolling cooldown (not a global reset time)
+const MANGA_COOLDOWN_MS = 20 * 60 * 1000;
 
 module.exports = {
   // --- SLASH COMMAND DEFINITION ---
@@ -155,11 +167,24 @@ module.exports = {
       }
     }
 
+    // ── MANGA COOLDOWN ──
+    // Rolling 20-minute personal timer. "Ready" if never played or cooldown expired.
+    let mangaDisplay;
+    if (!userData?.lastMangaClaim) {
+      // Never played the manga challenge
+      mangaDisplay = 'Ready';
+    } else {
+      const elapsed   = now - userData.lastMangaClaim;
+      const remaining = MANGA_COOLDOWN_MS - elapsed;
+      mangaDisplay = formatMinSec(remaining); // Returns "Ready" if remaining <= 0
+    }
+
     // ── BUILD AND SEND THE MESSAGE ──
     // Plain text, no embed. Each timer is on its own line.
     const content = [
       `**Next reset**: \`${pullResetDisplay}\``,
       `**Next Daily**: \`${dailyDisplay}\``,
+      `**Next Manga**: \`${mangaDisplay}\``,
     ].join('\n');
 
     if (interactionOrMessage.isChatInputCommand?.()) {
