@@ -127,7 +127,7 @@ module.exports = {
     // For prefix commands: react to the user's message with a green checkmark.
     // For slash commands: send a short ephemeral reply (can't react to slash messages).
     if (isSlash) {
-      return interactionOrMessage.reply({ content: '✅', flags: 64 });
+      return interactionOrMessage.reply({ content: 'Your pulls have been reset', flags: 64 });
     } else {
       await interactionOrMessage.react('✅');
     }

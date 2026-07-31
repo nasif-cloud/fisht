@@ -40,7 +40,8 @@ module.exports = {
     }
 
     if (!query) {
-      return interactionOrMessage.reply('Please provide a valid card name.');
+      // allowedMentions: { repliedUser: false } prevents pinging on prefix commands
+      return interactionOrMessage.reply({ content: 'Please provide a valid card name.', allowedMentions: { repliedUser: false } });
     }
 
     // Convert to lowercase so the search isn't case-sensitive
@@ -54,7 +55,7 @@ module.exports = {
     );
 
     if (!foundCard) {
-      return interactionOrMessage.reply(`**${query}** is not a valid card.`);
+      return interactionOrMessage.reply({ content: `**${query}** is not a valid card.`, allowedMentions: { repliedUser: false } });
     }
 
     // --- STEP 3: Check if the user actually owns this card ---
@@ -62,9 +63,9 @@ module.exports = {
     const copyEntry = userData?.cardCopies?.find(c => c.cardName === foundCard.name);
     const ownedCopies = copyEntry?.amount || 0;
 
-    // If the user doesn't own this card at all, tell them and stop
+    // If the user doesn't own this card at all, tell them and stop (no ping)
     if (ownedCopies === 0) {
-      return interactionOrMessage.reply(`You do not own **${foundCard.name}**`);
+      return interactionOrMessage.reply({ content: `You do not own **${foundCard.name}**`, allowedMentions: { repliedUser: false } });
     }
 
     // --- STEP 4: Determine their current mastery level ---

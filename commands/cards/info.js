@@ -17,7 +17,7 @@ module.exports = {
 
   // --- PREFIX COMMAND DEFINITION ---
   name: 'info',
-  aliases: ['i'], // 'op i luffy' works the same as 'op info luffy'
+  aliases: ['i', 'card'], // 'op i luffy' works the same as 'op info luffy'
 
   async execute(interactionOrMessage, args) {
     // Works for both slash commands (/info luffy) and prefix commands (op info luffy)
@@ -39,7 +39,9 @@ module.exports = {
     }
 
     if (!query) {
-      return interactionOrMessage.reply('Please provide a valid card name.');
+      // allowedMentions: { repliedUser: false } prevents the bot from pinging the user
+      // on prefix commands (slash commands never ping anyway)
+      return interactionOrMessage.reply({ content: 'Please provide a valid card name.', allowedMentions: { repliedUser: false } });
     }
 
     // Convert to lowercase so the search isn't case-sensitive
@@ -53,7 +55,7 @@ module.exports = {
     );
 
     if (!foundCard) {
-      return interactionOrMessage.reply(`**${query}** is not a valid card.`);
+      return interactionOrMessage.reply({ content: `**${query}** is not a valid card.`, allowedMentions: { repliedUser: false } });
     }
 
     // --- STEP 3: Set up the mastery tracker ---
@@ -97,7 +99,6 @@ module.exports = {
           `**Health:** ${resolvedHealth}`,
           `**Power:** ${resolvedPower}`,
           `**Speed:** ${resolvedSpeed}`,
-          `**Copies:** ${ownedCopies}`
         ].join('\n'),
         footer: {
           icon_url: user.displayAvatarURL({ dynamic: true }),

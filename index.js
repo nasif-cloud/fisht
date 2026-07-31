@@ -7,6 +7,11 @@ const fs   = require('fs');
 // The User model — needed so we can register new accounts automatically
 const User = require('./models/user');
 
+// Maintenance mode state — shared with the 'down' owner command.
+// When maintenance.active is true, all commands respond with a maintenance message.
+// Importing the same module object means both files see the same value in memory.
+const maintenance = require('./data/maintenance');
+
 // ─────────────────────────────────────────────
 // ACCOUNT REGISTRATION
 // ─────────────────────────────────────────────
@@ -112,6 +117,18 @@ client.once('ready', () => {
 });
 
 // ─────────────────────────────────────────────
+// CLIENT ERROR HANDLER
+// ─────────────────────────────────────────────
+// Without this, any unhandled Discord API error (like error 10062 "Unknown
+// interaction" — which happens when Discord tries to reply to an interaction
+// that already timed out or was handled by another bot instance) will crash
+// the entire Node.js process. This handler catches those errors and logs them
+// instead of crashing, keeping the bot alive.
+client.on('error', (error) => {
+  console.error('[Discord Client Error]', error.message);
+});
+
+// ─────────────────────────────────────────────
 // EVENT: SLASH COMMANDS
 // ─────────────────────────────────────────────
 // This fires every time someone uses a / command in Discord.
@@ -119,6 +136,12 @@ client.on('interactionCreate', async interaction => {
   // Ignore anything that isn't a slash command (e.g. buttons, dropdowns)
   // — those are handled inside their own command files via collectors.
   if (!interaction.isChatInputCommand()) return;
+
+  // ── MAINTENANCE MODE ──
+  // When the bot owner runs "op down", all commands are blocked until they run it again.
+  if (maintenance.active) {
+    return interaction.reply({ content: 'Bot is in Maintenance, come back later', flags: 64 });
+  }
 
   const command = client.commands.get(interaction.commandName);
   if (!command) {
@@ -134,11 +157,20 @@ client.on('interactionCreate', async interaction => {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    // Tell Discord we handled the interaction (otherwise the command shows as failed)
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'There was an error while executing this command!', flags: 64 });
-    } else {
-      await interaction.reply({ content: 'There was an error while executing this command!', flags: 64 });
+    // Error 10062 means the interaction already timed out or was handled elsewhere
+    // (e.g. two bot instances running at the same time). Safe to skip — don't crash.
+    if (error.code === 10062) return;
+
+    // For all other errors, try to tell Discord we handled the interaction
+    // so the command doesn't show a "failed" spinner in Discord.
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: 'There was an error while executing this command!', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'There was an error while executing this command!', flags: 64 });
+      }
+    } catch {
+      // If the error reply itself fails (e.g. interaction timed out), just ignore it
     }
   }
 });
@@ -164,6 +196,13 @@ client.on('messageCreate', async (message) => {
   // Look up the command in our loaded collection
   const command = client.commands.get(commandName);
   if (!command) return; // Unrecognised command — do nothing
+
+  // ── MAINTENANCE MODE ──
+  // Block all prefix commands when maintenance is active.
+  // allowedMentions: { repliedUser: false } prevents the bot from pinging the user.
+  if (maintenance.active) {
+    return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
+  }
 
   try {
     // Register the account before running the command
