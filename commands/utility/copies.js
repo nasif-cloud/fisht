@@ -125,7 +125,7 @@ function buildComponents(list, page, mode) {
       .setDisabled(page >= totalPages - 1), // Can't go past the last page
     new ButtonBuilder()
       .setCustomId('copies_search')
-      .setLabel('🔍')
+      .setLabel('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary)
   );
 

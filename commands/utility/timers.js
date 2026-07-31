@@ -182,7 +182,7 @@ module.exports = {
     // ── BUILD AND SEND THE MESSAGE ──
     // Plain text, no embed. Each timer is on its own line.
     const content = [
-      `**Next reset**: \`${pullResetDisplay}\``,
+      `**Next Reset**: \`${pullResetDisplay}\``,
       `**Next Daily**: \`${dailyDisplay}\``,
       `**Next Manga**: \`${mangaDisplay}\``,
     ].join('\n');

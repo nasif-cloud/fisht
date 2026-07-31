@@ -147,7 +147,7 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
     // 🔍 Search button — opens a modal to search by card name
     new ButtonBuilder()
       .setCustomId('ac_search')
-      .setLabel('🔍')
+      .setLabel('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
     // Previous card
     new ButtonBuilder()

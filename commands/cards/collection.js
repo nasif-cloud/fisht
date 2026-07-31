@@ -160,7 +160,7 @@ function buildNormalComponents(total, page, sortMode, isSlash) {
     // 🔍 Search button — opens a modal to find a specific owned card
     new ButtonBuilder()
       .setCustomId('col_search')
-      .setLabel('🔍')
+      .setLabel('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('col_prev')

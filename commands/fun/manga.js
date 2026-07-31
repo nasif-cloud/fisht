@@ -33,7 +33,7 @@ const User      = require('../../models/user');
 // CONSTANTS
 // ─────────────────────────────────────────────
 const COOLDOWN_MS  = 20 * 60 * 1000; // 20 minutes in milliseconds
-const GAME_TIME_MS = 5000;           // 5 seconds to press the Guess button
+const GAME_TIME_MS = 1000;           // 5 seconds to press the Guess button
 
 // Beli rewards
 const REWARD_EXACT = 300; // Spot on
@@ -76,7 +76,7 @@ module.exports = {
 
       if (remaining > 0) {
         // Still on cooldown — tell them how long is left
-        const content = `Your on cooldown.\nAvailable in: \`${formatCooldown(remaining)}\``;
+        const content = `Your're on cooldown.\nAvailable in: \`${formatCooldown(remaining)}\``;
 
         if (isSlash) return interactionOrMessage.reply({ content, flags: 64 });
         return interactionOrMessage.channel.send(content);
@@ -99,7 +99,7 @@ module.exports = {
       .setTitle('Manga Challenge')
       .setDescription(
         "Guess the volume number. Press **Guess** when you're ready. " +
-        'Be quick, you only have `5 seconds`.'
+        'Be quick, you only have `10 seconds`.'
       )
       .setImage(entry.image)  // The manga panel from data/manga.js
       .setColor(0xFFFFFF);
@@ -123,8 +123,8 @@ module.exports = {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // ── STEP 6: SET UP THE BUTTON COLLECTOR (5 second window) ──
-    // The player must press Guess within 5 seconds or the game expires.
+    // ── STEP 6: SET UP THE BUTTON COLLECTOR (10 second window) ──
+    // The player must press Guess within 10 seconds or the game expires.
     let resolved = false; // Tracks whether the game was already settled (clicked or wrong)
 
     const collector = response.createMessageComponentCollector({ time: GAME_TIME_MS });
@@ -160,7 +160,7 @@ module.exports = {
       // Wait up to 30 seconds for the player to submit the modal form
       try {
         const submit = await interaction.awaitModalSubmit({
-          time:   30000,
+          time:   10000,
           filter: i => i.customId === 'manga_modal' && i.user.id === user.id
         });
 
