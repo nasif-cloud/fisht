@@ -136,7 +136,7 @@ function buildComponents(list, page, mode, isSlash) {
 
   // Sort dropdown — shows which option is currently active with default: true
   const sortRow = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuiler()
+    new StringSelectMenuBuilder()
       .setCustomId('copies_sort')
       .setPlaceholder('Sort by...')
       .addOptions([
