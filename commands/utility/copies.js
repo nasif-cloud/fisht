@@ -103,13 +103,16 @@ function buildEmbed(user, list, page, mode) {
 
 // ─────────────────────────────────────────────
 // HELPER — build the normal browsing components
-// (Prev/Next buttons + sort dropdown + optional search button)
+// (Prev/Next buttons + sort dropdown + search button)
+// The search button is included for both slash and prefix commands.
+// When the user clicks it, the button click is always an interaction, so
+// modals work fine even if the original command was a prefix command.
 // ─────────────────────────────────────────────
-function buildComponents(list, page, mode, isSlash) {
+function buildComponents(list, page, mode) {
   const totalPages = Math.max(1, Math.ceil(list.length / CARDS_PER_PAGE));
 
-  // Navigation buttons
-  const navButtons = [
+  // Navigation buttons + search button
+  const navRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('copies_prev')
       .setLabel('Previous')
@@ -120,19 +123,11 @@ function buildComponents(list, page, mode, isSlash) {
       .setLabel('Next')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages - 1), // Can't go past the last page
-  ];
-
-  // The search button only works with slash commands (modals require an interaction context)
-  if (isSlash) {
-    navButtons.push(
-      new ButtonBuilder()
-        .setCustomId('copies_search')
-        .setLabel('🔍')
-        .setStyle(ButtonStyle.Secondary)
-    );
-  }
-
-  const navRow  = new ActionRowBuilder().addComponents(...navButtons);
+    new ButtonBuilder()
+      .setCustomId('copies_search')
+      .setLabel('🔍')
+      .setStyle(ButtonStyle.Secondary)
+  );
 
   // Sort dropdown — shows which option is currently active with default: true
   const sortRow = new ActionRowBuilder().addComponents(
@@ -169,23 +164,95 @@ function buildSearchComponents() {
 // ─────────────────────────────────────────────
 module.exports = {
   // Slash command definition (/copies)
+  // Optional filters:
+  //   sort — sort the full collection by amount, rank, or date (no buttons, static result)
+  //   card — filter to a specific card name (no buttons, static result)
+  // You cannot use sort and card at the same time — pick one.
   data: new SlashCommandBuilder()
     .setName('copies')
-    .setDescription('View all your card copies.'),
+    .setDescription('View all your card copies.')
+    .addStringOption(option =>
+      option
+        .setName('sort')
+        .setDescription('Sort your collection (returns a static result, no buttons)')
+        .setRequired(false)
+        .addChoices(
+          { name: 'By amount', value: 'amount' },
+          { name: 'By rank',   value: 'rank'   },
+          { name: 'By date',   value: 'date'   }
+        )
+    )
+    .addStringOption(option =>
+      option
+        .setName('card')
+        .setDescription('Show copies of a specific card (returns a static result, no buttons)')
+        .setRequired(false)
+    ),
 
-  // Prefix command definition (op copies / op col)
+  // Prefix command definition (op copies / op c / etc.)
   name: 'copies',
-  aliases: ['c'],
+  aliases: ['c', 'cinv', 'dupes', 'duplicates'],
+
   async execute(interactionOrMessage, args) {
     const user = interactionOrMessage.user || interactionOrMessage.author;
     // isSlash is true for /copies, false for "op copies"
     const isSlash = interactionOrMessage.isChatInputCommand?.();
 
-    // ── STEP 1: Load the player's card collection from the database ──
+    // ── STEP 1: Handle slash-only filter options ──
+    // These options produce a static (no buttons) embed and then exit early.
+    if (isSlash) {
+      const sortOption = interactionOrMessage.options.getString('sort');
+      const cardOption = interactionOrMessage.options.getString('card');
+
+      // You can't use both filters at the same time — let the user know
+      if (sortOption && cardOption) {
+        return interactionOrMessage.reply({
+          content: 'You can only use **sort** or **card**, not both at the same time.',
+          flags: 64 // Ephemeral — only the user sees this error
+        });
+      }
+
+      // ── CARD FILTER: show only copies of one specific card ──
+      if (cardOption) {
+        const userData   = await User.findOne({ userId: user.id });
+        const allCopies  = userData?.cardCopies || [];
+        const query      = cardOption.toLowerCase().trim();
+
+        // Match by card name or alias (same logic as the info command)
+        const filtered = allCopies.filter(item => {
+          const cardData = cards.find(c => c.name === item.cardName);
+          if (!cardData) return item.cardName.toLowerCase().includes(query);
+          return (
+            cardData.name.toLowerCase().includes(query) ||
+            cardData.aliases.some(a => a && a.toLowerCase().includes(query))
+          );
+        });
+
+        // Send a static embed — no buttons, no collector needed
+        return interactionOrMessage.reply({
+          embeds: [buildEmbed(user, filtered, 0, 'search')]
+        });
+      }
+
+      // ── SORT FILTER: show the full collection in a chosen order ──
+      if (sortOption) {
+        const userData  = await User.findOne({ userId: user.id });
+        const rawCopies = [...(userData?.cardCopies || [])];
+        const sorted    = sortList(rawCopies, sortOption);
+
+        // Send a static embed — no buttons, no collector needed
+        return interactionOrMessage.reply({
+          embeds: [buildEmbed(user, sorted, 0, sortOption)]
+        });
+      }
+    }
+
+    // ── STEP 2: Load the player's card collection from the database ──
+    // This path runs for all prefix commands and for /copies with no filter options.
     const userData = await User.findOne({ userId: user.id });
     const rawCopies = [...(userData?.cardCopies || [])]; // Spread into a plain JS array
 
-    // ── STEP 2: Set up state variables for this session ──
+    // ── STEP 3: Set up state variables for this session ──
     // These are tracked in a "closure" — meaning the button collector below
     // can read and change them even after the initial reply has been sent.
     let sortMode     = 'amount'; // Which sort is currently active
@@ -196,11 +263,11 @@ module.exports = {
     // Start with the default sort
     let currentList = sortList(rawCopies, sortMode);
 
-    // ── STEP 3: Send the initial embed ──
+    // ── STEP 4: Send the initial embed ──
     // fetchReply: true gives us back the sent message object so we can attach a collector
     const payload = {
       embeds:     [buildEmbed(user, currentList, currentPage, sortMode)],
-      components: buildComponents(currentList, currentPage, sortMode, isSlash),
+      components: buildComponents(currentList, currentPage, sortMode),
       fetchReply: true
     };
 
@@ -211,7 +278,7 @@ module.exports = {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // ── STEP 4: Set up the button/dropdown collector ──
+    // ── STEP 5: Set up the button/dropdown collector ──
     // The collector watches for any button click or dropdown selection on this message.
     // It stops listening after 2 minutes (120000ms) of inactivity.
     const collector = response.createMessageComponentCollector({ time: 120000 });
@@ -233,7 +300,7 @@ module.exports = {
         const list = isSearchMode ? searchResults : sortList(freshCopies, sortMode);
         await interaction.update({
           embeds:     [buildEmbed(user, list, currentPage, isSearchMode ? 'search' : sortMode)],
-          components: isSearchMode ? buildSearchComponents() : buildComponents(list, currentPage, sortMode, isSlash)
+          components: isSearchMode ? buildSearchComponents() : buildComponents(list, currentPage, sortMode)
         });
       }
 
@@ -244,7 +311,7 @@ module.exports = {
         currentPage = Math.min(totalPages - 1, currentPage + 1);
         await interaction.update({
           embeds:     [buildEmbed(user, list, currentPage, isSearchMode ? 'search' : sortMode)],
-          components: isSearchMode ? buildSearchComponents() : buildComponents(list, currentPage, sortMode, isSlash)
+          components: isSearchMode ? buildSearchComponents() : buildComponents(list, currentPage, sortMode)
         });
       }
 
@@ -256,12 +323,14 @@ module.exports = {
         currentList  = sortList(freshCopies, sortMode);
         await interaction.update({
           embeds:     [buildEmbed(user, currentList, currentPage, sortMode)],
-          components: buildComponents(currentList, currentPage, sortMode, isSlash)
+          components: buildComponents(currentList, currentPage, sortMode)
         });
       }
 
-      // ── SEARCH BUTTON (slash only) ──
+      // ── SEARCH BUTTON ──
       // Shows a modal — a small popup form where the user types their search term.
+      // This works for both slash and prefix commands because the button click itself
+      // is always an interaction, regardless of how the command was originally run.
       else if (interaction.customId === 'copies_search') {
         const modal = new ModalBuilder()
           .setCustomId('copies_search_modal')
@@ -327,7 +396,7 @@ module.exports = {
 
         await interaction.update({
           embeds:     [buildEmbed(user, currentList, currentPage, sortMode)],
-          components: buildComponents(currentList, currentPage, sortMode, isSlash)
+          components: buildComponents(currentList, currentPage, sortMode)
         });
       }
     });

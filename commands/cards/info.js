@@ -4,8 +4,6 @@ const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = re
 // Card data and helper functions from the central card library
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 
-// The User model so we can look up how many copies the player owns
-const User = require('../../models/user');
 
 module.exports = {
   // --- SLASH COMMAND DEFINITION ---
@@ -58,15 +56,7 @@ module.exports = {
       return interactionOrMessage.reply(`**${query}** is not a valid card.`);
     }
 
-    // --- STEP 3: Look up how many copies the user owns ---
-    // Fetch the user's save data from the database
-    const userData = await User.findOne({ userId: user.id });
-    // Find this specific card in their collection (if they have it at all)
-    const copyEntry = userData?.cardCopies?.find(c => c.cardName === foundCard.name);
-    // If they have copies, use that number — otherwise show 0
-    const ownedCopies = copyEntry?.amount || 0;
-
-    // --- STEP 4: Set up the mastery tracker ---
+    // --- STEP 3: Set up the mastery tracker ---
     // currentMastery tracks which version (M1/M2/M3) is being shown right now.
     // The Previous/Next buttons change this value.
     let currentMastery = 1;
