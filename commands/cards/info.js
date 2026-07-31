@@ -89,9 +89,11 @@ module.exports = {
 
       // resolveStat converts filter values like '+' or '--' into real numbers.
       // safeStat catches completely broken values so the bot doesn't crash.
-      const resolvedPower  = resolveStat(rank, 'power',  safeStat(cardData.power));
-      const resolvedHealth = resolveStat(rank, 'health', safeStat(cardData.health));
-      const resolvedSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed));
+      // We pass foundCard.name + masteryLevel so the same card always shows
+      // the exact same stat — no matter how many times you press Next/Previous.
+      const resolvedPower  = resolveStat(rank, 'power',  safeStat(cardData.power),  foundCard.name, masteryLevel);
+      const resolvedHealth = resolveStat(rank, 'health', safeStat(cardData.health), foundCard.name, masteryLevel);
+      const resolvedSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  foundCard.name, masteryLevel);
 
       // Grab the colour and thumbnail icon for this rank + mastery level from rankConfig
       const visual = rankConfig[rank][`M${masteryLevel}`];

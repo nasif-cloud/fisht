@@ -43,47 +43,75 @@ const statRanges = {
 
 const rankConfig = {
   D: {
-    M1: { color: 0x5A5B5A, icon: 'https://files.catbox.moe/kenmyv.png' }, // dark Grey
-    M2: { color: 0x5A5B5A, icon: 'https://files.catbox.moe/eg0wb5.png' },
-    M3: { color: 0x5A5B5A, icon: 'https://files.catbox.moe/wxv1gy.png' }
+    M1: { color: 0xB4B4B4, icon: 'https://files.catbox.moe/idv9j1.png' }, // grey
+    M2: { color: 0xA6A6A6, icon: 'https://files.catbox.moe/de4kvq.png' },
+    M3: { color: 0x737373, icon: 'https://files.catbox.moe/4aawoa.png' }
   },
 
   C: {
-    M1: { color: 0x8C6F47, icon: 'https://files.catbox.moe/9iyo0q.png' }, // Bronze
-    M2: { color: 0x8C6F47, icon: 'https://files.catbox.moe/644ohm.png' },
-    M3: { color: 0x8C6F47, icon: 'https://files.catbox.moe/mc9iga.png' }
+    M1: { color: 0xFFEB99, icon: 'https://files.catbox.moe/ae1xd0.png' }, // Bronze
+    M2: { color: 0xFFEB99, icon: 'https://files.catbox.moe/rp6v9b.png' },
+    M3: { color: 0xFFDE59, icon: 'https://files.catbox.moe/jv8krn.png' }
   },
 
   B: {
-    M1: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/s3k992.png' }, // White silverish
-    M2: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/3u9v5m.png' },
-    M3: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/ohhtfv.png' }
+    M1: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/xdqege.png' }, // White silverish
+    M2: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/emlr0x.png' },
+    M3: { color: 0x1F48FF, icon: 'https://files.catbox.moe/cx05wu.png' }
   },
 
   A: {
-    M1: { color: 0x3697A7, icon: 'https://files.catbox.moe/o2k4dl.png' }, // Light blue
-    M2: { color: 0x3697A7, icon: 'https://files.catbox.moe/6je064.png' },
-    M3: { color: 0x3697A7, icon: 'https://files.catbox.moe/5op31h.png' }
+    M1: { color: 0x8C52FF, icon: 'https://files.catbox.moe/7leyv5.png' }, // Light blue
+    M2: { color: 0x5E17EB, icon: 'https://files.catbox.moe/94glz5.png' },
+    M3: { color: 0x4910BC, icon: 'https://files.catbox.moe/tzo2wn.png' }
   },
 
   S: {
-    M1: { color: 0x8C6BBD, icon: 'https://files.catbox.moe/bx9psr.png' }, // Light purple
-    M2: { color: 0x8C6BBD, icon: 'https://files.catbox.moe/77hvxf.png' },
-    M3: { color: 0x8C6BBD, icon: 'https://files.catbox.moe/nacr7l.png' }
+    M1: { color: 0xFF2E86, icon: 'https://files.catbox.moe/8l4xhg.png' }, // Light purple
+    M2: { color: 0xFF006B, icon: 'https://files.catbox.moe/ai6sii.png' },
+    M3: { color: 0xC31566, icon: 'https://files.catbox.moe/j60uvf.png' }
   },
 
   SS: {
-    M1: { color: 0x0D522E, icon: 'https://files.catbox.moe/je61w4.png' }, // Emerald green
-    M2: { color: 0x0D522E, icon: 'https://files.catbox.moe/xcu1xi.png' },
-    M3: { color: 0x0D522E, icon: 'https://files.catbox.moe/z9ok4x.png' }
+    M1: { color: 0xFA4538, icon: 'https://files.catbox.moe/5urgzt.png' }, // Emerald green
+    M2: { color: 0xF8210D, icon: 'https://files.catbox.moe/x26s4d.png' },
+    M3: { color: 0xFC3104, icon: 'https://files.catbox.moe/0irfa0.png' }
   },
 
   UR: {
-    M1: { color: 0x7D376B, icon: 'https://files.catbox.moe/2cqyoo.png' }, // Ruby
-    M2: { color: 0x7D376B, icon: 'https://files.catbox.moe/c10sc7.png' },
-    M3: { color: 0x7D376B, icon: 'https://files.catbox.moe/g137vf.png' }
+    M1: { color: 0xFE5986, icon: 'https://files.catbox.moe/fr5wdg.png' }, // Ruby
+    M2: { color: 0xE4442B, icon: 'https://files.catbox.moe/wwfwi3.png' },
+    M3: { color: 0xB560F5, icon: 'https://files.catbox.moe/ndi2le.png' }
   }
 };
+
+// --- SEEDED RANDOM NUMBER HELPERS ---
+// These two functions let us produce a FIXED number from a card name + stat combo.
+// Without seeding, Math.random() would give a different number every call, so Shanks
+// might show 98 power one time and 99 the next. With seeding, the same card name +
+// stat type + filter always produces the same number — for every user, forever.
+
+// Turns any string into a stable integer (a "hash"). Same string → same integer.
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    // This bit-shifting formula is a classic string hash (djb2-style).
+    // The important property is: different strings almost always give different numbers.
+    hash = Math.imul(31, hash) + str.charCodeAt(i);
+    hash |= 0; // Force it to a 32-bit integer so it doesn't grow forever
+  }
+  return Math.abs(hash); // We only want positive seeds
+}
+
+// A simple "pseudo-random" function that always returns the same output for the same seed.
+// Output is always a decimal between 0 (inclusive) and 1 (exclusive), just like Math.random().
+function seededRandom(seed) {
+  // Mulberry32 algorithm — fast, good distribution, no dependencies needed
+  let t = (seed + 0x6D2B79F5) >>> 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
 
 // --- STAT RESOLVER HELPER ---
 // This function turns a card's stat filter (like '-', '=', '++') into a real number.
@@ -96,14 +124,24 @@ const rankConfig = {
 //     =  = middle zone
 //     +  = fourth zone
 //     ++ = top zone     (highest possible)
-//   A RANDOM value is picked inside the matching zone, so two cards
-//   with the same rank and filter will still have slightly different stats.
+//
+// WHY STATS ARE NOW FIXED:
+//   We use cardName + mastery + statType + filter as a seed for the random number.
+//   This means the same card always produces the same stat — for all users, across
+//   all time — so running "op info shanks" 100 times always shows the same numbers.
 //
 // SPECIAL RULE FOR HEALTH:
 //   Health values are always rounded UP to the nearest 5 (e.g. 173 → 175).
 //   This keeps HP clean and avoids awkward numbers like 173 or 181.
-function resolveStat(rank, statType, value) {
-  // If the stat is already a plain number, just return it as-is
+//
+// PARAMETERS:
+//   rank     — the card's rank string, e.g. 'B', 'SS'
+//   statType — 'health', 'power', or 'speed'
+//   value    — the filter string ('--', '-', '=', '+', '++') or a plain number
+//   cardName — the card's name, used to seed the RNG so the result is always the same
+//   mastery  — 1, 2, or 3 — different masteries get different (but still fixed) numbers
+function resolveStat(rank, statType, value, cardName = '', mastery = 1) {
+  // If the stat is already a plain number, just return it as-is (no randomness needed)
   if (typeof value === 'number') return value;
 
   // Look up the min/max range for this rank + stat type
@@ -122,8 +160,13 @@ function resolveStat(rank, statType, value) {
   else if (value === '++') { zoneMin = min + 4 * fifth; zoneMax = max; }
   else return min; // Unknown filter — fall back to the minimum value
 
-  // Pick a random number within the zone and round it to the nearest whole number
-  let result = Math.round(Math.random() * (zoneMax - zoneMin) + zoneMin);
+  // Build a seed string that is unique to this exact card + mastery + stat + filter combo.
+  // Changing ANY of these parts gives a completely different fixed number.
+  const seedStr  = `${cardName}|M${mastery}|${statType}|${value}`;
+  const seedNum  = hashString(seedStr);
+
+  // Use the seeded RNG to pick a fixed point inside the zone
+  let result = Math.round(seededRandom(seedNum) * (zoneMax - zoneMin) + zoneMin);
 
   // Health is always rounded UP to the nearest 5 for cleaner numbers (e.g. 173 → 175)
   if (statType === 'health') result = Math.ceil(result / 5) * 5;
@@ -137,13 +180,13 @@ function resolveStat(rank, statType, value) {
 // Example format: '<:ur_rank:1234567890123456789>' or just a plain emoji like '💜'
 // Leave blank ('') and the emoji simply won't show — nothing will break.
 const rankEmojis = {
-  UR: '', // ← paste your UR emoji here
-  SS: '', // ← paste your SS emoji here
-  S:  '', // ← paste your S  emoji here
-  A:  '', // ← paste your A  emoji here
-  B:  '', // ← paste your B  emoji here
-  C:  '', // ← paste your C  emoji here
-  D:  ''  // ← paste your D  emoji here
+  UR: '<:UR1:1532557985312931921>', // ← paste your UR emoji here
+  SS: '<:SS1:1532557981743583414>', // ← paste your SS emoji here
+  S:  '<:S1:1532557978610303077>', // ← paste your S  emoji here
+  A:  '<:A1:1532557975477293066>', // ← paste your A  emoji here
+  B:  '<:B1:1532557972407062558>', // ← paste your B  emoji here
+  C:  '<:C1:1532557969085173850>', // ← paste your C  emoji here
+  D:  '<:D1:1532557966501220482>'  // ← paste your D  emoji here
 };
 
 // --- CARD VALIDATION ---
@@ -239,7 +282,7 @@ const cards = [
     health: 175,
     power: 35,
     speed: 15,
-    image: 'https://files.catbox.moe/nhv0lv.png', 
+    image: 'https://i.postimg.cc/C5sWBwMk/1.png', 
     
   
     M2: {
@@ -248,7 +291,7 @@ const cards = [
       health: 460,
       power: 84,
       speed: 34,
-      image: 'https://files.catbox.moe/fkfmh2.png'
+      image: 'https://i.postimg.cc/PJQBpdf3/2.png'
     },
     
  
@@ -258,7 +301,7 @@ const cards = [
       health: 660,
       power: 113,
       speed: 53,
-      image: 'https://files.catbox.moe/6yvdik.png'
+      image: 'https://i.postimg.cc/NFkW9QGP/3.png'
     }
   },
   {
@@ -272,7 +315,7 @@ const cards = [
     health: '-',
     power: '+',
     speed: '-',
-    image: 'https://files.catbox.moe/c1glfx.webp', 
+    image: 'https://i.postimg.cc/yxywg76L/4.png', 
     
   
     M2: {
@@ -281,7 +324,7 @@ const cards = [
       health: '=',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/lkabpg.webp'
+      image: 'https://i.postimg.cc/GtxZ8b3q/5.png'
     },
     
  
@@ -291,7 +334,7 @@ const cards = [
       health: '-',
       power: '+',
       speed: '-',
-      image: 'https://files.catbox.moe/1bzw7m.webp'
+      image: 'https://i.postimg.cc/bY0XF90f/6.png'
     }
   },
   {
@@ -305,7 +348,7 @@ const cards = [
     health: '-',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/sqyrkz.webp', 
+    image: 'https://i.postimg.cc/66Vs1fVt/7.png', 
     
   
     M2: {
@@ -314,7 +357,7 @@ const cards = [
       health: '=',
       power: '++',
       speed: '+',
-      image: 'https://files.catbox.moe/53ggt1.webp'
+      image: 'https://i.postimg.cc/DfQVYPQ2/8.png'
     },
     
  
@@ -324,7 +367,7 @@ const cards = [
       health: '-',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/90xqrv.webp'
+      image: 'https://i.postimg.cc/RC1rbL1Z/9.png'
     }
   },
   {
@@ -338,7 +381,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/vwj7qy.webp', 
+    image: 'https://i.postimg.cc/J73wd53t/13.png', 
     
   
     M2: {
@@ -347,7 +390,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/rtznsh.webp'
+      image: 'https://i.postimg.cc/1R0xYr0N/14.png'
     },
     
  
@@ -357,7 +400,7 @@ const cards = [
       health: '-',
       power: '-',
       speed: '-',
-      image: 'https://files.catbox.moe/pgf05l.webp'
+      image: 'https://i.postimg.cc/v87RSt7V/15.png'
     }
   },
   {
@@ -371,7 +414,7 @@ const cards = [
     health: '-',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/sd79uc.webp', 
+    image: 'https://i.postimg.cc/zDwmPFwh/16.png', 
     
   
     M2: {
@@ -380,7 +423,7 @@ const cards = [
       health: '=',
       power: '++',
       speed: '+',
-      image: 'https://files.catbox.moe/2ua0en.webp'
+      image: 'https://i.postimg.cc/7P1vQn11/17.png'
     },
     
  
@@ -390,7 +433,7 @@ const cards = [
       health: '-',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/jqj853.webp'
+      image: 'https://i.postimg.cc/WpmRfwmG/18.png'
     }
   },
 
@@ -403,7 +446,7 @@ const cards = [
     health: '-',
     power: '=',
     speed: '-',
-    image: 'https://files.catbox.moe/m6khxi.webp', 
+    image: 'https://i.postimg.cc/QNgLnJgt/10.png', 
     
     M2: {
       title: 'Swordsman - MONSTERS',
@@ -411,16 +454,16 @@ const cards = [
       health: '=',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/uu2mwh.webp'
+      image: 'https://i.postimg.cc/3rjMbFjk/11.png'
     }, 
   
     M3: {
-      title: 'Swordsman',
+      title: 'Swordsman - MONSTERS',
       rank: 'A',
       health: '-',
       power: '=',
       speed: '-',
-      image: 'https://files.catbox.moe/stalzr.webp',
+      image: 'https://i.postimg.cc/WpmRfwmD/12.png',
     }
     },
 
@@ -433,7 +476,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '-',
-    image: 'https://files.catbox.moe/6di7he.webp', 
+    image: 'https://i.postimg.cc/zDwmPFwS/19.png', 
     
     M2: {
       title: 'Buggy Pirates',
@@ -441,7 +484,7 @@ const cards = [
       health: '-',
       power: '=',
       speed: '-',
-      image: 'https://files.catbox.moe/95714k.webp'
+      image: 'https://i.postimg.cc/MZ0krm0m/20.png'
     }, 
   
     M3: {
@@ -450,7 +493,7 @@ const cards = [
       health: '-',
       power: '-',
       speed: '-',
-      image: 'https://files.catbox.moe/rv7sjr.webp',
+      image: 'https://i.postimg.cc/pVQN1JQB/21.png',
     }
   },
   {
@@ -462,7 +505,7 @@ const cards = [
     health: '-',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/1nqenf.webp', 
+    image: 'https://i.postimg.cc/pLLpdTVC/53.png', 
     
     M2: {
       title: 'Zoro\'s Friend',
@@ -470,7 +513,7 @@ const cards = [
       health: '=',
       power: '++',
       speed: '+',
-      image: 'https://files.catbox.moe/sxai2t.webp'
+      image: 'https://i.postimg.cc/HkkVLxWB/54.png'
     }, 
   
     M3: {
@@ -479,7 +522,7 @@ const cards = [
       health: '-',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/7hhfao.webp',
+      image: 'https://i.postimg.cc/httfGj42/55.png',
     }
   },
   {
@@ -491,7 +534,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '-',
-    image: 'https://files.catbox.moe/07xxir.webp', 
+    image: 'https://i.postimg.cc/MppvGTZY/50.png', 
     
     M2: {
       title: 'Marine Lieutenant Commander',
@@ -499,7 +542,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '-',
-      image: 'https://files.catbox.moe/degsdc.webp'
+      image: 'https://i.postimg.cc/8zzjC5km/51.png'
     }, 
   
     M3: {
@@ -508,7 +551,7 @@ const cards = [
       health: '+',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/x1g8vp.webp',
+      image: 'https://i.postimg.cc/t44YgTR5/52.png',
     }
   },
   {
@@ -520,7 +563,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/1p1q2l.webp', 
+    image: 'https://i.postimg.cc/VkkdN6sM/47.png', 
     
     M2: {
       title: 'Rika\'s Mother',
@@ -528,7 +571,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/lp6zrk.webp'
+      image: 'https://i.postimg.cc/5226t098/48.png'
     }, 
   
     M3: {
@@ -537,7 +580,7 @@ const cards = [
       health: '+',
       power: '+',
       speed: '+',
-      image: 'https://files.catbox.moe/hb598j.webp',
+      image: 'https://i.postimg.cc/zGGVfBDC/49.png',
     }
   },
   {
@@ -549,15 +592,15 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/vn8lmp.webp', 
+    image: 'https://i.postimg.cc/SxxJKsQX/43.png', 
     
     M2: {
-      title: 'Chore boy',
+      title: 'Chief Petty Officer',
       rank: 'C', 
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/uihqgj.webp'
+      image: 'https://i.postimg.cc/Njj50MGr/44.png'
     }, 
   
     M3: {
@@ -566,7 +609,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/pi2dzs.webp',
+      image: 'https://i.postimg.cc/T33pPw2b/45.png',
     }
   },
   {
@@ -578,7 +621,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/4wo6qd.webp', 
+    image: 'https://i.postimg.cc/CLNRYD0b/40.png', 
     
     M2: {
       title: 'Young Girl from Shells Town',
@@ -586,7 +629,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/c625pg.webp'
+      image: 'https://i.postimg.cc/bNTZ8bPQ/41.png'
     }, 
   
     M3: {
@@ -595,7 +638,7 @@ const cards = [
       health: '-',
       power: '-',
       speed: '-',
-      image: 'https://files.catbox.moe/oory1k.webp',
+      image: 'https://i.postimg.cc/x11cdCjc/42.png',
     }
   },
   {
@@ -607,7 +650,7 @@ const cards = [
     health: '-',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/m205vb.webp', 
+    image: 'https://i.postimg.cc/zGGVfBDg/46.png', 
   },
   {
     name: 'Roronoa Zoro',
@@ -618,7 +661,7 @@ const cards = [
     health: '=',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/6ba6xr.webp', 
+    image: 'https://i.postimg.cc/dtBhvdFk/37.png', 
     
     M2: {
       title: 'Worst Generation Pirate',
@@ -626,7 +669,7 @@ const cards = [
       health: '=',
       power: '+',
       speed: '=',
-      image: 'https://files.catbox.moe/7wsd4b.webp'
+      image: 'https://i.postimg.cc/J4qsmJ8k/38.png'
     }, 
   
     M3: {
@@ -635,7 +678,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/wi5mbm.webp',
+      image: 'https://i.postimg.cc/6508wRKr/39.png',
     }
   },
   {
@@ -647,7 +690,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/nhz48j.webp', 
+    image: 'https://i.postimg.cc/zXjy5WNf/34.png', 
     
     M2: {
       title: 'Alvida Pirates',
@@ -655,7 +698,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/33ped9.webp'
+      image: 'https://i.postimg.cc/7YV5D74C/35.png'
     }, 
   
     M3: {
@@ -664,11 +707,11 @@ const cards = [
       health: '+',
       power: '+',
       speed: '+',
-      image: 'https://files.catbox.moe/5ybxy6.webp',
+      image: 'https://i.postimg.cc/QxbFs5DW/36.png',
     }
   },
   {
-    name: 'Hoppoko',
+    name: 'Poppoko',
     aliases: ['Hoppoko',],
 
     title: 'Alvida Pirates',
@@ -676,7 +719,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/sdxqvv.webp', 
+    image: 'https://i.postimg.cc/5N3X1vJb/31.png', 
     
     M2: {
       title: 'Alvida Pirates',
@@ -684,7 +727,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/jiatfo.webp'
+      image: 'https://i.postimg.cc/m2wPRM4b/32.png'
     }, 
   
     M3: {
@@ -693,7 +736,7 @@ const cards = [
       health: '+',
       power: '+',
       speed: '+',
-      image: 'https://files.catbox.moe/3jnd8e.webp',
+      image: 'https://i.postimg.cc/9FpDVT2F/33.png',
     }
   },
   {
@@ -705,7 +748,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/xj8ca0.webp', 
+    image: 'https://i.postimg.cc/159xxVM0/28.png', 
     
     M2: {
       title: 'Alvida Pirates',
@@ -713,7 +756,7 @@ const cards = [
       health: '=',
       power: '=',
       speed: '=',
-      image: 'https://files.catbox.moe/2c6hv9.webp'
+      image: 'https://i.postimg.cc/ZKTkkvjF/30.png'
     }, 
   
     M3: {
@@ -734,24 +777,24 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/gwd0gv.webp', 
+    image: 'https://i.postimg.cc/L6HddgvP/25.png', 
     
     M2: {
       title: 'Master Chief Petty Officer',
-    rank: 'C',
+    rank: 'B',
     health: '-',
     power: '=',
     speed: '-',
-    image: 'https://files.catbox.moe/widrsk.webp', 
+    image: 'https://i.postimg.cc/vHQRRxXf/26.png', 
     }, 
   
     M3: {
       title: 'Marine Captain',
-      rank: 'A', 
+      rank: 'S', 
       health: '-',
       power: '+',
       speed: '-',
-      image: 'https://files.catbox.moe/mai8dm.webp'
+      image: 'https://i.postimg.cc/28zppLTn/27.png'
     }
   },
   {
@@ -763,7 +806,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/iyik88.webp', 
+    image: 'https://i.postimg.cc/X7VMMBxB/22.png', 
     
     M2: {
       title: 'Strawhat Pirates',
@@ -771,7 +814,7 @@ const cards = [
       health: '-',
       power: '-',
       speed: '-',
-      image: 'https://files.catbox.moe/daq37n.webp'
+      image: 'https://i.postimg.cc/KvZXX3Qg/23.png'
     }, 
   
     M3: {
@@ -780,7 +823,7 @@ const cards = [
       health: '-',
       power: '=',
       speed: '-',
-      image: 'https://files.catbox.moe/tennjq.webp',
+      image: 'https://i.postimg.cc/J41wwHKk/24.png',
     }
   },
   {
@@ -792,7 +835,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/dea0pm.webp', 
+    image: 'https://i.postimg.cc/s2tXK4YS/86.png', 
     
     M2: {
     title: 'Partys Bar Owner',
@@ -800,7 +843,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/oqhpqz.webp', 
+    image: 'https://i.postimg.cc/VN364WqB/87.png', 
     }, 
   
     M3: {
@@ -809,7 +852,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/8e7bgd.webp', 
+    image: 'https://i.postimg.cc/rpvmgN1f/88.png', 
     }
   },
   {
@@ -821,7 +864,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/qvwrtl.webp', 
+    image: 'https://i.postimg.cc/Bv8bxVKg/83.png', 
     
     M2: {
     title: 'Red Hair Pirates',
@@ -829,7 +872,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/6ks07l.webp', 
+    image: 'https://i.postimg.cc/5tZ0pSBz/84.png', 
     }, 
   
     M3: {
@@ -838,7 +881,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/50qrqp.webp', 
+    image: 'https://i.postimg.cc/pdgTkJff/85.png', 
     }
   },
   {
@@ -850,7 +893,7 @@ const cards = [
     health: '+',
     power: '=',
     speed: '-',
-    image: 'https://files.catbox.moe/jqqnfp.webp', 
+    image: 'https://i.postimg.cc/0N6jpBwY/80.png', 
     
     M2: {
     title: 'Red Hair Pirates',
@@ -858,7 +901,7 @@ const cards = [
     health: '++',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/ri2f40.webp', 
+    image: 'https://i.postimg.cc/QMBCpyTg/81.png', 
     }, 
   
     M3: {
@@ -867,7 +910,7 @@ const cards = [
     health: '+',
     power: '=',
     speed: '-',
-    image: 'https://files.catbox.moe/bhb723.webp', 
+    image: 'https://i.postimg.cc/7LChgW2n/82.png', 
     }
   },
   {
@@ -879,7 +922,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/yx6q71.webp', 
+    image: 'https://i.postimg.cc/g0wjvTZh/77.png', 
     
     M2: {
     title: 'Buggy Pirates',
@@ -887,7 +930,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/cwxrug.webp', 
+    image: 'https://i.postimg.cc/cJKCQbnw/78.png', 
     }, 
   
     M3: {
@@ -896,7 +939,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/2lta03.webp', 
+    image: 'https://i.postimg.cc/XvZqwzC9/79.png', 
     }
   },
   {
@@ -908,7 +951,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/ka2l8d.webp', 
+    image: 'https://i.postimg.cc/25qy4KZy/74.png', 
     
     M2: {
     title: 'Buggy Pirates',
@@ -916,7 +959,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/xhlmd9.webp', 
+    image: 'https://i.postimg.cc/3wyNgcvW/75.png', 
     }, 
   
     M3: {
@@ -925,7 +968,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/wnysfl.webp', 
+    image: 'https://i.postimg.cc/9f40Gn7q/76.png', 
     }
   },
   {
@@ -937,7 +980,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/bxqvhl.webp', 
+    image: 'https://i.postimg.cc/Bv8bxVK0/71.png', 
     
     M2: {
     title: 'Buggy Pirates',
@@ -945,7 +988,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/ttqukw.webp', 
+    image: 'https://i.postimg.cc/q7tq853p/72.png', 
     }, 
   
     M3: {
@@ -954,7 +997,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/97vp14.webp', 
+    image: 'https://i.postimg.cc/8CFch06C/73.png', 
     }
   },
   {
@@ -962,28 +1005,28 @@ const cards = [
     aliases: ['Shanks', 'Red Hair'],
 
     title: 'Red Hair Pirates Captain',
-    rank: 'S',
-    health: '=',
-    power: '+',
-    speed: '+',
-    image: 'https://files.catbox.moe/nzudbg.webp', 
-    
-    M2: {
-    title: 'Emperor of the Sea',
     rank: 'SS',
     health: '=',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/dgaouc.webp', 
+    image: 'https://i.postimg.cc/htZhQBfP/68.png', 
+    
+    M2: {
+    title: 'Emperor of the Sea',
+    rank: 'SS',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://i.postimg.cc/qvDg6Tz7/69.png', 
     }, 
   
     M3: {
     title: 'Emperor of the New World',
     rank: 'UR',
     health: '=',
-    power: '+',
+    power: '++',
     speed: '+',
-    image: 'https://files.catbox.moe/y890nm.webp', 
+    image: 'https://i.postimg.cc/nhSM9JCr/70.png', 
     }
   },
   {
@@ -995,7 +1038,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/jcx816.webp', 
+    image: 'https://i.postimg.cc/L8Qhgpnd/65.png', 
     
     M2: {
     title: 'Marine Commander',
@@ -1003,7 +1046,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/76hqqr.webp', 
+    image: 'https://i.postimg.cc/Mp3XfSvS/66.png', 
     }, 
   
     M3: {
@@ -1012,7 +1055,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/r6bmxp.webp', 
+    image: 'https://i.postimg.cc/XY1XBbpV/67.png', 
     }
   },
   {
@@ -1024,7 +1067,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/se16rt.webp', 
+    image: 'https://i.postimg.cc/T3Nh56hN/62.png', 
     
     M2: {
     title: 'The Genius Jester',
@@ -1032,7 +1075,7 @@ const cards = [
     health: '=',
     power: '-',
     speed: '=',
-    image: 'https://files.catbox.moe/7g2ix3.webp', 
+    image: 'https://i.postimg.cc/x1pqN2qB/63.png', 
     }, 
   
     M3: {
@@ -1041,7 +1084,7 @@ const cards = [
     health: '=',
     power: '-',
     speed: '=',
-    image: 'https://files.catbox.moe/9qm48f.webp', 
+    image: 'https://i.postimg.cc/Hkvj8gjq/64.png', 
     }
   },
   {
@@ -1053,7 +1096,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/cb2vkx.webp', 
+    image: 'https://i.postimg.cc/P55Pqxf0/59.png', 
     
     M2: {
     title: 'Marine Seasman Recruit',
@@ -1061,7 +1104,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/w7o90r.webp', 
+    image: 'https://i.postimg.cc/RZpqJBqX/60.png', 
     }, 
   
     M3: {
@@ -1070,11 +1113,11 @@ const cards = [
     health: '++',
     power: '++',
     speed: '++',
-    image: 'https://files.catbox.moe/g4vgzs.webp', 
+    image: 'https://i.postimg.cc/htZhQBh2/61.png', 
     }
   },
   {
-    name: '',
+    name: 'Rokkaku',
     aliases: ['',],
 
     title: 'Marine Lieutenant Junior Grade',
@@ -1082,7 +1125,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/mlj0bt.webp', 
+    image: 'https://i.postimg.cc/7ZZfL6PB/56.png', 
     
     M2: {
     title: 'Marine Lieutenant Junior Grade',
@@ -1090,7 +1133,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://files.catbox.moe/69af0r.webp', 
+    image: 'https://i.postimg.cc/P55PqxfF/57.png', 
     }, 
   
     M3: {
@@ -1099,7 +1142,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/0dv3nk.webp', 
+    image: 'https://i.postimg.cc/kggB54Mz/58.png',
     }
   },
   {
@@ -1111,7 +1154,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/l2swfd.webp', 
+    image: 'https://i.postimg.cc/d1r0fZnk/98.png', 
     
     M2: {
     title: 'Foosha Village Mayor',
@@ -1119,7 +1162,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://files.catbox.moe/v31bqm.webp', 
+    image: 'https://i.postimg.cc/D0hz3fYz/99.png', 
     }, 
   
     M3: {
@@ -1128,7 +1171,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/z3zahn.webp', 
+    image: 'https://i.postimg.cc/yxKNC6r8/100.png', 
     }
   },
   {

@@ -136,7 +136,7 @@ function buildComponents(list, page, mode, isSlash) {
 
   // Sort dropdown — shows which option is currently active with default: true
   const sortRow = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder()
+    new StringSelectMenuBuiler()
       .setCustomId('copies_sort')
       .setPlaceholder('Sort by...')
       .addOptions([
@@ -175,8 +175,7 @@ module.exports = {
 
   // Prefix command definition (op copies / op col)
   name: 'copies',
-  aliases: ['col'],
-
+  aliases: ['c'],
   async execute(interactionOrMessage, args) {
     const user = interactionOrMessage.user || interactionOrMessage.author;
     // isSlash is true for /copies, false for "op copies"

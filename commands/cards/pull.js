@@ -193,12 +193,15 @@ module.exports = {
       userData.lastPullReset = lastReset;
     }
     // If they've used all their pulls, tell them when the next reset is.
+    // We show the time as "Xh Ym" instead of a Discord timestamp so it always reads clearly.
     if (userData.pullsUsed >= PULL_LIMIT) {
-      const nextReset = getNextReset(now);
-      const resetTs = Math.floor(nextReset.getTime() / 1000); // Unix timestamp for Discord's <t:> format
+      const nextReset    = getNextReset(now);
+      const remainingMs  = nextReset - now;
+      const resetHours   = Math.floor(remainingMs / (1000 * 60 * 60));
+      const resetMins    = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
       return sendPrivate(
         interactionOrMessage,
-        `You've ran out of pulls. \`${userData.pullsUsed}/${PULL_LIMIT}\`\nNext reset in: <t:${resetTs}:R>`
+        `You've ran out of pulls. \`${userData.pullsUsed}/${PULL_LIMIT}\`\nNext reset in: \`${resetHours}h ${resetMins}m\``
       );
     }
 
@@ -221,16 +224,18 @@ module.exports = {
     const pulledCard = pool[Math.floor(Math.random() * pool.length)];
 
     // ── STEP 5: Resolve the card's stats ──
-    // safeRank catches invalid rank values; resolveStat converts filter strings to numbers
+    // safeRank catches invalid rank values; resolveStat converts filter strings to numbers.
+    // We pass pulledCard.name + mastery 1 so stats are fixed — the same card always
+    // shows the same numbers no matter who pulls it or how many times.
     const resolvedRank = safeRank(pulledCard.rank);
     if (resolvedRank !== pulledCard.rank) {
       console.warn(`[Pull] Card "${pulledCard.name}" has invalid rank "${pulledCard.rank}". Using fallback rank D.`);
     }
     const visualSettings = rankConfig[resolvedRank].M1;
 
-    const resolvedHealth = resolveStat(resolvedRank, 'health', safeStat(pulledCard.health));
-    const resolvedPower  = resolveStat(resolvedRank, 'power',  safeStat(pulledCard.power));
-    const resolvedSpeed  = resolveStat(resolvedRank, 'speed',  safeStat(pulledCard.speed));
+    const resolvedHealth = resolveStat(resolvedRank, 'health', safeStat(pulledCard.health), pulledCard.name, 1);
+    const resolvedPower  = resolveStat(resolvedRank, 'power',  safeStat(pulledCard.power),  pulledCard.name, 1);
+    const resolvedSpeed  = resolveStat(resolvedRank, 'speed',  safeStat(pulledCard.speed),  pulledCard.name, 1);
 
     // ── STEP 6: Track the copy in the player's collection ──
     // Look for this card in the player's existing collection
