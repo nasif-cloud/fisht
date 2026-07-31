@@ -49,37 +49,37 @@ const rankConfig = {
   },
 
   C: {
-    M1: { color: 0xFFEB99, icon: 'https://files.catbox.moe/ae1xd0.png' }, // Bronze
+    M1: { color: 0xFFEB99, icon: 'https://files.catbox.moe/ae1xd0.png' }, // Yellow
     M2: { color: 0xFFEB99, icon: 'https://files.catbox.moe/rp6v9b.png' },
     M3: { color: 0xFFDE59, icon: 'https://files.catbox.moe/jv8krn.png' }
   },
 
   B: {
-    M1: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/xdqege.png' }, // White silverish
+    M1: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/xdqege.png' }, // Blue
     M2: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/emlr0x.png' },
     M3: { color: 0x1F48FF, icon: 'https://files.catbox.moe/cx05wu.png' }
   },
 
   A: {
-    M1: { color: 0x8C52FF, icon: 'https://files.catbox.moe/7leyv5.png' }, // Light blue
-    M2: { color: 0x5E17EB, icon: 'https://files.catbox.moe/94glz5.png' },
-    M3: { color: 0x4910BC, icon: 'https://files.catbox.moe/tzo2wn.png' }
+    M1: { color: 0xCEA8F0, icon: 'https://i.postimg.cc/bwFyWyj6/10.png' }, // Purple
+    M2: { color: 0xB174E7, icon: 'https://i.postimg.cc/NjPsSswC/11.png' },
+    M3: { color: 0x9440DD, icon: 'https://i.postimg.cc/Z5Db2bhw/12.png' }
   },
 
   S: {
-    M1: { color: 0xFF2E86, icon: 'https://files.catbox.moe/8l4xhg.png' }, // Light purple
-    M2: { color: 0xFF006B, icon: 'https://files.catbox.moe/ai6sii.png' },
-    M3: { color: 0xC31566, icon: 'https://files.catbox.moe/j60uvf.png' }
+    M1: { color: 0xFFB6D4, icon: 'https://i.postimg.cc/rwqj3T9j/13.png' }, // Pink
+    M2: { color: 0xFF4090, icon: 'https://i.postimg.cc/qvpwSrGj/14.png' },
+    M3: { color: 0xFF2C97, icon: 'https://i.postimg.cc/mgVjGndC/15.png' }
   },
 
   SS: {
-    M1: { color: 0xFA4538, icon: 'https://files.catbox.moe/5urgzt.png' }, // Emerald green
+    M1: { color: 0xFA4538, icon: 'https://files.catbox.moe/5urgzt.png' }, // Orange
     M2: { color: 0xF8210D, icon: 'https://files.catbox.moe/x26s4d.png' },
     M3: { color: 0xFC3104, icon: 'https://files.catbox.moe/0irfa0.png' }
   },
 
   UR: {
-    M1: { color: 0xFE5986, icon: 'https://files.catbox.moe/fr5wdg.png' }, // Ruby
+    M1: { color: 0xFE5986, icon: 'https://files.catbox.moe/fr5wdg.png' }, // Rainbow
     M2: { color: 0xE4442B, icon: 'https://files.catbox.moe/wwfwi3.png' },
     M3: { color: 0xB560F5, icon: 'https://files.catbox.moe/ndi2le.png' }
   }
@@ -182,8 +182,8 @@ function resolveStat(rank, statType, value, cardName = '', mastery = 1) {
 const rankEmojis = {
   UR: '<:UR1:1532557985312931921>', // ← paste your UR emoji here
   SS: '<:SS1:1532557981743583414>', // ← paste your SS emoji here
-  S:  '<:S1:1532557978610303077>', // ← paste your S  emoji here
-  A:  '<:A1:1532557975477293066>', // ← paste your A  emoji here
+  S:  '<:S1:1532809299695501464>', // ← paste your S  emoji here
+  A:  '<:A1:1532809220729208942>', // ← paste your A  emoji here
   B:  '<:B1:1532557972407062558>', // ← paste your B  emoji here
   C:  '<:C1:1532557969085173850>', // ← paste your C  emoji here
   D:  '<:D1:1532557966501220482>'  // ← paste your D  emoji here
@@ -1212,7 +1212,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '-',
-    image: 'https://files.catbox.moe/7h7kv5.webp', 
+    image: 'https://i.postimg.cc/pdgTkJf7/89.png', 
     
     M2: {
     title: 'Red Hair Pirates',
@@ -1241,7 +1241,7 @@ const cards = [
     health: '=',
     power: '+',
     speed: '=',
-    image: 'https://files.catbox.moe/nklm96.webp', 
+    image: 'https://i.postimg.cc/JnZhFHxf/92.png', 
     
     M2: {
     title: 'Red Hair Pirates',
