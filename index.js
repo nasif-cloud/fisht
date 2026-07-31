@@ -199,8 +199,10 @@ client.on('messageCreate', async (message) => {
 
   // ── MAINTENANCE MODE ──
   // Block all prefix commands when maintenance is active.
+  // Exception: 'down' is the owner command that TURNS OFF maintenance, so it must
+  // always be allowed through — otherwise the owner can't resume the bot.
   // allowedMentions: { repliedUser: false } prevents the bot from pinging the user.
-  if (maintenance.active) {
+  if (maintenance.active && commandName !== 'down') {
     return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
   }
 

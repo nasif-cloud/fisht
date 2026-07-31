@@ -198,8 +198,12 @@ module.exports = {
     // isSlash is true for /copies, false for "op copies"
     const isSlash = interactionOrMessage.isChatInputCommand?.();
 
-    // ── STEP 1: Handle slash-only filter options ──
-    // These options produce a static (no buttons) embed and then exit early.
+    // ── STEP 1: Read slash options to set the initial state ──
+    // Slash users can pre-set sort mode or filter to a specific card via options.
+    // Either way, the result is still interactive with Prev/Next buttons.
+    let initialSort       = 'amount'; // Default sort: by amount
+    let initialCardFilter = null;     // null = no card filter
+
     if (isSlash) {
       const sortOption = interactionOrMessage.options.getString('sort');
       const cardOption = interactionOrMessage.options.getString('card');
@@ -212,62 +216,49 @@ module.exports = {
         });
       }
 
-      // ── CARD FILTER: show only copies of one specific card ──
-      if (cardOption) {
-        const userData   = await User.findOne({ userId: user.id });
-        const allCopies  = userData?.cardCopies || [];
-        const query      = cardOption.toLowerCase().trim();
-
-        // Match by card name or alias (same logic as the info command)
-        const filtered = allCopies.filter(item => {
-          const cardData = cards.find(c => c.name === item.cardName);
-          if (!cardData) return item.cardName.toLowerCase().includes(query);
-          return (
-            cardData.name.toLowerCase().includes(query) ||
-            cardData.aliases.some(a => a && a.toLowerCase().includes(query))
-          );
-        });
-
-        // Send a static embed — no buttons, no collector needed
-        return interactionOrMessage.reply({
-          embeds: [buildEmbed(user, filtered, 0, 'search')]
-        });
-      }
-
-      // ── SORT FILTER: show the full collection in a chosen order ──
-      if (sortOption) {
-        const userData  = await User.findOne({ userId: user.id });
-        const rawCopies = [...(userData?.cardCopies || [])];
-        const sorted    = sortList(rawCopies, sortOption);
-
-        // Send a static embed — no buttons, no collector needed
-        return interactionOrMessage.reply({
-          embeds: [buildEmbed(user, sorted, 0, sortOption)]
-        });
-      }
+      if (sortOption) initialSort       = sortOption;
+      if (cardOption) initialCardFilter = cardOption;
     }
 
     // ── STEP 2: Load the player's card collection from the database ──
-    // This path runs for all prefix commands and for /copies with no filter options.
-    const userData = await User.findOne({ userId: user.id });
-    const rawCopies = [...(userData?.cardCopies || [])]; // Spread into a plain JS array
+    const userData  = await User.findOne({ userId: user.id });
+    const rawCopies = [...(userData?.cardCopies || [])]; // Spread so we don't mutate the DB object
 
     // ── STEP 3: Set up state variables for this session ──
     // These are tracked in a "closure" — meaning the button collector below
     // can read and change them even after the initial reply has been sent.
-    let sortMode     = 'amount'; // Which sort is currently active
-    let currentPage  = 0;        // Which page is currently showing (0-based)
-    let isSearchMode = false;    // Whether we're showing search results right now
-    let searchResults = [];      // The filtered list used in search mode
+    let sortMode     = initialSort;
+    let currentPage  = 0;
+    let isSearchMode = false;
+    let searchResults = [];
 
-    // Start with the default sort
+    // If a card filter was provided via slash option, start in search mode
+    // so the user immediately sees the filtered results with a Back button.
+    if (initialCardFilter) {
+      const query = initialCardFilter.toLowerCase().trim();
+      searchResults = rawCopies.filter(item => {
+        const cardData = cards.find(c => c.name === item.cardName);
+        if (!cardData) return item.cardName.toLowerCase().includes(query);
+        return (
+          cardData.name.toLowerCase().includes(query) ||
+          cardData.aliases.some(a => a && a.toLowerCase().includes(query))
+        );
+      });
+      isSearchMode = true;
+    }
+
+    // Start with the initial sort applied to the full list (used for normal mode)
     let currentList = sortList(rawCopies, sortMode);
 
     // ── STEP 4: Send the initial embed ──
     // fetchReply: true gives us back the sent message object so we can attach a collector
+    // If we started in search mode (via slash 'card' option), show search results immediately.
+    // Otherwise show the normal sorted list.
+    const initialList = isSearchMode ? searchResults : currentList;
+    const initialMode = isSearchMode ? 'search'      : sortMode;
     const payload = {
-      embeds:     [buildEmbed(user, currentList, currentPage, sortMode)],
-      components: buildComponents(currentList, currentPage, sortMode),
+      embeds:     [buildEmbed(user, initialList, currentPage, initialMode)],
+      components: isSearchMode ? buildSearchComponents() : buildComponents(initialList, currentPage, sortMode),
       fetchReply: true
     };
 

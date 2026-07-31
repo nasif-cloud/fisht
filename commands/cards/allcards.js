@@ -7,7 +7,7 @@
 // Prefix aliases: ac, cards
 // Prefix controls:
 //   Row 1 — 🔍 (search by name), Previous, Next
-//   Row 2 — Sort dropdown (health / power / speed / copies / rank)
+//   Row 2 — Sort dropdown (health / power / speed / rank)
 //   Row 3 — Mastery dropdown (M1's / M2's / M3's)
 //
 // Slash controls: sort, mastery, and card are options at invocation.
@@ -30,7 +30,7 @@ const {
 } = require('discord.js');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
-const User = require('../../models/user');
+// Note: User is not needed here — allcards shows all cards without personal data.
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -42,7 +42,6 @@ const SORT_LABELS = {
   health: 'By health',
   power:  'By power',
   speed:  'By speed',
-  copies: 'By copies',
   rank:   'By rank'
 };
 
@@ -64,10 +63,9 @@ function resolveCardStat(card, mastery, statType) {
 }
 
 // ─────────────────────────────────────────────
-// HELPER — sort a list of card objects
-// 'userCopies' is the player's cardCopies array (needed only for 'copies' sort)
+// HELPER — sort a list of card objects by the given mode
 // ─────────────────────────────────────────────
-function sortCards(cardList, sortMode, mastery, userCopies) {
+function sortCards(cardList, sortMode, mastery) {
   const copy = [...cardList]; // Don't mutate the original
 
   if (sortMode === 'rank') {
@@ -75,14 +73,6 @@ function sortCards(cardList, sortMode, mastery, userCopies) {
       const rankA = safeRank(getCardData(a, mastery).rank || a.rank);
       const rankB = safeRank(getCardData(b, mastery).rank || b.rank);
       return RANK_ORDER.indexOf(rankA) - RANK_ORDER.indexOf(rankB);
-    });
-  }
-
-  if (sortMode === 'copies') {
-    return copy.sort((a, b) => {
-      const copA = userCopies?.find(c => c.cardName === a.name)?.amount || 0;
-      const copB = userCopies?.find(c => c.cardName === b.name)?.amount || 0;
-      return copB - copA; // Most copies first
     });
   }
 
@@ -185,7 +175,6 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
         { label: 'By health', value: 'health', default: sortMode === 'health' },
         { label: 'By power',  value: 'power',  default: sortMode === 'power'  },
         { label: 'By speed',  value: 'speed',  default: sortMode === 'speed'  },
-        { label: 'By copies', value: 'copies', default: sortMode === 'copies' },
         { label: 'By rank',   value: 'rank',   default: sortMode === 'rank'   }
       ])
   );
@@ -247,7 +236,6 @@ module.exports = {
           { name: 'By health', value: 'health' },
           { name: 'By power',  value: 'power'  },
           { name: 'By speed',  value: 'speed'  },
-          { name: 'By copies', value: 'copies' },
           { name: 'By rank',   value: 'rank'   }
         )
     )
@@ -296,11 +284,7 @@ module.exports = {
       }
     }
 
-    // ── STEP 2: Fetch user data for "by copies" sort ──
-    const userData   = await User.findOne({ userId: user.id });
-    let userCopies = userData?.cardCopies || [];
-
-    // ── STEP 3: Set up initial state ──
+    // ── STEP 2: Set up initial state ──
     let sortMode    = slashSort    || 'power';       // Default sort: by power
     let mastery     = parseInt(slashMastery) || 1;   // Default mastery: M1
     let currentPage = 0;
@@ -329,7 +313,7 @@ module.exports = {
     }
 
     // ── STEP 5: Build the initial sorted card list ──
-    let sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, userCopies);
+    let sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery);
 
     // ── STEP 6: Build the initial embed and components ──
     let embed, components;
@@ -402,15 +386,7 @@ module.exports = {
       else if (interaction.customId === 'ac_sort') {
         sortMode    = interaction.values[0];
         currentPage = 0; // Reset to first card when sort changes
-
-        // Refresh copies data whenever the user switches to "by copies" sort
-        // so they see their current collection, not stale data from command start
-        if (sortMode === 'copies') {
-          const freshData = await User.findOne({ userId: user.id });
-          userCopies = freshData?.cardCopies || [];
-        }
-
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, userCopies);
+        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery);
 
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
@@ -424,7 +400,7 @@ module.exports = {
         currentPage = 0; // Reset to first card when mastery changes
 
         // Re-sort with the new mastery so stat values reflect the displayed level
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, userCopies);
+        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery);
 
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
