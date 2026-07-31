@@ -20,6 +20,18 @@ const User = require('./models/user');
 const STARTER_BERRIES = 2500;
 const STARTER_MEAT    = 5;
 
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Bot is alive and running!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Web server is listening on port ${PORT}`);
+});
+
 async function registerAccount(discordUser) {
   try {
     // Look for an existing save file for this user
