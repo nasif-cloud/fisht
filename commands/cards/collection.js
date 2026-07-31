@@ -2,22 +2,23 @@
 // COLLECTION COMMAND
 // ─────────────────────────────────────────────
 // The personal version of /allcards — shows only the cards the user owns.
-// Mastery is a view setting (M1 / M2 / M3), NOT derived from copy count.
-// A Copies field is added to every card embed.
+// Cards are always displayed at M1 in normal browse mode.
+// A Copies field is shown on every card embed.
 //
 // Prefix aliases: col, mycards
 // Prefix controls:
 //   Row 1 — 🔍 (search), Previous, Next
 //   Row 2 — Sort dropdown (copies / health / power / speed / rank)
-//   Row 3 — Mastery dropdown (M1's / M2's / M3's)
 //
-// Slash controls: sort, mastery, and card are options at invocation.
-//   /collection                          → sorted by copies, M1 view
-//   /collection sort:rank mastery:M2     → sorted by rank, M2 view
-//   /collection card:luffy               → jump to Luffy (cannot combine with sort/mastery)
+// Slash controls: sort and card are options at invocation.
+//   /collection              → sorted by copies (default)
+//   /collection sort:rank    → sorted by rank
+//   /collection card:luffy   → jump to Luffy in your collection (cannot combine with sort)
 //
 // Search mode (🔍 button or card slash option):
-//   Shows one owned card; Prev/Next cycles M1 → M2 → M3 (like /allcards search mode).
+//   Shows one owned card. Prev/Next cycle through ONLY the mastery levels the user
+//   actually owns (1 copy = M1 only, 2 copies = M1+M2, 3+ copies = M1+M2+M3).
+//   If the user only owns one mastery of a card, no Prev/Next buttons are shown.
 //   A red Back button returns to the sorted list.
 
 const {
@@ -39,7 +40,7 @@ const User = require('../../models/user');
 // ─────────────────────────────────────────────
 const RANK_ORDER = ['UR', 'SS', 'S', 'A', 'B', 'C', 'D'];
 
-// Human-readable label for each sort mode, used in the embed footer
+// Human-readable label for each sort mode, shown in the embed footer
 const SORT_LABELS = {
   copies: 'By copies',
   health: 'By health',
@@ -68,11 +69,25 @@ function resolveCardStat(card, mastery, statType) {
 }
 
 // ─────────────────────────────────────────────
-// HELPER — sort an owned-card list
-// Each entry in ownedList is: { card, copies }
-// Stat-based sorts use the currently selected mastery view level
+// HELPER — figure out which mastery levels the user actually owns for a card
+// This is based purely on copy count:
+//   1 copy  → [1]         (owns M1 only)
+//   2 copies → [1, 2]     (owns M1 and M2)
+//   3+ copies → [1, 2, 3] (owns all three)
 // ─────────────────────────────────────────────
-function sortOwnedCards(ownedList, sortMode, mastery) {
+function getOwnedMasteries(copies) {
+  const owned = [1]; // Everyone who owns a card at all has at least M1
+  if (copies >= 2) owned.push(2);
+  if (copies >= 3) owned.push(3);
+  return owned;
+}
+
+// ─────────────────────────────────────────────
+// HELPER — sort an owned-card list
+// Each entry is: { card, copies }
+// Stat-based sorts always use M1 (mastery view is fixed at M1 for normal mode)
+// ─────────────────────────────────────────────
+function sortOwnedCards(ownedList, sortMode) {
   const copy = [...ownedList]; // Don't mutate the original
 
   if (sortMode === 'copies') {
@@ -82,28 +97,29 @@ function sortOwnedCards(ownedList, sortMode, mastery) {
 
   if (sortMode === 'rank') {
     return copy.sort((a, b) => {
-      const rankA = safeRank(getCardData(a.card, mastery).rank || a.card.rank);
-      const rankB = safeRank(getCardData(b.card, mastery).rank || b.card.rank);
+      // Always compare rank at M1 (the base card rank)
+      const rankA = safeRank(a.card.rank);
+      const rankB = safeRank(b.card.rank);
       return RANK_ORDER.indexOf(rankA) - RANK_ORDER.indexOf(rankB);
     });
   }
 
-  // health, power, speed — sort by the stat at the selected mastery view
+  // health, power, speed — sort by M1 stat values
   return copy.sort((a, b) => {
-    return resolveCardStat(b.card, mastery, sortMode) - resolveCardStat(a.card, mastery, sortMode);
+    return resolveCardStat(b.card, 1, sortMode) - resolveCardStat(a.card, 1, sortMode);
   });
 }
 
 // ─────────────────────────────────────────────
-// HELPER — build the embed for one owned card
-// Shows stats at the selected mastery view level, plus a Copies field
+// HELPER — build the embed for one owned card at a given mastery
+// Always shows the real Copies count regardless of which mastery is displayed
 // ─────────────────────────────────────────────
 function buildCardEmbed(entry, mastery, footerText, user) {
   const { card, copies } = entry;
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
 
-  // Log a warning if the rank value is invalid so the owner can find and fix it
+  // Warn in logs if the rank value is invalid so the owner can find and fix it
   if (rank !== (cardData.rank || card.rank)) {
     console.warn(`[Collection] "${card.name}" M${mastery} has invalid rank "${cardData.rank}". Using fallback D.`);
   }
@@ -122,7 +138,7 @@ function buildCardEmbed(entry, mastery, footerText, user) {
       `**Health:** ${health}`,
       `**Power:** ${power}`,
       `**Speed:** ${speed}`,
-      `**Copies:** ${copies}` // Always shows the real copy count, regardless of mastery view
+      `**Copies:** ${copies}` // Real copy count, not tied to mastery display
     ].join('\n'),
     footer: {
       icon_url: user.displayAvatarURL({ dynamic: true }),
@@ -136,27 +152,28 @@ function buildCardEmbed(entry, mastery, footerText, user) {
 
 // ─────────────────────────────────────────────
 // HELPER — normal-mode footer text
-// Example: "Card 3/12 - By copies [M1's]"
+// Example: "Card 3/12 - By copies"
 // ─────────────────────────────────────────────
-function normalFooter(page, total, sortMode, mastery) {
-  return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By copies'} [M${mastery}'s]`;
+function normalFooter(page, total, sortMode) {
+  return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By copies'}`;
 }
 
 // ─────────────────────────────────────────────
 // HELPER — search-mode footer text
-// Example: "Card 2/3 - [Monkey D. Luffy]"
-// (The number shows which mastery is being viewed out of 3)
+// Shows position within the mastery levels the user actually owns.
+// Example: "Card 2/2 - [Monkey D. Luffy]" if they own M1+M2
+//          "Card 1/1 - [Roronoa Zoro]"    if they only own M1
 // ─────────────────────────────────────────────
-function searchFooter(searchMastery, cardName) {
-  return `Card ${searchMastery}/3 - [${cardName}]`;
+function searchFooter(masteryIndex, totalOwnedMasteries, cardName) {
+  return `Card ${masteryIndex + 1}/${totalOwnedMasteries} - [${cardName}]`;
 }
 
 // ─────────────────────────────────────────────
 // HELPER — components for normal (browsing) mode
-// PREFIX: 3 rows — nav buttons, sort dropdown, mastery dropdown
-// SLASH:  1 row  — nav buttons only (sort/mastery are set at invocation)
+// PREFIX: 2 rows — nav buttons, sort dropdown
+// SLASH:  1 row  — nav buttons only (sort is set at invocation)
 // ─────────────────────────────────────────────
-function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
+function buildNormalComponents(total, page, sortMode, isSlash) {
   const navRow = new ActionRowBuilder().addComponents(
     // 🔍 Search button — opens a modal to find a specific owned card
     new ButtonBuilder()
@@ -175,10 +192,10 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
       .setDisabled(page >= total - 1)
   );
 
-  // Slash users set sort/mastery via command options — no dropdowns needed mid-session
+  // Slash users set sort via command option — no dropdown needed mid-session
   if (isSlash) return [navRow];
 
-  // PREFIX: add sort and mastery dropdowns below the nav buttons
+  // PREFIX: add sort dropdown below nav buttons
   const sortRow = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('col_sort')
@@ -192,42 +209,39 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
       ])
   );
 
-  const masteryRow = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId('col_mastery')
-      .setPlaceholder('Mastery view...')
-      .addOptions([
-        { label: "Only M1's", value: '1', default: mastery === 1 },
-        { label: "Only M2's", value: '2', default: mastery === 2 },
-        { label: "Only M3's", value: '3', default: mastery === 3 }
-      ])
-  );
-
-  return [navRow, sortRow, masteryRow];
+  return [navRow, sortRow];
 }
 
 // ─────────────────────────────────────────────
 // HELPER — components for search (single-card) mode
-// Back button (red) + Prev/Next to cycle through M1 → M2 → M3
+// Always shows a red Back button.
+// Prev/Next are only added when the user owns more than one mastery of this card.
 // ─────────────────────────────────────────────
-function buildSearchComponents(searchMastery) {
+function buildSearchComponents(masteryIndex, ownedMasteries) {
+  const backBtn = new ButtonBuilder()
+    .setCustomId('col_back')
+    .setLabel('Back')
+    .setStyle(ButtonStyle.Danger);
+
+  // Only show nav buttons if there are multiple owned mastery levels to cycle through
+  if (ownedMasteries.length <= 1) {
+    // Only one mastery owned — just show Back, no Prev/Next
+    return [new ActionRowBuilder().addComponents(backBtn)];
+  }
+
   return [
     new ActionRowBuilder().addComponents(
-      // Back returns to the sorted collection list
-      new ButtonBuilder()
-        .setCustomId('col_back')
-        .setLabel('Back')
-        .setStyle(ButtonStyle.Danger),
+      backBtn,
       new ButtonBuilder()
         .setCustomId('col_prev')
         .setLabel('Previous')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(searchMastery === 1), // Can't go before M1
+        .setDisabled(masteryIndex === 0), // Already at the lowest owned mastery
       new ButtonBuilder()
         .setCustomId('col_next')
         .setLabel('Next')
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(searchMastery === 3)  // Can't go past M3
+        .setDisabled(masteryIndex === ownedMasteries.length - 1) // Already at highest owned mastery
     )
   ];
 }
@@ -239,7 +253,7 @@ module.exports = {
   // Slash command definition (/collection)
   data: new SlashCommandBuilder()
     .setName('collection')
-    .setDescription("Browse the cards you own at any mastery view level.")
+    .setDescription("Browse the cards you own.")
     .addStringOption(option =>
       option
         .setName('sort')
@@ -255,19 +269,8 @@ module.exports = {
     )
     .addStringOption(option =>
       option
-        .setName('mastery')
-        .setDescription('Which mastery level to view (default: M1) — cannot use with card')
-        .setRequired(false)
-        .addChoices(
-          { name: "Only M1's", value: '1' },
-          { name: "Only M2's", value: '2' },
-          { name: "Only M3's", value: '3' }
-        )
-    )
-    .addStringOption(option =>
-      option
         .setName('card')
-        .setDescription('Jump to a specific card you own (cannot be used with sort or mastery)')
+        .setDescription('Jump to a specific card you own (cannot be used with sort)')
         .setRequired(false)
     ),
 
@@ -280,19 +283,17 @@ module.exports = {
     const isSlash = interactionOrMessage.isChatInputCommand?.();
 
     // ── STEP 1: Read slash options ──
-    let slashSort    = null;
-    let slashMastery = null;
-    let slashCard    = null;
+    let slashSort = null;
+    let slashCard = null;
 
     if (isSlash) {
-      slashSort    = interactionOrMessage.options.getString('sort');
-      slashMastery = interactionOrMessage.options.getString('mastery');
-      slashCard    = interactionOrMessage.options.getString('card');
+      slashSort = interactionOrMessage.options.getString('sort');
+      slashCard = interactionOrMessage.options.getString('card');
 
-      // 'card' can't be combined with sort or mastery — same rule as /allcards
-      if (slashCard && (slashSort || slashMastery)) {
+      // 'card' can't be combined with 'sort' — they serve different purposes
+      if (slashCard && slashSort) {
         return interactionOrMessage.reply({
-          content: 'You cannot use **card** together with **sort** or **mastery**. Pick one.',
+          content: 'You cannot use **card** together with **sort**. Pick one.',
           flags: 64 // Ephemeral — only the user sees this error
         });
       }
@@ -302,12 +303,12 @@ module.exports = {
     const userData = await User.findOne({ userId: user.id });
 
     // Build a list of owned cards: each entry holds the card object and copy count.
-    // Mastery is NOT stored here — it is a view setting chosen by the user.
+    // Copy count drives which masteries the user has unlocked for that card.
     const ownedList = [];
     for (const entry of (userData?.cardCopies || [])) {
-      if (!entry.amount || entry.amount <= 0) continue; // Skip zero-copy entries (safety guard)
+      if (!entry.amount || entry.amount <= 0) continue; // Skip zero-copy entries (safety)
       const card = cards.find(c => c.name === entry.cardName);
-      if (!card) continue; // Skip cards that no longer exist in the card library
+      if (!card) continue; // Skip cards removed from the card library
       ownedList.push({
         card,
         copies: entry.amount
@@ -322,18 +323,18 @@ module.exports = {
       });
     }
 
-    // ── STEP 3: Set up initial state ──
-    let sortMode      = slashSort    || 'copies';       // Default sort: by copies
-    let mastery       = parseInt(slashMastery) || 1;    // Default view: M1
-    let currentPage   = 0;
-    let isSearchMode  = false;
-    let searchEntry   = null; // The single owned card shown in search mode
-    let searchMastery = 1;    // Which mastery (1/2/3) is active in search mode
+    // ── STEP 3: Set up state ──
+    let sortMode     = slashSort || 'copies'; // Default sort: by copies
+    let currentPage  = 0;
+    let isSearchMode = false;
+    let searchEntry  = null;   // The owned-card entry shown in search mode
+    let searchOwnedMasteries = []; // Which mastery levels the user owns for the searched card
+    let searchMasteryIndex   = 0;  // Which of those masteries is currently displayed
 
-    // Apply the initial sort to the owned list
-    let sortedList = sortOwnedCards(ownedList, sortMode, mastery);
+    // Apply the initial sort to the owned list (always M1 for stat-based sorts)
+    let sortedList = sortOwnedCards(ownedList, sortMode);
 
-    // ── STEP 4: Handle 'card' option / enter search mode immediately ──
+    // ── STEP 4: Handle 'card' slash option — enter search mode immediately ──
     if (slashCard) {
       const query = slashCard.toLowerCase().trim();
       const found = ownedList.find(e =>
@@ -348,20 +349,23 @@ module.exports = {
         });
       }
 
-      isSearchMode  = true;
-      searchEntry   = found;
-      searchMastery = 1; // Always start at M1 in search mode
+      isSearchMode         = true;
+      searchEntry          = found;
+      searchOwnedMasteries = getOwnedMasteries(found.copies); // e.g. [1] or [1, 2] or [1, 2, 3]
+      searchMasteryIndex   = 0; // Always start at the lowest owned mastery
     }
 
     // ── STEP 5: Build the initial embed and components ──
     let embed, components;
 
     if (isSearchMode) {
-      embed      = buildCardEmbed(searchEntry, searchMastery, searchFooter(searchMastery, searchEntry.card.name), user);
-      components = buildSearchComponents(searchMastery);
+      const mastery = searchOwnedMasteries[searchMasteryIndex];
+      embed      = buildCardEmbed(searchEntry, mastery, searchFooter(searchMasteryIndex, searchOwnedMasteries.length, searchEntry.card.name), user);
+      components = buildSearchComponents(searchMasteryIndex, searchOwnedMasteries);
     } else {
-      embed      = buildCardEmbed(sortedList[currentPage], mastery, normalFooter(currentPage, sortedList.length, sortMode, mastery), user);
-      components = buildNormalComponents(sortedList.length, currentPage, sortMode, mastery, isSlash);
+      // Normal browse: always display at M1
+      embed      = buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user);
+      components = buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash);
     }
 
     // ── STEP 6: Send the initial message ──
@@ -388,17 +392,18 @@ module.exports = {
       // ── NEXT ──
       if (interaction.customId === 'col_next') {
         if (isSearchMode) {
-          // In search mode: cycle forward through M1 → M2 → M3
-          searchMastery = Math.min(3, searchMastery + 1);
+          // In search mode: advance to the next mastery level the user actually owns
+          searchMasteryIndex = Math.min(searchOwnedMasteries.length - 1, searchMasteryIndex + 1);
+          const mastery = searchOwnedMasteries[searchMasteryIndex];
           await interaction.update({
-            embeds:     [buildCardEmbed(searchEntry, searchMastery, searchFooter(searchMastery, searchEntry.card.name), user)],
-            components: buildSearchComponents(searchMastery)
+            embeds:     [buildCardEmbed(searchEntry, mastery, searchFooter(searchMasteryIndex, searchOwnedMasteries.length, searchEntry.card.name), user)],
+            components: buildSearchComponents(searchMasteryIndex, searchOwnedMasteries)
           });
         } else {
           currentPage = Math.min(sortedList.length - 1, currentPage + 1);
           await interaction.update({
-            embeds:     [buildCardEmbed(sortedList[currentPage], mastery, normalFooter(currentPage, sortedList.length, sortMode, mastery), user)],
-            components: buildNormalComponents(sortedList.length, currentPage, sortMode, mastery, isSlash)
+            embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+            components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
           });
         }
       }
@@ -406,17 +411,18 @@ module.exports = {
       // ── PREVIOUS ──
       else if (interaction.customId === 'col_prev') {
         if (isSearchMode) {
-          // In search mode: cycle backward through M3 → M2 → M1
-          searchMastery = Math.max(1, searchMastery - 1);
+          // In search mode: go back to the previous owned mastery level
+          searchMasteryIndex = Math.max(0, searchMasteryIndex - 1);
+          const mastery = searchOwnedMasteries[searchMasteryIndex];
           await interaction.update({
-            embeds:     [buildCardEmbed(searchEntry, searchMastery, searchFooter(searchMastery, searchEntry.card.name), user)],
-            components: buildSearchComponents(searchMastery)
+            embeds:     [buildCardEmbed(searchEntry, mastery, searchFooter(searchMasteryIndex, searchOwnedMasteries.length, searchEntry.card.name), user)],
+            components: buildSearchComponents(searchMasteryIndex, searchOwnedMasteries)
           });
         } else {
           currentPage = Math.max(0, currentPage - 1);
           await interaction.update({
-            embeds:     [buildCardEmbed(sortedList[currentPage], mastery, normalFooter(currentPage, sortedList.length, sortMode, mastery), user)],
-            components: buildNormalComponents(sortedList.length, currentPage, sortMode, mastery, isSlash)
+            embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+            components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
           });
         }
       }
@@ -425,27 +431,14 @@ module.exports = {
       else if (interaction.customId === 'col_sort') {
         sortMode    = interaction.values[0];
         currentPage = 0; // Reset to first card when sort changes
-        // Re-sort the owned list with the new mode, using the current mastery view
-        sortedList = sortOwnedCards(ownedList, sortMode, mastery);
+        sortedList  = sortOwnedCards(ownedList, sortMode); // Re-sort
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], mastery, normalFooter(currentPage, sortedList.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, mastery, isSlash)
+          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
         });
       }
 
-      // ── MASTERY DROPDOWN (prefix only) ──
-      else if (interaction.customId === 'col_mastery') {
-        mastery     = parseInt(interaction.values[0]); // '1', '2', or '3' → 1, 2, 3
-        currentPage = 0; // Reset to first card when mastery view changes
-        // Re-sort so stat values reflect the new mastery view level
-        sortedList = sortOwnedCards(ownedList, sortMode, mastery);
-        await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], mastery, normalFooter(currentPage, sortedList.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, mastery, isSlash)
-        });
-      }
-
-      // ── SEARCH BUTTON (🔍) — opens a modal for the user to type an owned card name ──
+      // ── SEARCH BUTTON (🔍) — opens a modal for the user to type a card name ──
       else if (interaction.customId === 'col_search') {
         const modal = new ModalBuilder()
           .setCustomId('col_search_modal')
@@ -478,19 +471,21 @@ module.exports = {
           );
 
           if (!found) {
-            // Card not in their collection — ephemeral error, embed stays unchanged
+            // Not in their collection — ephemeral error, embed stays unchanged
             await submit.reply({ content: `You don't own a card matching **${query}**.`, flags: 64 });
             return;
           }
 
-          // Enter search mode for this card, starting at M1
-          isSearchMode  = true;
-          searchEntry   = found;
-          searchMastery = 1;
+          // Enter search mode: compute which masteries this user owns for that card
+          isSearchMode         = true;
+          searchEntry          = found;
+          searchOwnedMasteries = getOwnedMasteries(found.copies);
+          searchMasteryIndex   = 0; // Start at the lowest owned mastery
 
+          const mastery = searchOwnedMasteries[searchMasteryIndex];
           await submit.update({
-            embeds:     [buildCardEmbed(searchEntry, searchMastery, searchFooter(searchMastery, searchEntry.card.name), user)],
-            components: buildSearchComponents(searchMastery)
+            embeds:     [buildCardEmbed(searchEntry, mastery, searchFooter(searchMasteryIndex, searchOwnedMasteries.length, searchEntry.card.name), user)],
+            components: buildSearchComponents(searchMasteryIndex, searchOwnedMasteries)
           });
 
         } catch {
@@ -498,15 +493,16 @@ module.exports = {
         }
       }
 
-      // ── BACK BUTTON — exit search mode and return to the sorted collection ──
+      // ── BACK BUTTON — exit search mode and return to the sorted list ──
       else if (interaction.customId === 'col_back') {
-        isSearchMode  = false;
-        searchEntry   = null;
-        searchMastery = 1;
-        currentPage   = 0;
+        isSearchMode         = false;
+        searchEntry          = null;
+        searchOwnedMasteries = [];
+        searchMasteryIndex   = 0;
+        currentPage          = 0;
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], mastery, normalFooter(currentPage, sortedList.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, mastery, isSlash)
+          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
         });
       }
     });
