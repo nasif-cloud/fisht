@@ -7,6 +7,10 @@ const fs   = require('fs');
 // The User model — needed so we can register new accounts automatically
 const User = require('./models/user');
 
+// CommandLock — prevents duplicate command handling when two bot instances
+// are running at the same time. See models/commandLock.js for how it works.
+const CommandLock = require('./models/commandLock');
+
 // Maintenance mode state — shared with the 'down' / 'downall' owner commands.
 // maintenance.active → non-owners blocked; owner still works.
 // maintenance.full   → everyone blocked including owner (except down/downall).
@@ -151,6 +155,18 @@ client.on('interactionCreate', async interaction => {
     return interaction.reply({ content: 'Bot is in Maintenance, come back later', flags: 64 });
   }
 
+  // ── DEDUPLICATION LOCK ──
+  // If two bot instances are running, both receive this event.
+  // Only the first one to insert the lock document will process the command;
+  // the other gets a duplicate-key error (11000) and returns silently.
+  try {
+    await CommandLock.create({ eventId: interaction.id });
+  } catch (lockErr) {
+    if (lockErr.code === 11000) return; // Another instance claimed this event first
+    console.error('[CommandLock] Unexpected error:', lockErr.message);
+    // Non-duplicate errors: log and continue rather than silently dropping the command
+  }
+
   const command = client.commands.get(interaction.commandName);
   if (!command) {
     console.error(`No command matching ${interaction.commandName} was found.`);
@@ -204,6 +220,16 @@ client.on('messageCreate', async (message) => {
   // Look up the command in our loaded collection
   const command = client.commands.get(commandName);
   if (!command) return; // Unrecognised command — do nothing
+
+  // ── DEDUPLICATION LOCK ──
+  // Same logic as the slash handler above — first instance to insert wins,
+  // the other skips silently via duplicate-key error 11000.
+  try {
+    await CommandLock.create({ eventId: message.id });
+  } catch (lockErr) {
+    if (lockErr.code === 11000) return;
+    console.error('[CommandLock] Unexpected error:', lockErr.message);
+  }
 
   // ── MAINTENANCE MODE (prefix) ──
   // 'down' and 'downall' always pass through — the owner needs them to toggle maintenance off.

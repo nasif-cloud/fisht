@@ -2,7 +2,7 @@
 // MANGA COMMAND
 // ─────────────────────────────────────────────
 // A mini-game: the bot shows a random One Piece manga panel and the player
-// has 5 seconds to press Guess, then types the volume number in a popup form.
+// has 10 seconds to press Guess, then types the volume number in a popup form.
 //
 // Rewards based on how close the guess is:
 //   Spot on (0 off)  → 300 Berries
@@ -52,7 +52,7 @@ async function getDominantColor(imageUrl) {
 // CONSTANTS
 // ─────────────────────────────────────────────
 const COOLDOWN_MS  = 20 * 60 * 1000; // 20 minutes in milliseconds
-const GAME_TIME_MS = 1000;           // 5 seconds to press the Guess button
+const GAME_TIME_MS = 10000;           // 10 seconds to press the Guess button
 
 // Beli rewards
 const REWARD_EXACT = 300; // Spot on
@@ -181,12 +181,18 @@ module.exports = {
 
       await interaction.showModal(modal);
 
-      // Wait up to 30 seconds for the player to submit the modal form
+      // Wait for the player to submit the modal form
       try {
         const submit = await interaction.awaitModalSubmit({
           time:   10000,
           filter: i => i.customId === 'manga_modal' && i.user.id === user.id
         });
+
+        // ── CRITICAL: acknowledge the modal submit immediately ──
+        // Discord gives us only 3 seconds to respond before the interaction
+        // expires. deferUpdate() buys us up to 15 minutes to do slow work
+        // (like DB queries) without the embed silently not updating.
+        await submit.deferUpdate();
 
         const rawAnswer  = submit.fields.getTextInputValue('manga_answer').trim();
         const userAnswer = parseInt(rawAnswer, 10);
@@ -198,7 +204,7 @@ module.exports = {
             .setDescription('Better luck next time.')
             .setImage(entry.image)
             .setColor(embedColor);
-          return submit.update({ embeds: [wrongEmbed], components: [] });
+          return submit.editReply({ embeds: [wrongEmbed], components: [] });
         }
 
         // Calculate how far off the guess was
@@ -228,7 +234,9 @@ module.exports = {
           resultDesc = 'Better luck next time.';
         }
 
-        // Add the Berries reward to the player's balance if they earned any
+        // Add the Berries reward to the player's balance if they earned any.
+        // These DB operations happen AFTER deferUpdate, so the 3-second
+        // deadline is no longer a concern.
         if (reward > 0 && userData) {
           userData = await User.findOne({ userId: user.id }); // Re-fetch for fresh balance
           if (userData) {
@@ -237,17 +245,19 @@ module.exports = {
           }
         }
 
-        // Update the embed with the result
+        // Show the result embed — editReply is used because we already deferred
         const resultEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered **${userAnswer}**.`)
           .setDescription(resultDesc)
           .setImage(entry.image)
           .setColor(embedColor);
 
-        await submit.update({ embeds: [resultEmbed], components: [] });
+        await submit.editReply({ embeds: [resultEmbed], components: [] });
 
       } catch {
-        // Modal was dismissed or timed out — show "Times up..." and remove the button
+        // awaitModalSubmit timed out — user dismissed the modal or ran out of time.
+        // Edit the original message directly (response.edit is a plain REST call
+        // with no interaction deadline).
         const timedEmbed = new EmbedBuilder()
           .setTitle('Times up...')
           .setImage(entry.image)
@@ -260,7 +270,7 @@ module.exports = {
       // 'guessed' means the player clicked the button — already handled above
       if (reason === 'guessed') return;
 
-      // Any other reason (usually 'time') means the 5 seconds ran out
+      // Any other reason (usually 'time') means the 10 seconds ran out
       const timedEmbed = new EmbedBuilder()
         .setTitle('Times up...')
         .setImage(entry.image)
