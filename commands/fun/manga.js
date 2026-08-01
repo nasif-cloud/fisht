@@ -256,10 +256,10 @@ module.exports = {
 
       } catch {
         // awaitModalSubmit timed out — user dismissed the modal or ran out of time.
-        // Edit the original message directly (response.edit is a plain REST call
-        // with no interaction deadline).
+        // Show the same result format as a wrong answer (no reward).
         const timedEmbed = new EmbedBuilder()
-          .setTitle('Times up...')
+          .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
+          .setDescription('Better luck next time.')
           .setImage(entry.image)
           .setColor(embedColor);
         await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
@@ -270,9 +270,11 @@ module.exports = {
       // 'guessed' means the player clicked the button — already handled above
       if (reason === 'guessed') return;
 
-      // Any other reason (usually 'time') means the 10 seconds ran out
+      // Any other reason (usually 'time') means the 10 seconds ran out without
+      // the player pressing Guess — treat as a wrong answer (same format, no reward).
       const timedEmbed = new EmbedBuilder()
-        .setTitle('Times up...')
+        .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
+        .setDescription('Better luck next time.')
         .setImage(entry.image)
         .setColor(embedColor);
       await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});

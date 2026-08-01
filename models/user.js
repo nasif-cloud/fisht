@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema({
   // Used to enforce the 20-minute rolling cooldown on the manga command.
   lastMangaClaim: { type: Date, default: null },
 
+  // The timestamp of the last time this user played the Trivia Challenge.
+  // Used to enforce the 20-minute rolling cooldown on the trivia command.
+  lastTriviaClaim: { type: Date, default: null },
+
   // A list of every card the user has collected, with how many copies they own.
   // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, lastObtained: <date> }
   cardCopies: [{

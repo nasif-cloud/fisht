@@ -15,4 +15,7 @@ module.exports = {
 
   // op oreset @user manga → clears lastMangaClaim
   manga: { lastMangaClaim: null },
+
+  // op oreset @user trivia → clears lastTriviaClaim
+  trivia: { lastTriviaClaim: null },
 };
