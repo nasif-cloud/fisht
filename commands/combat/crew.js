@@ -72,11 +72,15 @@ function resolveDisplayTeam(userData, ownedCards) {
 }
 
 function getDisplaySlots(teamEntries) {
-  const slots = [null, null, null];
-  for (let index = 0; index < Math.min(3, teamEntries.length); index++) {
-    slots[index] = teamEntries[index];
-  }
-  return slots;
+  // Always put the highest-power card in the center slot (index 1)
+  // so the strongest card is visually prominent.
+  const sorted = [...teamEntries].sort((a, b) => b.power - a.power);
+
+  if (sorted.length === 0) return [null, null, null];
+  if (sorted.length === 1) return [null, sorted[0], null];
+  if (sorted.length === 2) return [sorted[1], sorted[0], null]; // strongest center, second left
+  // 3 cards: strongest center, second left, third right
+  return [sorted[1], sorted[0], sorted[2]];
 }
 
 function getTeamTotalPower(teamEntries) {
@@ -92,16 +96,16 @@ function getPrefixCommandName(message) {
   return content.split(/ +/)[0]?.toLowerCase() || '';
 }
 
-function truncateText(ctx, text, maxWidth, font) {
-  ctx.font = font;
-  if (ctx.measureText(text).width <= maxWidth) return text;
-
-  let output = text;
-  while (output.length > 0 && ctx.measureText(`${output}...`).width > maxWidth) {
-    output = output.slice(0, -1);
+// Shrink the font size until the text fits within maxWidth.
+// Returns the font size to use — caller must set ctx.font before drawing.
+function fitFontSize(ctx, text, maxWidth, maxPx) {
+  let size = maxPx;
+  ctx.font = `700 ${size}px sans-serif`;
+  while (size > 8 && ctx.measureText(text).width > maxWidth) {
+    size--;
+    ctx.font = `700 ${size}px sans-serif`;
   }
-
-  return output ? `${output}...` : '...';
+  return size;
 }
 
 function roundedRectPath(ctx, x, y, width, height, radius) {
@@ -212,7 +216,7 @@ async function detectFaceCrop(sourceImage) {
 }
 
 async function renderCardSlot(ctx, entry, layout) {
-  const { x, y, size, labelWidth, radius, innerPadding } = layout;
+  const { x, y, size, radius, innerPadding } = layout;
   const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
   const cardName = entry?.card?.name || 'Empty slot';
   const frameShadow = entry ? borderColor : '#25304c';
@@ -263,15 +267,19 @@ async function renderCardSlot(ctx, entry, layout) {
 
     ctx.restore();
 
+    // Draw name label — shrink font until it fully fits, never cut it off
     ctx.save();
+    const nameMaxWidth = innerSize - 12; // 6px padding each side
+    const nameFontSize = fitFontSize(ctx, cardName, nameMaxWidth, 15);
+    const labelHeight = nameFontSize + 14; // padding above and below text
     ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
-    roundedRectPath(ctx, innerX, innerY + innerSize - 34, innerSize, 34, 10);
+    roundedRectPath(ctx, innerX, innerY + innerSize - labelHeight, innerSize, labelHeight, 10);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 15px sans-serif';
+    ctx.font = `700 ${nameFontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(truncateText(ctx, cardName, labelWidth, '700 15px sans-serif'), innerX + innerSize / 2, innerY + innerSize - 17);
+    ctx.fillText(cardName, innerX + innerSize / 2, innerY + innerSize - labelHeight / 2);
     ctx.restore();
   } else {
     ctx.save();
@@ -324,10 +332,13 @@ async function renderTeamImage(teamEntries, username) {
   ctx.fillText(String(totalPower), CANVAS_WIDTH / 2, 118);
   ctx.restore();
 
+  // Layout is centered on the 860px canvas.
+  // Total width: 166 + 24 (gap) + 220 + 24 (gap) + 166 = 600px → start at (860-600)/2 = 130
+  // Middle card center: 130 + 166 + 24 + 110 = 430 = canvas center ✓
   const layout = {
-    left:   { x: 72,  y: 173, size: 166, labelWidth: 170, radius: 30, innerPadding: 12 },
-    middle: { x: 303, y: 135, size: 220, labelWidth: 224, radius: 36, innerPadding: 13 },
-    right:  { x: 606, y: 173, size: 166, labelWidth: 170, radius: 30, innerPadding: 12 }
+    left:   { x: 130, y: 183, size: 166, radius: 30, innerPadding: 12 },
+    middle: { x: 320, y: 145, size: 220, radius: 36, innerPadding: 13 },
+    right:  { x: 564, y: 183, size: 166, radius: 30, innerPadding: 12 }
   };
 
   await renderCardSlot(ctx, slots[0], layout.left);
