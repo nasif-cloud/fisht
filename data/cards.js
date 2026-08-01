@@ -55,9 +55,9 @@ const rankConfig = {
   },
 
   B: {
-    M1: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/xdqege.png' }, // Blue
-    M2: { color: 0x9CA4A2, icon: 'https://files.catbox.moe/emlr0x.png' },
-    M3: { color: 0x1F48FF, icon: 'https://files.catbox.moe/cx05wu.png' }
+    M1: { color: 0x99ACFF, icon: 'https://files.catbox.moe/xdqege.png' }, // Blue
+    M2: { color: 0x5271FF, icon: 'https://files.catbox.moe/emlr0x.png' },
+    M3: { color: 0x2F55FF, icon: 'https://files.catbox.moe/cx05wu.png' }
   },
 
   A: {

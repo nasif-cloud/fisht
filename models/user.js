@@ -52,7 +52,11 @@ const userSchema = new mongoose.Schema({
     cardName:     { type: String, required: true },
     amount:       { type: Number, default: 1 },
     lastObtained: { type: Date,   default: Date.now }
-  }]
+  }],
+
+  // The user's current combat team, stored as card names.
+  // /team and op auto both read and update this list.
+  teamCards: { type: [String], default: [] }
 
 });
 

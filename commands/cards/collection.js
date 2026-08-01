@@ -142,13 +142,6 @@ function normalFooter(page, total, sortMode) {
   return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By copies'}`;
 }
 
-// ─────────────────────────────────────────────
-// HELPER — search-mode footer text
-// Example: "[Monkey D. Luffy]"
-// ─────────────────────────────────────────────
-function searchFooter(cardName) {
-  return `[${cardName}]`;
-}
 
 // ─────────────────────────────────────────────
 // HELPER — components for normal (browsing) mode

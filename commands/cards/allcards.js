@@ -134,7 +134,7 @@ function normalFooter(page, total, sortMode, mastery) {
 // Example: "Card 2/3 - [Monkey D. Luffy]"
 // ─────────────────────────────────────────────
 function searchFooter(mastery, cardName) {
-  return `Card ${mastery}/3 - [${cardName}]`;
+  return `Card ${mastery}/3`;
 }
 
 // ─────────────────────────────────────────────

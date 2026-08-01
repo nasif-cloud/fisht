@@ -267,7 +267,7 @@ module.exports = {
       thumbnail: { url: visualSettings.icon },
       color: visualSettings.color,
       // Footer shows pull count so players always know how many they have left
-      footer: { text: `This card was pulled by ${user.username} · ${userData.pullsUsed}/${PULL_LIMIT} pulls used` },
+      footer: { text: `This card was pulled by ${user.username} · ${userData.pullsUsed}/${PULL_LIMIT}` },
       image: { url: pulledCard.image }
     };
 

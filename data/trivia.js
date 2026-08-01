@@ -10,6 +10,7 @@
 //
 // Source: https://onepiece.fandom.com/wiki/One_Piece_Wiki:One_Piece_Quiz
 // To add more questions, copy the format below and add to the array.
+// keep the option choices short and concise, as the buttons have a character limit. Avoid using emojis in the options, as they may not render properly on all devices.
 
 module.exports = [
   {
@@ -114,7 +115,7 @@ module.exports = [
   },
   {
     question: 'What was the original reason Brogy and Dorry started fighting each other?',
-    options:  ['An unresolved hunting contest', 'An insult to their home islands', 'A rivalry over a woman', 'A dispute over treasure'],
-    answer:   'An unresolved hunting contest'
+    options:  ['unresolved hunting contest', 'insult to their home islands', 'rivalry over a woman', 'dispute over treasure'],
+    answer:   'unresolved hunting contest'
   }
 ];
