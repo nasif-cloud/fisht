@@ -281,7 +281,7 @@ module.exports = {
     }
 
     // ── STEP 3: Set up state ──
-    let sortMode     = slashSort || 'copies'; // Default sort: by copies
+    let sortMode     = slashSort || 'power'; // Default sort: by power
     let currentPage  = 0;
     let isSearchMode = false;
     let searchEntry  = null; // The single owned-card entry shown in search mode

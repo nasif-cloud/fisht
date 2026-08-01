@@ -259,9 +259,9 @@ async function renderTeamImage(teamEntries, username) {
   // Middle card center: 85 + 200 + 20 + 125 = 430 = canvas center ✓
   // Cards start well below the number text (which bottoms out ~y=161) with breathing room.
   const layout = {
-    left:   { x: 85,  y: 210, size: 200, radius: 34, innerPadding: 13 },
-    middle: { x: 305, y: 170, size: 250, radius: 40, innerPadding: 15 },
-    right:  { x: 575, y: 210, size: 200, radius: 34, innerPadding: 13 }
+    left:   { x: 65,  y: 240, size: 200, radius: 34, innerPadding: 13 },
+    middle: { x: 300, y: 195, size: 250, radius: 40, innerPadding: 15 },
+    right:  { x: 585, y: 240, size: 200, radius: 34, innerPadding: 13 }
   };
 
   await renderCardSlot(ctx, slots[0], layout.left);
