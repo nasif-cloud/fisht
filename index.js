@@ -1,4 +1,22 @@
 require('dotenv').config();
+// Ensure a Web Crypto `crypto` is available for libraries (mongodb uses it).
+if (typeof globalThis.crypto === 'undefined') {
+  try {
+    // Prefer Node's WebCrypto if available
+    const { webcrypto } = require('crypto');
+    if (webcrypto) globalThis.crypto = webcrypto;
+  } catch (e) {
+    // Fallback: provide minimal getRandomValues using randomBytes
+    const { randomBytes } = require('crypto');
+    globalThis.crypto = {
+      getRandomValues: (array) => {
+        const buffer = randomBytes(array.length);
+        array.set(buffer);
+        return array;
+      },
+    };
+  }
+}
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const mongoose = require('mongoose');
 const { randomUUID } = require('crypto');
