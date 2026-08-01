@@ -108,7 +108,7 @@ module.exports = {
       const remainingMins  = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
       // Plain text reply (no embed) — shown publicly for prefix, ephemerally for slash
-      const content = `You already claimed your daily. Come back in \`${remainingHours}h ${remainingMins}m\`.`;
+      const content = `You already claimed your daily. Come back in \`${remainingHours}h ${remainingMins}m\``;
 
       if (interactionOrMessage.isChatInputCommand?.()) {
         return interactionOrMessage.reply({ content, flags: 64 }); // ephemeral (only visible to them)
@@ -130,7 +130,7 @@ module.exports = {
       .setTitle('Daily Claimed!')
       .setDescription(
         `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:money:1532532493578928178> Berries!\n` +
-        `Next claim resets at **10:30 PM ET**.`
+        `Next claim resets at **10:30 PM ET**`
       );
 
     if (interactionOrMessage.isChatInputCommand?.()) {

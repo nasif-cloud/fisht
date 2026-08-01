@@ -50,7 +50,7 @@ module.exports = {
     );
 
     if (!card) {
-      const msg = `**${query}** is not a valid card.`;
+      const msg = `**${query}** is not a valid card`;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });
@@ -62,7 +62,7 @@ module.exports = {
     // Check the user actually owns the card
     const owned = userData?.cardCopies?.find(e => e.cardName === card.name && e.amount > 0);
     if (!owned) {
-      const msg = `You don't own **${card.name}**.`;
+      const msg = `You don't own **${card.name}**`;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });
@@ -71,7 +71,7 @@ module.exports = {
     // Check if the card is already on the team
     const team = userData.teamCards || [];
     if (team.includes(card.name)) {
-      const msg = `**${card.name}** is already in your team.`;
+      const msg = `**${card.name}** is already in your team`;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });
@@ -79,7 +79,7 @@ module.exports = {
 
     // Check if the team is already full (3 cards max)
     if (team.length >= 3) {
-      const msg = `Your team is full. Remove a card first with \`teamremove\`.`;
+      const msg = `Your team is full. Remove a card first with \`teamremove\``;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });

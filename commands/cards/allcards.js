@@ -344,7 +344,7 @@ module.exports = {
     collector.on('collect', async (interaction) => {
       // Only the person who ran the command can interact with it
       if (interaction.user.id !== user.id) {
-        return interaction.reply({ content: "This isn't yours.", flags: 64 });
+        return interaction.reply({ content: "This isn't yours", flags: 64 });
       }
 
       // ── NEXT (normal mode: advance to next card) ──

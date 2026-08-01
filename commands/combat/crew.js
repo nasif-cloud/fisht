@@ -408,7 +408,7 @@ module.exports = {
     if (!autoMode && userData.lastTeamTime && (now - userData.lastTeamTime.getTime()) < TEAM_COOLDOWN_MS) {
       const secondsLeft = Math.ceil((TEAM_COOLDOWN_MS - (now - userData.lastTeamTime.getTime())) / 1000);
       const label = secondsLeft === 1 ? 'second' : 'seconds';
-      const content = `Wait **${secondsLeft} ${label}** before checking your team again.`;
+      const content = `Wait **${secondsLeft} ${label}** before checking your team again`;
 
       if (isSlash) {
         return interactionOrMessage.reply({ content, flags: 64 });
@@ -418,7 +418,7 @@ module.exports = {
     }
 
     if (ownedCards.length === 0) {
-      const content = "You don't own any cards yet. Use `op pull` to get some!";
+      const content = "You don't own any cards yet. Use `op pull` to start pulling";
       if (isSlash) {
         return interactionOrMessage.reply({ content, flags: 64 });
       }

@@ -49,7 +49,7 @@ module.exports = {
     );
 
     if (!card) {
-      const msg = `**${query}** is not a valid card.`;
+      const msg = `**${query}** is not a valid card`;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });
@@ -61,7 +61,7 @@ module.exports = {
 
     // Check the card is actually on the team
     if (!team.includes(card.name)) {
-      const msg = `**${card.name}** is not in your team.`;
+      const msg = `**${card.name}** is not in your team`;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });

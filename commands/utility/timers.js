@@ -128,7 +128,7 @@ module.exports = {
 
   // --- PREFIX COMMAND DEFINITION ---
   name: 'timers',
-  aliases: ['cooldowns', 't'], // 'op cooldowns' and 'op t' both work
+  aliases: ['cooldowns', 'cd', 't'],  // 'op cooldowns' and 'op t' both work
   description: 'Shows all active timers and cooldowns.',
 
   async execute(interactionOrMessage) {

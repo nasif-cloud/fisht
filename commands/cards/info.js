@@ -55,7 +55,7 @@ module.exports = {
     );
 
     if (!foundCard) {
-      return interactionOrMessage.reply({ content: `**${query}** is not a valid card.`, allowedMentions: { repliedUser: false } });
+      return interactionOrMessage.reply({ content: `**${query}** is not a valid card`, allowedMentions: { repliedUser: false } });
     }
 
     // --- STEP 3: Set up the mastery tracker ---

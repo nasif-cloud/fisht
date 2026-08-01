@@ -20,8 +20,8 @@ module.exports = [
   },
   {
     question: 'What is the bounty of "Rookie" Rockstar?',
-    options:  ['94,000,000 Beli', '50,000,000 Beli', '120,000,000 Beli', '77,000,000 Beli'],
-    answer:   '94,000,000 Beli'
+    options:  ['94,000,000', '50,000,000', '120,000,000', '77,000,000'],
+    answer:   '94,000,000'
   },
   {
     question: 'Which of the eleven Supernovas ate a Zoan Devil Fruit?',
@@ -69,16 +69,6 @@ module.exports = [
     answer:   'Seven'
   },
   {
-    question: 'Who were Thriller Bark\'s "Mysterious Four"?',
-    options:  [
-      'Gecko Moria, Absalom, Perona & Hogback',
-      'Gecko Moria, Absalom, Perona & Kuma',
-      'Gecko Moria, Lola, Perona & Hogback',
-      'Gecko Moria, Perona, Hogback & Brook'
-    ],
-    answer:   'Gecko Moria, Absalom, Perona & Hogback'
-  },
-  {
     question: 'What was the name of the mayor of Luffy\'s hometown, Foosha Village?',
     options:  ['Woop Slap', 'Mayor Boodle', 'Curly Dadan', 'Tom'],
     answer:   'Woop Slap'
@@ -90,18 +80,13 @@ module.exports = [
   },
   {
     question: 'Among Hatchan, Kaku, Onigumo, and Zoro — who uses the most swords?',
-    options:  ['Onigumo (eight swords)', 'Hatchan (six swords)', 'Zoro (three swords)', 'Kaku (four swords)'],
+    options:  ['Onigumo', 'Hatchan', 'Zoro', 'Kaku'],
     answer:   'Onigumo (eight swords)'
   },
   {
-    question: 'In Mock Town, how did Bellamy lose to Luffy?',
-    options:  ['Knocked out with a single punch', 'Defeated with Gear Second', 'Overwhelmed by Haki', 'Taken down by the whole crew'],
-    answer:   'Knocked out with a single punch'
-  },
-  {
     question: 'How much does Nami charge for seeing her naked?',
-    options:  ['100,000 Beli', '50,000 Beli', '1,000,000 Beli', '200,000 Beli'],
-    answer:   '100,000 Beli'
+    options:  ['100,000', '50,000', '1,000,000', '200,000'],
+    answer:   '100,000'
   },
   {
     question: 'What mythological animal does Pierre (in hybrid form) resemble?',
@@ -113,9 +98,4 @@ module.exports = [
     options:  ['Jinbe', 'Crocodile', 'Doflamingo', 'Mihawk'],
     answer:   'Jinbe'
   },
-  {
-    question: 'What was the original reason Brogy and Dorry started fighting each other?',
-    options:  ['unresolved hunting contest', 'insult to their home islands', 'rivalry over a woman', 'dispute over treasure'],
-    answer:   'unresolved hunting contest'
-  }
 ];

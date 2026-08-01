@@ -210,7 +210,7 @@ module.exports = {
   // Slash command definition (/collection)
   data: new SlashCommandBuilder()
     .setName('collection')
-    .setDescription("Browse the cards you own.")
+    .setDescription("Browse the cards you own")
     .addStringOption(option =>
       option
         .setName('sort')
@@ -275,7 +275,7 @@ module.exports = {
     // If the user has no cards at all, tell them (no ping on prefix)
     if (ownedList.length === 0) {
       return interactionOrMessage.reply({
-        content: "You don't own any cards yet. Use `op pull` to get some!",
+        content: "You don't own any cards yet. Use `op pull` to get start pulling",
         allowedMentions: { repliedUser: false }
       });
     }
@@ -339,7 +339,7 @@ module.exports = {
     collector.on('collect', async (interaction) => {
       // Only the person who ran the command can use the buttons
       if (interaction.user.id !== user.id) {
-        return interaction.reply({ content: "This isn't yours.", flags: 64 });
+        return interaction.reply({ content: "This isn't yours", flags: 64 });
       }
 
       // ── NEXT (normal browse only — search mode has no nav) ──
