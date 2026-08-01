@@ -7,10 +7,14 @@ const fs   = require('fs');
 // The User model — needed so we can register new accounts automatically
 const User = require('./models/user');
 
-// Maintenance mode state — shared with the 'down' owner command.
-// When maintenance.active is true, all commands respond with a maintenance message.
-// Importing the same module object means both files see the same value in memory.
+// Maintenance mode state — shared with the 'down' / 'downall' owner commands.
+// maintenance.active → non-owners blocked; owner still works.
+// maintenance.full   → everyone blocked including owner (except down/downall).
+// Importing the same module object means all files see the same flags in memory.
 const maintenance = require('./data/maintenance');
+
+// The bot owner's Discord user ID — used to allow owner through normal maintenance.
+const OWNER_ID = '1257718161298690119';
 
 // ─────────────────────────────────────────────
 // ACCOUNT REGISTRATION
@@ -137,9 +141,13 @@ client.on('interactionCreate', async interaction => {
   // — those are handled inside their own command files via collectors.
   if (!interaction.isChatInputCommand()) return;
 
-  // ── MAINTENANCE MODE ──
-  // When the bot owner runs "op down", all commands are blocked until they run it again.
-  if (maintenance.active) {
+  // ── MAINTENANCE MODE (slash) ──
+  // full=true  → block everyone, no exceptions for slash commands
+  // active=true → block non-owners only
+  if (maintenance.full) {
+    return interaction.reply({ content: 'Bot is in Maintenance, come back later', flags: 64 });
+  }
+  if (maintenance.active && interaction.user.id !== OWNER_ID) {
     return interaction.reply({ content: 'Bot is in Maintenance, come back later', flags: 64 });
   }
 
@@ -197,13 +205,18 @@ client.on('messageCreate', async (message) => {
   const command = client.commands.get(commandName);
   if (!command) return; // Unrecognised command — do nothing
 
-  // ── MAINTENANCE MODE ──
-  // Block all prefix commands when maintenance is active.
-  // Exception: 'down' is the owner command that TURNS OFF maintenance, so it must
-  // always be allowed through — otherwise the owner can't resume the bot.
-  // allowedMentions: { repliedUser: false } prevents the bot from pinging the user.
-  if (maintenance.active && commandName !== 'down') {
-    return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
+  // ── MAINTENANCE MODE (prefix) ──
+  // 'down' and 'downall' always pass through — the owner needs them to toggle maintenance off.
+  // full=true  → block everyone except those two commands
+  // active=true → block non-owners (owner can still run everything)
+  const maintenancePassthrough = ['down', 'downall'];
+  if (!maintenancePassthrough.includes(commandName)) {
+    if (maintenance.full) {
+      return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
+    }
+    if (maintenance.active && message.author.id !== OWNER_ID) {
+      return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
+    }
   }
 
   try {

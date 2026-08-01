@@ -26,8 +26,27 @@ const {
   TextInputStyle
 } = require('discord.js');
 
+const { Vibrant } = require('node-vibrant/node'); // v4 named import
+
 const mangaPool = require('../../data/manga');
 const User      = require('../../models/user');
+
+// ─────────────────────────────────────────────
+// HELPER — extract dominant hex color from an image URL
+// Falls back to a random color if the URL is a placeholder or the fetch fails.
+// ─────────────────────────────────────────────
+async function getDominantColor(imageUrl) {
+  try {
+    const palette = await Vibrant.from(imageUrl).getPalette();
+    // palette.Vibrant is the most visually prominent swatch
+    const hex = palette.Vibrant?.hex;
+    if (hex) return parseInt(hex.replace('#', ''), 16);
+  } catch {
+    // Network error, bad URL, or unsupported image format — fall through
+  }
+  // Fallback: random colour so the embed isn't always plain white
+  return Math.floor(Math.random() * 0xFFFFFF);
+}
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -94,6 +113,11 @@ module.exports = {
     // ── STEP 3: PICK A RANDOM MANGA ENTRY ──
     const entry = mangaPool[Math.floor(Math.random() * mangaPool.length)];
 
+    // ── STEP 3b: EXTRACT DOMINANT COLOR ──
+    // Reads the image and pulls out the most prominent colour so the embed
+    // matches the panel's art style. Falls back to a random colour on error.
+    const embedColor = await getDominantColor(entry.image);
+
     // ── STEP 4: BUILD THE INITIAL EMBED ──
     const activeEmbed = new EmbedBuilder()
       .setTitle('Manga Challenge')
@@ -102,7 +126,7 @@ module.exports = {
         'Be quick, you only have `10 seconds`.'
       )
       .setImage(entry.image)  // The manga panel from data/manga.js
-      .setColor(0xFFFFFF);
+      .setColor(embedColor);
 
     // Blue "Guess" button — clicking this opens the number input form
     const guessBtn = new ButtonBuilder()
@@ -173,7 +197,7 @@ module.exports = {
             .setTitle(`The answer was **${entry.answer}**, you answered **${rawAnswer}**.`)
             .setDescription('Better luck next time.')
             .setImage(entry.image)
-            .setColor(0xFFFFFF);
+            .setColor(embedColor);
           return submit.update({ embeds: [wrongEmbed], components: [] });
         }
 
@@ -218,7 +242,7 @@ module.exports = {
           .setTitle(`The answer was **${entry.answer}**, you answered **${userAnswer}**.`)
           .setDescription(resultDesc)
           .setImage(entry.image)
-          .setColor(0xFFFFFF);
+          .setColor(embedColor);
 
         await submit.update({ embeds: [resultEmbed], components: [] });
 
@@ -227,7 +251,7 @@ module.exports = {
         const timedEmbed = new EmbedBuilder()
           .setTitle('Times up...')
           .setImage(entry.image)
-          .setColor(0xFFFFFF);
+          .setColor(embedColor);
         await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
       }
     });
@@ -240,7 +264,7 @@ module.exports = {
       const timedEmbed = new EmbedBuilder()
         .setTitle('Times up...')
         .setImage(entry.image)
-        .setColor(0xFFFFFF);
+        .setColor(embedColor);
       await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
     });
   }

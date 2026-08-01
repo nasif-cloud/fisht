@@ -19,7 +19,10 @@ module.exports = {
       'op nomeat @user [amount]        — remove Meat from a user',
       'op ocard @user [cardname] [amount]   — give card copies (name/alias search)',
       'op nocard @user [cardname] [amount]  — remove card copies (name/alias search)',
-      'op olist                         — show this list',
+      'op oreset @user [command]            — reset a user\'s rolling cooldown (daily, manga)',
+      'op down                              — toggle normal maintenance (owner still works)',
+      'op downall                           — toggle hard lockdown (blocks everyone)',
+      'op olist                             — show this list',
       '',
       'Notes:',
       '• All commands are prefix-only.',
@@ -27,6 +30,7 @@ module.exports = {
       '• Failure = no-ping reply with the error message.',
       '• Cards are searched by name/alias, not mastery title.',
       '• Balance/meat cannot go below 0.',
+      '• oreset only clears personal rolling cooldowns, not global pull resets.',
     ].join('\n');
 
     // Reply without pinging
