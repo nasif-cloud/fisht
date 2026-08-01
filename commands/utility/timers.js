@@ -124,7 +124,7 @@ module.exports = {
   // --- SLASH COMMAND DEFINITION ---
   data: new SlashCommandBuilder()
     .setName('timers')
-    .setDescription('Check your active cooldowns and reset timers.'),
+    .setDescription('Check your active cooldowns'),
 
   // --- PREFIX COMMAND DEFINITION ---
   name: 'timers',

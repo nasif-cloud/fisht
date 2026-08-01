@@ -160,7 +160,7 @@ function buildNormalComponents(total, page, sortMode, isSlash) {
     // 🔍 Search button — opens a modal to find a specific owned card
     new ButtonBuilder()
       .setCustomId('col_search')
-      .setLabel('<:magnifyingglass:1532884937294741645>')
+      .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('col_prev')
@@ -221,7 +221,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('sort')
-        .setDescription('How to sort your collection (default: by copies) — cannot use with card')
+        .setDescription('Sort by a specific filter')
         .setRequired(false)
         .addChoices(
           { name: 'By copies', value: 'copies' },
@@ -234,7 +234,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('card')
-        .setDescription('Jump to a specific card you own (cannot be used with sort)')
+        .setDescription('Search for a specific card')
         .setRequired(false)
     ),
 

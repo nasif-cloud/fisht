@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const mongoose = require('mongoose');
+const { randomUUID } = require('crypto');
 const path = require('path');
 const fs   = require('fs');
 
@@ -11,6 +12,11 @@ const User = require('./models/user');
 // are running at the same time. See models/commandLock.js for how it works.
 const CommandLock = require('./models/commandLock');
 
+// ServiceLease — keeps only one bot service actively handling commands.
+// A newer service can take over from an older one immediately, and older
+// services stop responding once they notice they no longer own the lease.
+const ServiceLease = require('./models/serviceLease');
+
 // Maintenance mode state — shared with the 'down' / 'downall' owner commands.
 // maintenance.active → non-owners blocked; owner still works.
 // maintenance.full   → everyone blocked including owner (except down/downall).
@@ -19,6 +25,13 @@ const maintenance = require('./data/maintenance');
 
 // The bot owner's Discord user ID — used to allow owner through normal maintenance.
 const OWNER_ID = '1257718161298690119';
+const SERVICE_LEASE_ID = 'fisht-command-handler';
+const SERVICE_LEASE_HEARTBEAT_MS = 5000;
+const SERVICE_LEASE_STALE_MS = 15000;
+const SERVICE_INSTANCE_ID = randomUUID();
+const SERVICE_STARTED_AT = new Date();
+let leaseHeartbeatTimer = null;
+let serviceLeaseOwned = false;
 
 // ─────────────────────────────────────────────
 // ACCOUNT REGISTRATION
@@ -81,6 +94,102 @@ async function registerAccount(discordUser) {
   }
 }
 
+async function claimServiceLease() {
+  const now = new Date();
+  const staleBefore = new Date(now.getTime() - SERVICE_LEASE_STALE_MS);
+
+  const claimFilter = {
+    _id: SERVICE_LEASE_ID,
+    $or: [
+      { leaderId: SERVICE_INSTANCE_ID },
+      { heartbeatAt: { $lt: staleBefore } },
+      { startedAt: { $lt: SERVICE_STARTED_AT } },
+      { startedAt: SERVICE_STARTED_AT, instanceId: { $lt: SERVICE_INSTANCE_ID } },
+    ],
+  };
+
+  const claimUpdate = {
+    $set: {
+      leaderId: SERVICE_INSTANCE_ID,
+      instanceId: SERVICE_INSTANCE_ID,
+      startedAt: SERVICE_STARTED_AT,
+      heartbeatAt: now,
+      updatedAt: now,
+    },
+    $setOnInsert: {
+      _id: SERVICE_LEASE_ID,
+    },
+  };
+
+  const updateResult = await ServiceLease.updateOne(claimFilter, claimUpdate);
+  if (updateResult.matchedCount > 0) {
+    return true;
+  }
+
+  try {
+    await ServiceLease.create({
+      _id: SERVICE_LEASE_ID,
+      leaderId: SERVICE_INSTANCE_ID,
+      instanceId: SERVICE_INSTANCE_ID,
+      startedAt: SERVICE_STARTED_AT,
+      heartbeatAt: now,
+      updatedAt: now,
+    });
+    return true;
+  } catch (error) {
+    if (error.code === 11000) {
+      const retryResult = await ServiceLease.updateOne(claimFilter, claimUpdate);
+      return retryResult.matchedCount > 0;
+    }
+
+    throw error;
+  }
+}
+
+async function hasServiceLease() {
+  const lease = await ServiceLease.findById(SERVICE_LEASE_ID).lean();
+  return Boolean(
+    lease &&
+    lease.leaderId === SERVICE_INSTANCE_ID &&
+    lease.instanceId === SERVICE_INSTANCE_ID
+  );
+}
+
+async function maintainServiceLease() {
+  try {
+    if (leaseHeartbeatTimer) {
+      clearInterval(leaseHeartbeatTimer);
+    }
+
+    leaseHeartbeatTimer = setInterval(async () => {
+      try {
+        const ownsLease = await claimServiceLease();
+        if (ownsLease && !serviceLeaseOwned) {
+          console.log('[ServiceLease] Gained leadership');
+        }
+
+        if (!ownsLease && serviceLeaseOwned) {
+          console.warn('[ServiceLease] Lost leadership, pausing command handling');
+        }
+
+        serviceLeaseOwned = ownsLease;
+      } catch (error) {
+        console.error('[ServiceLease] Heartbeat error:', error.message);
+      }
+    }, SERVICE_LEASE_HEARTBEAT_MS);
+
+    leaseHeartbeatTimer.unref?.();
+
+    serviceLeaseOwned = await claimServiceLease();
+    if (serviceLeaseOwned) {
+      console.log('[ServiceLease] Gained leadership');
+    }
+  } catch (error) {
+    console.error('[ServiceLease] Failed to claim lease:', error.message);
+    throw error;
+  }
+}
+
 // ─────────────────────────────────────────────
 // DISCORD CLIENT SETUP
 // ─────────────────────────────────────────────
@@ -108,6 +217,8 @@ async function startBot() {
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Successfully connected to MongoDB Atlas!');
+
+    await maintainServiceLease();
 
     console.log('Logging in to Discord...');
     await client.login(process.env.DISCORD_TOKEN);
@@ -144,6 +255,10 @@ client.on('interactionCreate', async interaction => {
   // Ignore anything that isn't a slash command (e.g. buttons, dropdowns)
   // — those are handled inside their own command files via collectors.
   if (!interaction.isChatInputCommand()) return;
+
+  // Only the current lease holder is allowed to process commands.
+  // If a newer deployment took over, older services stop here.
+  if (!(await hasServiceLease())) return;
 
   // ── MAINTENANCE MODE (slash) ──
   // full=true  → block everyone, no exceptions for slash commands
@@ -206,6 +321,10 @@ client.on('interactionCreate', async interaction => {
 client.on('messageCreate', async (message) => {
   // Ignore bots and DMs — prefix commands only work in servers
   if (message.author.bot || !message.guild) return;
+
+  // Only the current lease holder is allowed to process commands.
+  // If a newer deployment took over, older services stop here.
+  if (!(await hasServiceLease())) return;
 
   const prefix = 'op'; // The prefix the bot listens for
 

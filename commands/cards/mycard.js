@@ -12,7 +12,7 @@ module.exports = {
   // This shows up when a user types /mycard in Discord
   data: new SlashCommandBuilder()
     .setName('mycard')
-    .setDescription('View a card you own at your current mastery level')
+    .setDescription('Check info about a card you own')
     .addStringOption(option =>
       option.setName('query').setDescription('Name or alias of the card').setRequired(true)
     ),

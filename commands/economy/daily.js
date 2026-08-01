@@ -78,7 +78,7 @@ module.exports = {
   // --- SLASH COMMAND DEFINITION ---
   data: new SlashCommandBuilder()
     .setName('daily')
-    .setDescription('Claim your daily Berries reward.'),
+    .setDescription('Claim your daily Rewards'),
 
   // --- PREFIX COMMAND DEFINITION ---
   name: 'daily',

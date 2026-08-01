@@ -4,7 +4,7 @@ module.exports = {
     // slash command
     data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('See a list of commands.'),
+    .setDescription('See a list of commands (not all of them work)'),
 
     // prefix command
     name: 'help',

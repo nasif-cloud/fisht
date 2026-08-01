@@ -72,7 +72,7 @@ module.exports = {
   // Slash command definition (/eat)
   data: new SlashCommandBuilder()
     .setName('eat')
-    .setDescription(`Use ${EAT_COST} Meat to reset your pulls for this window.`),
+    .setDescription(`Reset your pull count`),
 
   // Prefix command definition (op eat)
   name: 'eat',

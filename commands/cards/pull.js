@@ -155,12 +155,12 @@ module.exports = {
   // Slash command definition (/pull)
   data: new SlashCommandBuilder()
     .setName('pull')
-    .setDescription('Pull a random card.'),
+    .setDescription('Pull a random card'),
 
   // Prefix command definition (op pull / op p)
   name: 'pull',
   aliases: ['p'],
-  description: 'Pull a random card.',
+  description: 'Pull a random card',
 
   async execute(interactionOrMessage) {
     const user = interactionOrMessage.user || interactionOrMessage.author;

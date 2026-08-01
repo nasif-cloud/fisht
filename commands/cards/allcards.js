@@ -147,7 +147,7 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
     // 🔍 Search button — opens a modal to search by card name
     new ButtonBuilder()
       .setCustomId('ac_search')
-      .setLabel('<:magnifyingglass:1532884937294741645>')
+      .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
     // Previous card
     new ButtonBuilder()
@@ -226,11 +226,11 @@ module.exports = {
   // Slash command definition (/allcards)
   data: new SlashCommandBuilder()
     .setName('allcards')
-    .setDescription('Browse all cards in the game.')
+    .setDescription('See a list of all the all the cards.')
     .addStringOption(option =>
       option
         .setName('sort')
-        .setDescription('How to sort the card list (default: by power)')
+        .setDescription('Sort by a specific filter')
         .setRequired(false)
         .addChoices(
           { name: 'By health', value: 'health' },
@@ -242,7 +242,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('mastery')
-        .setDescription('Which mastery level to display (default: M1)')
+        .setDescription('Sort by a specific mastery level')
         .setRequired(false)
         .addChoices(
           { name: "Only M1's", value: '1' },
@@ -253,7 +253,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('card')
-        .setDescription('Search for a specific card (cannot be used with sort or mastery)')
+        .setDescription('Search for a specific card')
         .setRequired(false)
     ),
 

@@ -125,7 +125,7 @@ function buildComponents(list, page, mode) {
       .setDisabled(page >= totalPages - 1), // Can't go past the last page
     new ButtonBuilder()
       .setCustomId('copies_search')
-      .setLabel('<:magnifyingglass:1532884937294741645>')
+      .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -174,7 +174,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('sort')
-        .setDescription('Sort your collection (returns a static result, no buttons)')
+        .setDescription('Sort by a specific filter')
         .setRequired(false)
         .addChoices(
           { name: 'By amount', value: 'amount' },
@@ -185,7 +185,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('card')
-        .setDescription('Show copies of a specific card (returns a static result, no buttons)')
+        .setDescription('Search for a specific card')
         .setRequired(false)
     ),
 

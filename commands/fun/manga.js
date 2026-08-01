@@ -26,21 +26,151 @@ const {
   TextInputStyle
 } = require('discord.js');
 
-const { Vibrant } = require('node-vibrant/node'); // v4 named import
+const zlib = require('node:zlib');
 
 const mangaPool = require('../../data/manga');
 const User      = require('../../models/user');
 
 // ─────────────────────────────────────────────
-// HELPER — extract dominant hex color from an image URL
-// Falls back to a random color if the URL is a placeholder or the fetch fails.
+// HELPER — extract dominant hex color from a PNG image URL.
+// Falls back to a random color if the fetch fails or the image is not a PNG.
 // ─────────────────────────────────────────────
 async function getDominantColor(imageUrl) {
   try {
-    const palette = await Vibrant.from(imageUrl).getPalette();
-    // palette.Vibrant is the most visually prominent swatch
-    const hex = palette.Vibrant?.hex;
-    if (hex) return parseInt(hex.replace('#', ''), 16);
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Image request failed with status ${response.status}`);
+    }
+
+    const imageBuffer = Buffer.from(await response.arrayBuffer());
+    if (imageBuffer.length < 8 || !imageBuffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+      throw new Error('Unsupported image format');
+    }
+
+    const chunks = [];
+    let offset = 8;
+    let width = 0;
+    let height = 0;
+    let bitDepth = 0;
+    let colorType = 0;
+
+    while (offset < imageBuffer.length) {
+      const length = imageBuffer.readUInt32BE(offset);
+      const type = imageBuffer.toString('ascii', offset + 4, offset + 8);
+      const dataStart = offset + 8;
+      const dataEnd = dataStart + length;
+
+      if (type === 'IHDR') {
+        width = imageBuffer.readUInt32BE(dataStart);
+        height = imageBuffer.readUInt32BE(dataStart + 4);
+        bitDepth = imageBuffer[dataStart + 8];
+        colorType = imageBuffer[dataStart + 9];
+      } else if (type === 'IDAT') {
+        chunks.push(imageBuffer.subarray(dataStart, dataEnd));
+      } else if (type === 'IEND') {
+        break;
+      }
+
+      offset = dataEnd + 4;
+    }
+
+    if (!width || !height || bitDepth !== 8 || (colorType !== 2 && colorType !== 6)) {
+      throw new Error('Unsupported PNG encoding');
+    }
+
+    const inflated = zlib.inflateSync(Buffer.concat(chunks));
+    const bytesPerPixel = colorType === 6 ? 4 : 3;
+    const rowSize = width * bytesPerPixel;
+    const histogram = new Map();
+    const previousRow = Buffer.alloc(rowSize);
+    let inputOffset = 0;
+
+    function unfilterSub(row, bpp) {
+      for (let i = bpp; i < row.length; i += 1) {
+        row[i] = (row[i] + row[i - bpp]) & 0xff;
+      }
+    }
+
+    function unfilterUp(row, prior) {
+      for (let i = 0; i < row.length; i += 1) {
+        row[i] = (row[i] + prior[i]) & 0xff;
+      }
+    }
+
+    function paethPredictor(left, up, upLeft) {
+      const p = left + up - upLeft;
+      const pa = Math.abs(p - left);
+      const pb = Math.abs(p - up);
+      const pc = Math.abs(p - upLeft);
+      if (pa <= pb && pa <= pc) return left;
+      if (pb <= pc) return up;
+      return upLeft;
+    }
+
+    for (let y = 0; y < height; y += 1) {
+      const filterType = inflated[inputOffset];
+      inputOffset += 1;
+      const row = Buffer.from(inflated.subarray(inputOffset, inputOffset + rowSize));
+      inputOffset += rowSize;
+
+      switch (filterType) {
+        case 0:
+          break;
+        case 1:
+          unfilterSub(row, bytesPerPixel);
+          break;
+        case 2:
+          unfilterUp(row, previousRow);
+          break;
+        case 3:
+          for (let i = 0; i < row.length; i += 1) {
+            const left = i >= bytesPerPixel ? row[i - bytesPerPixel] : 0;
+            const up = previousRow[i];
+            row[i] = (row[i] + Math.floor((left + up) / 2)) & 0xff;
+          }
+          break;
+        case 4:
+          for (let i = 0; i < row.length; i += 1) {
+            const left = i >= bytesPerPixel ? row[i - bytesPerPixel] : 0;
+            const up = previousRow[i];
+            const upLeft = i >= bytesPerPixel ? previousRow[i - bytesPerPixel] : 0;
+            row[i] = (row[i] + paethPredictor(left, up, upLeft)) & 0xff;
+          }
+          break;
+        default:
+          throw new Error(`Unsupported PNG filter ${filterType}`);
+      }
+
+      row.copy(previousRow);
+
+      for (let i = 0; i < row.length; i += bytesPerPixel) {
+        const alpha = colorType === 6 ? row[i + 3] : 255;
+        if (alpha < 32) continue;
+
+        const red = row[i];
+        const green = row[i + 1];
+        const blue = row[i + 2];
+        const key = `${red >> 3},${green >> 3},${blue >> 3}`;
+        histogram.set(key, (histogram.get(key) || 0) + 1);
+      }
+    }
+
+    let bestKey = null;
+    let bestCount = 0;
+    for (const [key, count] of histogram.entries()) {
+      if (count > bestCount) {
+        bestKey = key;
+        bestCount = count;
+      }
+    }
+
+    if (bestKey) {
+      const [red5, green5, blue5] = bestKey.split(',').map(Number);
+      const red = (red5 << 3) | (red5 >> 2);
+      const green = (green5 << 3) | (green5 >> 2);
+      const blue = (blue5 << 3) | (blue5 >> 2);
+      return (red << 16) | (green << 8) | blue;
+    }
   } catch {
     // Network error, bad URL, or unsupported image format — fall through
   }
@@ -75,7 +205,7 @@ module.exports = {
   // Slash command definition (/manga)
   data: new SlashCommandBuilder()
     .setName('manga')
-    .setDescription('Guess the One Piece volume from the manga panel!'),
+    .setDescription('Guess the One Piece volume from the manga cover'),
 
   // Prefix command definition
   name: 'manga',

@@ -7,7 +7,7 @@ module.exports = {
   // --- SLASH COMMAND DEFINITION ---
   data: new SlashCommandBuilder()
     .setName('balance')
-    .setDescription("Check your wallet — see your Berries and Meat."),
+    .setDescription("Check your balance"),
 
   // --- PREFIX COMMAND DEFINITION ---
   name: 'balance',
@@ -31,7 +31,7 @@ module.exports = {
     // Build the embed object
     // The whitearrow emoji acts as a bullet point before each line
     const embed = {
-      title: `${user.username}'s Wallet`,
+      title: `${user.username}'s Balance`,
       description:
         `<:whitearrow:1532531439445344547> Berries: **${berriesFormatted}** <:money:1532532493578928178>\n` +
         `<:whitearrow:1532531439445344547> Meat: **${meatFormatted}** <:meatrbg:1532524176701657248>`,

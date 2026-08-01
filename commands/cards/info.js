@@ -12,7 +12,7 @@ module.exports = {
     .setName('info')
     .setDescription('Check info about a card')
     .addStringOption(option =>
-      option.setName('query').setDescription('Name or alias').setRequired(true)
+      option.setName('query').setDescription('Name').setRequired(true)
     ),
 
   // --- PREFIX COMMAND DEFINITION ---
