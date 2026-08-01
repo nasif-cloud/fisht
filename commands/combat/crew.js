@@ -144,7 +144,15 @@ function getSmartCrop(img) {
   };
 }
 
-async function renderCardSlot(ctx, entry, layout) {
+// Pre-load a card's image. Returns null for empty slots so callers can check easily.
+async function loadCardImage(entry) {
+  if (!entry) return null;
+  return loadImage(await fetchImageBuffer(entry.card.image));
+}
+
+// renderCardSlot now accepts an already-loaded sourceImage (or null for empty slots)
+// so all network work can be done in parallel before any drawing starts.
+function renderCardSlot(ctx, entry, sourceImage, layout) {
   const { x, y, size, radius, innerPadding } = layout;
   const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
   const cardName = entry?.card?.name || 'Empty slot';
@@ -171,8 +179,7 @@ async function renderCardSlot(ctx, entry, layout) {
   ctx.stroke();
   ctx.restore();
 
-  if (entry) {
-    const sourceImage = await loadImage(await fetchImageBuffer(entry.card.image));
+  if (entry && sourceImage) {
     const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
     const innerX = x + innerPadding;
     const innerY = y + innerPadding;
@@ -214,7 +221,6 @@ async function renderCardSlot(ctx, entry, layout) {
     ctx.fillText('Empty slot', x + size / 2, y + size / 2);
     ctx.restore();
   }
-
 }
 
 async function renderTeamImage(teamEntries, username) {
@@ -259,14 +265,22 @@ async function renderTeamImage(teamEntries, username) {
   // Middle card center: 85 + 200 + 20 + 125 = 430 = canvas center ✓
   // Cards start well below the number text (which bottoms out ~y=161) with breathing room.
   const layout = {
-    left:   { x: 65,  y: 240, size: 200, radius: 34, innerPadding: 13 },
-    middle: { x: 300, y: 195, size: 250, radius: 40, innerPadding: 15 },
-    right:  { x: 585, y: 240, size: 200, radius: 34, innerPadding: 13 }
+    left:   { x: 40,  y: 225, size: 215, radius: 34, innerPadding: 13 },
+    middle: { x: 293, y: 190, size: 270, radius: 40, innerPadding: 15 },
+    right:  { x: 595, y: 225, size: 215, radius: 34, innerPadding: 13 }
   };
 
-  await renderCardSlot(ctx, slots[0], layout.left);
-  await renderCardSlot(ctx, slots[1], layout.middle);
-  await renderCardSlot(ctx, slots[2], layout.right);
+  // Fetch all card images in parallel — one round-trip instead of three sequential ones.
+  const [imgLeft, imgMiddle, imgRight] = await Promise.all([
+    loadCardImage(slots[0]),
+    loadCardImage(slots[1]),
+    loadCardImage(slots[2])
+  ]);
+
+  // Drawing is synchronous (no more awaits needed inside renderCardSlot)
+  renderCardSlot(ctx, slots[0], imgLeft,   layout.left);
+  renderCardSlot(ctx, slots[1], imgMiddle, layout.middle);
+  renderCardSlot(ctx, slots[2], imgRight,  layout.right);
 
   return canvas.toBuffer('image/png');
 }
@@ -297,17 +311,17 @@ function teamMatchesBestPossible(teamCards, ownedCards) {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('crew')
-    .setDescription('Show your 3 card crew'),
+    .setName('team')
+    .setDescription('Show your 3 card team'),
 
-  name: 'crew',
-  aliases: ['crew', 'autocrew', 'auto'],
+  name: 'team',
+  aliases: ['team', 'autoteam', 'auto'],
 
   async execute(interactionOrMessage) {
     const user = interactionOrMessage.user || interactionOrMessage.author;
     const isSlash = interactionOrMessage.isChatInputCommand?.();
-    const prefixCommandName = isSlash ? 'crew' : getPrefixCommandName(interactionOrMessage);
-    const autoMode = !isSlash && (prefixCommandName === 'autocrew' || prefixCommandName === 'auto');
+    const prefixCommandName = isSlash ? 'team' : getPrefixCommandName(interactionOrMessage);
+    const autoMode = !isSlash && (prefixCommandName === 'autoteam' || prefixCommandName === 'auto');
 
     const userData = await User.findOne({ userId: user.id }) || new User({ userId: user.id });
     const ownedCards = buildOwnedCardPool(userData);
@@ -342,11 +356,15 @@ module.exports = {
       return;
     }
 
+    // Defer the slash reply immediately so Discord doesn't time out during
+    // the image fetch + canvas render (which can take a couple of seconds).
+    if (isSlash) await interactionOrMessage.deferReply();
+
     const teamEntries = resolveDisplayTeam(userData, ownedCards);
     const payload = await buildTeamPayload(user, teamEntries);
 
     if (isSlash) {
-      return interactionOrMessage.reply(payload);
+      return interactionOrMessage.editReply(payload);
     }
     return interactionOrMessage.channel.send({ ...payload, allowedMentions: { repliedUser: false } });
   }

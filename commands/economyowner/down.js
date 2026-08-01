@@ -22,6 +22,6 @@ module.exports = {
     maintenance.active = !maintenance.active;
 
     // React with a green checkmark to confirm the change
-    await message.react('✅');
+    await message.react('<:Success:1533154745731256531>');
   }
 };

@@ -79,7 +79,7 @@ module.exports = {
 
     // Check if the team is already full (3 cards max)
     if (team.length >= 3) {
-      const msg = `Your team is full (3/3). Remove a card first with \`op teamremove\` or \`/teamremove\`.`;
+      const msg = `Your team is full. Remove a card first with \`teamremove\`.`;
       return isSlash
         ? interactionOrMessage.reply({ content: msg, flags: 64 })
         : interactionOrMessage.reply({ content: msg, allowedMentions: { repliedUser: false } });
@@ -91,8 +91,8 @@ module.exports = {
 
     // ── Success: react ✅ for prefix, ephemeral ✅ for slash ──
     if (isSlash) {
-      return interactionOrMessage.reply({ content: '✅', flags: 64 });
+      return interactionOrMessage.reply({ content: '<:Success:1533154745731256531>', flags: 64 });
     }
-    await interactionOrMessage.react('✅');
+    await interactionOrMessage.react('<:Success:1533154745731256531>');
   }
 };

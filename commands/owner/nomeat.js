@@ -31,6 +31,6 @@ module.exports = {
     userData.meat = Math.max(0, userData.meat - amount);
     await userData.save();
 
-    await message.react('✅');
+    await message.react('<:Success:1533154745731256531>');
   }
 };

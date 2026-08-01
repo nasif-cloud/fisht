@@ -37,6 +37,6 @@ module.exports = {
     await userData.save();
 
     // React with a green checkmark to confirm success — no text reply
-    await message.react('✅');
+    await message.react('<:Success:1533154745731256531>');
   }
 };

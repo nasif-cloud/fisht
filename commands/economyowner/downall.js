@@ -24,6 +24,6 @@ module.exports = {
     maintenance.full = !maintenance.full;
 
     // React with ✅ to confirm
-    await message.react('✅');
+    await message.react('<:Success:1533154745731256531>');
   }
 };

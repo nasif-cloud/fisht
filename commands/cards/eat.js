@@ -129,7 +129,7 @@ module.exports = {
     if (isSlash) {
       return interactionOrMessage.reply({ content: 'Your pulls have been reset', flags: 64 });
     } else {
-      await interactionOrMessage.react('✅');
+      await interactionOrMessage.react('<:Success:1533154745731256531>');
     }
   }
 };

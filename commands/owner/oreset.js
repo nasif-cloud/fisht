@@ -72,6 +72,6 @@ module.exports = {
     }
 
     // React with ✅ to confirm — same style as the other owner commands
-    await message.react('✅');
+    await message.react('<:Success:1533154745731256531>');
   }
 };

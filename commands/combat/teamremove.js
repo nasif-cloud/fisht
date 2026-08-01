@@ -73,8 +73,8 @@ module.exports = {
 
     // ── Success: react ✅ for prefix, ephemeral ✅ for slash ──
     if (isSlash) {
-      return interactionOrMessage.reply({ content: '✅', flags: 64 });
+      return interactionOrMessage.reply({ content: '<:Success:1533154745731256531>', flags: 64 });
     }
-    await interactionOrMessage.react('✅');
+    await interactionOrMessage.react('<:Success:1533154745731256531>');
   }
 };

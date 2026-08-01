@@ -26,7 +26,7 @@ module.exports = {
       '',
       'Notes:',
       '• All commands are prefix-only.',
-      '• Success = green ✅ reaction, no reply.',
+      '• Success = green <:Success:1533154745731256531> reaction, no reply.',
       '• Failure = no-ping reply with the error message.',
       '• Cards are searched by name/alias, not mastery title.',
       '• Balance/meat cannot go below 0.',

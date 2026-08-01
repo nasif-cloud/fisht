@@ -31,6 +31,6 @@ module.exports = {
     userData.balance = Math.max(0, userData.balance - amount);
     await userData.save();
 
-    await message.react('✅');
+    await message.react('<:Success:1533154745731256531>');
   }
 };
