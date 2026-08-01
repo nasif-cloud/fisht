@@ -209,7 +209,7 @@ module.exports = {
 
   // Prefix command definition
   name: 'manga',
-  aliases: ['mg'],
+  aliases: ['m'],
 
   async execute(interactionOrMessage) {
     const user    = interactionOrMessage.user || interactionOrMessage.author;

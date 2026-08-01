@@ -71,6 +71,7 @@ module.exports = {
 
   // Prefix command definition
   name: 'trivia',
+  aliases: ['t'],
 
   async execute(interactionOrMessage) {
     const user    = interactionOrMessage.user || interactionOrMessage.author;
