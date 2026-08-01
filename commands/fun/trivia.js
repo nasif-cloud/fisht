@@ -67,7 +67,7 @@ module.exports = {
   // Slash command definition (/trivia)
   data: new SlashCommandBuilder()
     .setName('trivia')
-    .setDescription('Answer a One Piece trivia question for Berries!'),
+    .setDescription('Answer Trivia questions for rewards'),
 
   // Prefix command definition
   name: 'trivia',
@@ -110,7 +110,7 @@ module.exports = {
       .setTitle('Vegapunk\'s Trivia Challenge')
       .setDescription(entry.question)
       .setThumbnail(THUMBNAIL_URL)
-      .setFooter({ text: `Answer correctly for ${REWARD} 〔Beli〕. You have \`10 seconds\`.` })
+      .setFooter({ text: `Answer correctly for ${REWARD} berries, You have 10 seconds.` })
       .setColor(COLOR_NEUTRAL);
 
     // ── STEP 5: BUILD THE FOUR GREY BUTTONS ──
