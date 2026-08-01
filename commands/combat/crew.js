@@ -6,7 +6,21 @@ const User = require('../../models/user');
 
 const CANVAS_WIDTH = 860;
 const CANVAS_HEIGHT = 500;
-const SUCCESS_REACTION = '✅';
+const SUCCESS_REACTION = '<:Success:1533154745731256531>';
+const TEAM_COOLDOWN_MS = 5000;
+const IMAGE_FETCH_TIMEOUT_MS = 2500;
+
+const imageBufferCache = new Map();
+
+const glowByRank = {
+  D: { blur: 0, alpha: 0 },
+  C: { blur: 0, alpha: 0 },
+  B: { blur: 0, alpha: 0 },
+  A: { blur: 5, alpha: 0.25 },
+  S: { blur: 10, alpha: 0.38 },
+  SS: { blur: 20, alpha: 0.52 },
+  UR: { blur: 30, alpha: 0.7 }
+};
 
 function buildOwnedCardPool(userData) {
   const ownedCards = [];
@@ -112,10 +126,57 @@ function getRankColor(rank) {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
+function hexToRgb(hexColor) {
+  const numeric = typeof hexColor === 'number' ? hexColor : parseInt(String(hexColor).replace('#', ''), 16);
+  return {
+    r: (numeric >> 16) & 255,
+    g: (numeric >> 8) & 255,
+    b: numeric & 255
+  };
+}
+
+function getGlowStyle(rank) {
+  const resolvedRank = safeRank(rank);
+  const style = glowByRank[resolvedRank] || glowByRank.D;
+  const { r, g, b } = hexToRgb(rankConfig[resolvedRank]?.M1?.color || 0xffffff);
+
+  return {
+    shadowBlur: style.blur,
+    shadowColor: `rgba(${r}, ${g}, ${b}, ${style.alpha})`
+  };
+}
+
+function drawCardGlow(ctx, entry, layout) {
+  if (!entry) return;
+
+  const glow = getGlowStyle(entry.rank);
+  if (glow.shadowBlur <= 0 || glow.shadowColor.endsWith(', 0)')) return;
+
+  const { x, y, size, radius } = layout;
+  const glowPadding = 0;
+  const { r, g, b } = hexToRgb(rankConfig[safeRank(entry.rank)]?.M1?.color || 0xffffff);
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.shadowColor = glow.shadowColor;
+  ctx.shadowBlur = glow.shadowBlur;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.01)';
+  roundedRectPath(ctx, x - glowPadding, y - glowPadding, size + glowPadding * 2, size + glowPadding * 2, radius + glowPadding);
+  ctx.fill();
+  ctx.restore();
+}
+
 async function fetchImageBuffer(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`);
-  return Buffer.from(await response.arrayBuffer());
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), IMAGE_FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`);
+    return Buffer.from(await response.arrayBuffer());
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // Top-biased square crop — faces in card/manga art are almost always in the
@@ -147,7 +208,22 @@ function getSmartCrop(img) {
 // Pre-load a card's image. Returns null for empty slots so callers can check easily.
 async function loadCardImage(entry) {
   if (!entry) return null;
-  return loadImage(await fetchImageBuffer(entry.card.image));
+
+  const cacheKey = entry.card.image;
+  if (imageBufferCache.has(cacheKey)) {
+    const cached = imageBufferCache.get(cacheKey);
+    return cached ? loadImage(cached) : null;
+  }
+
+  try {
+    const buffer = await fetchImageBuffer(entry.card.image);
+    imageBufferCache.set(cacheKey, buffer);
+    return loadImage(buffer);
+  } catch (error) {
+    console.warn(`[Crew] Failed to load image for ${entry.card.name}: ${error.message}`);
+    imageBufferCache.set(cacheKey, null);
+    return null;
+  }
 }
 
 // renderCardSlot now accepts an already-loaded sourceImage (or null for empty slots)
@@ -156,11 +232,13 @@ function renderCardSlot(ctx, entry, sourceImage, layout) {
   const { x, y, size, radius, innerPadding } = layout;
   const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
   const cardName = entry?.card?.name || 'Empty slot';
-  const frameShadow = entry ? borderColor : '#25304c';
+  const glowStyle = entry ? getGlowStyle(entry.rank) : { shadowBlur: 10, shadowColor: '#25304c' };
+
+  drawCardGlow(ctx, entry, layout);
 
   ctx.save();
-  ctx.shadowColor = frameShadow;
-  ctx.shadowBlur = entry ? 22 : 10;
+  ctx.shadowColor = glowStyle.shadowColor;
+  ctx.shadowBlur = glowStyle.shadowBlur;
   ctx.fillStyle = '#f7f9ff';
   roundedRectPath(ctx, x, y, size, size, radius);
   ctx.fill();
@@ -265,9 +343,9 @@ async function renderTeamImage(teamEntries, username) {
   // Middle card center: 85 + 200 + 20 + 125 = 430 = canvas center ✓
   // Cards start well below the number text (which bottoms out ~y=161) with breathing room.
   const layout = {
-    left:   { x: 40,  y: 225, size: 215, radius: 34, innerPadding: 13 },
-    middle: { x: 293, y: 190, size: 270, radius: 40, innerPadding: 15 },
-    right:  { x: 595, y: 225, size: 215, radius: 34, innerPadding: 13 }
+    left:   { x: 39,  y: 225, size: 215, radius: 34, innerPadding: 13 },
+    middle: { x: 292, y: 190, size: 270, radius: 40, innerPadding: 15 },
+    right:  { x: 599, y: 225, size: 215, radius: 34, innerPadding: 13 }
   };
 
   // Fetch all card images in parallel — one round-trip instead of three sequential ones.
@@ -326,6 +404,19 @@ module.exports = {
     const userData = await User.findOne({ userId: user.id }) || new User({ userId: user.id });
     const ownedCards = buildOwnedCardPool(userData);
 
+    const now = Date.now();
+    if (!autoMode && userData.lastTeamTime && (now - userData.lastTeamTime.getTime()) < TEAM_COOLDOWN_MS) {
+      const secondsLeft = Math.ceil((TEAM_COOLDOWN_MS - (now - userData.lastTeamTime.getTime())) / 1000);
+      const label = secondsLeft === 1 ? 'second' : 'seconds';
+      const content = `Wait **${secondsLeft} ${label}** before checking your team again.`;
+
+      if (isSlash) {
+        return interactionOrMessage.reply({ content, flags: 64 });
+      }
+
+      return interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
+    }
+
     if (ownedCards.length === 0) {
       const content = "You don't own any cards yet. Use `op pull` to get some!";
       if (isSlash) {
@@ -361,6 +452,8 @@ module.exports = {
     if (isSlash) await interactionOrMessage.deferReply();
 
     const teamEntries = resolveDisplayTeam(userData, ownedCards);
+    userData.lastTeamTime = new Date(now);
+    await userData.save().catch(() => {});
     const payload = await buildTeamPayload(user, teamEntries);
 
     if (isSlash) {

@@ -179,12 +179,25 @@ module.exports = {
       mangaDisplay = formatMinSec(remaining); // Returns "Ready" if remaining <= 0
     }
 
+    // ── TRIVIA COOLDOWN ──
+    // Rolling 20-minute personal timer. "Ready" if never played or cooldown expired.
+    let triviaDisplay;
+    if (!userData?.lastTriviaClaim) {
+      // Never played the trivia challenge
+      triviaDisplay = 'Ready';
+    } else {
+      const elapsed   = now - userData.lastTriviaClaim;
+      const remaining = MANGA_COOLDOWN_MS - elapsed;
+      triviaDisplay = formatMinSec(remaining); // Returns "Ready" if remaining <= 0
+    }
+
     // ── BUILD AND SEND THE MESSAGE ──
     // Plain text, no embed. Each timer is on its own line.
     const content = [
       `**Next Reset**: \`${pullResetDisplay}\``,
       `**Next Daily**: \`${dailyDisplay}\``,
       `**Next Manga**: \`${mangaDisplay}\``,
+      `**Next Trivia**: \`${triviaDisplay}\``,
     ].join('\n');
 
     if (interactionOrMessage.isChatInputCommand?.()) {

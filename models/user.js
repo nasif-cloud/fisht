@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
   // Used to enforce the 3-second cooldown between pulls.
   lastPullTime: { type: Date, default: null },
 
+  // The timestamp of the user's most recent team render.
+  // Used to enforce a short cooldown on /team and op team.
+  lastTeamTime: { type: Date, default: null },
+
   // The timestamp of the last time this user played the Manga Challenge.
   // Used to enforce the 20-minute rolling cooldown on the manga command.
   lastMangaClaim: { type: Date, default: null },

@@ -391,7 +391,10 @@ client.on('messageCreate', async (message) => {
     await command.execute(message, args);
   } catch (error) {
     console.error(`Error executing command ${commandName}:`, error);
-    await message.channel.send('Error running command.');
+    await message.reply({
+      content: 'Error running command.',
+      allowedMentions: { repliedUser: false }
+    });
   }
 });
 
