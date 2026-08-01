@@ -1,10 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { createCanvas, loadImage, Image, ImageData } = require('@napi-rs/canvas');
-require('@tensorflow/tfjs');
-const faceapi = require('face-api.js');
-const fs = require('node:fs');
-const fsp = require('node:fs/promises');
-const path = require('node:path');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const User = require('../../models/user');
@@ -12,13 +7,6 @@ const User = require('../../models/user');
 const CANVAS_WIDTH = 860;
 const CANVAS_HEIGHT = 500;
 const SUCCESS_REACTION = '✅';
-const FACE_MODEL_DIR = path.join(__dirname, '..', '..', '.cache', 'face-models');
-const FACE_MODEL_BASE_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-
-const CanvasClass = createCanvas(1, 1).constructor;
-faceapi.env.monkeyPatch({ Canvas: CanvasClass, Image, ImageData });
-
-let faceModelsReady = false;
 
 function buildOwnedCardPool(userData) {
   const ownedCards = [];
@@ -124,95 +112,36 @@ function getRankColor(rank) {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
-async function ensureFaceModels() {
-  if (faceModelsReady) return;
-
-  await fsp.mkdir(FACE_MODEL_DIR, { recursive: true });
-
-  const manifestFile = 'tiny_face_detector_model-weights_manifest.json';
-  const manifestPath = path.join(FACE_MODEL_DIR, manifestFile);
-
-  if (!fs.existsSync(manifestPath)) {
-    const manifestResponse = await fetch(`${FACE_MODEL_BASE_URL}/${manifestFile}`);
-    if (!manifestResponse.ok) {
-      throw new Error(`Failed to download face model manifest: ${manifestResponse.status}`);
-    }
-
-    await fsp.writeFile(manifestPath, Buffer.from(await manifestResponse.arrayBuffer()));
-  }
-
-  const manifest = JSON.parse(await fsp.readFile(manifestPath, 'utf8'));
-  const shardFiles = new Set();
-
-  for (const group of manifest.weightsManifest || []) {
-    for (const fileName of group.paths || []) {
-      shardFiles.add(fileName);
-    }
-  }
-
-  await Promise.all([...shardFiles].map(async fileName => {
-    const shardPath = path.join(FACE_MODEL_DIR, fileName);
-    if (fs.existsSync(shardPath)) return;
-
-    const shardResponse = await fetch(`${FACE_MODEL_BASE_URL}/${fileName}`);
-    if (!shardResponse.ok) {
-      throw new Error(`Failed to download face model shard: ${shardResponse.status}`);
-    }
-
-    await fsp.writeFile(shardPath, Buffer.from(await shardResponse.arrayBuffer()));
-  }));
-
-  await faceapi.nets.tinyFaceDetector.loadFromDisk(FACE_MODEL_DIR);
-  faceModelsReady = true;
-}
-
 async function fetchImageBuffer(url) {
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status}`);
-  }
-
+  if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`);
   return Buffer.from(await response.arrayBuffer());
 }
 
-async function detectFaceCrop(sourceImage) {
-  try {
-    await ensureFaceModels();
-  } catch (error) {
-    console.warn('[Crew] Face model load failed, using center crop.', error.message);
-    return null;
+// Top-biased square crop — faces in card/manga art are almost always in the
+// upper portion of the image, so we anchor the crop near the top rather than
+// the center. For portrait images (taller than wide) we take a full-width
+// square starting just a few percent from the top. For landscape/square images
+// we fall back to a centered square crop.
+function getSmartCrop(img) {
+  const { width, height } = img;
+
+  if (height > width) {
+    // Portrait: crop a full-width square, anchored ~8% from the top
+    const cropSize = width;
+    const cropY = Math.floor(height * 0.08);
+    // Make sure we don't overshoot the bottom
+    const safeY = Math.min(cropY, height - cropSize);
+    return { x: 0, y: Math.max(0, safeY), size: cropSize };
   }
 
-  try {
-    const detection = await faceapi.detectSingleFace(
-      sourceImage,
-      new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 })
-    );
-
-    if (!detection?.box) return null;
-
-    const { x, y, width, height } = detection.box;
-    const imageWidth = sourceImage.width;
-    const imageHeight = sourceImage.height;
-    const faceCenterX = x + width / 2;
-    const faceCenterY = y + height / 2;
-    const cropSize = Math.min(
-      Math.max(width, height) * 2.4,
-      imageWidth,
-      imageHeight
-    );
-
-    let cropX = faceCenterX - cropSize / 2;
-    let cropY = faceCenterY - cropSize / 2;
-
-    cropX = Math.max(0, Math.min(cropX, imageWidth - cropSize));
-    cropY = Math.max(0, Math.min(cropY, imageHeight - cropSize));
-
-    return { x: cropX, y: cropY, size: cropSize };
-  } catch (error) {
-    console.warn('[Crew] Face detection failed, using center crop.', error.message);
-    return null;
-  }
+  // Landscape / square: center crop
+  const cropSize = Math.min(width, height);
+  return {
+    x: Math.floor((width  - cropSize) / 2),
+    y: Math.floor((height - cropSize) / 2),
+    size: cropSize
+  };
 }
 
 async function renderCardSlot(ctx, entry, layout) {
@@ -244,7 +173,7 @@ async function renderCardSlot(ctx, entry, layout) {
 
   if (entry) {
     const sourceImage = await loadImage(await fetchImageBuffer(entry.card.image));
-    const crop = await detectFaceCrop(sourceImage);
+    const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
     const innerX = x + innerPadding;
     const innerY = y + innerPadding;
     const innerSize = size - innerPadding * 2;
@@ -255,15 +184,7 @@ async function renderCardSlot(ctx, entry, layout) {
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-
-    if (crop) {
-      ctx.drawImage(sourceImage, crop.x, crop.y, crop.size, crop.size, innerX, innerY, innerSize, innerSize);
-    } else {
-      const sourceSize = Math.min(sourceImage.width, sourceImage.height);
-      const sourceX = (sourceImage.width - sourceSize) / 2;
-      const sourceY = (sourceImage.height - sourceSize) / 2;
-      ctx.drawImage(sourceImage, sourceX, sourceY, sourceSize, sourceSize, innerX, innerY, innerSize, innerSize);
-    }
+    ctx.drawImage(sourceImage, crop.x, crop.y, crop.size, crop.size, innerX, innerY, innerSize, innerSize);
 
     ctx.restore();
 
@@ -333,12 +254,14 @@ async function renderTeamImage(teamEntries, username) {
   ctx.restore();
 
   // Layout is centered on the 860px canvas.
-  // Total width: 166 + 24 (gap) + 220 + 24 (gap) + 166 = 600px → start at (860-600)/2 = 130
-  // Middle card center: 130 + 166 + 24 + 110 = 430 = canvas center ✓
+  // Side cards: size=200, middle card: size=250, gap=20
+  // Total width: 200 + 20 + 250 + 20 + 200 = 690 → start at (860-690)/2 = 85
+  // Middle card center: 85 + 200 + 20 + 125 = 430 = canvas center ✓
+  // Cards start well below the number text (which bottoms out ~y=161) with breathing room.
   const layout = {
-    left:   { x: 130, y: 183, size: 166, radius: 30, innerPadding: 12 },
-    middle: { x: 320, y: 145, size: 220, radius: 36, innerPadding: 13 },
-    right:  { x: 564, y: 183, size: 166, radius: 30, innerPadding: 12 }
+    left:   { x: 85,  y: 210, size: 200, radius: 34, innerPadding: 13 },
+    middle: { x: 305, y: 170, size: 250, radius: 40, innerPadding: 15 },
+    right:  { x: 575, y: 210, size: 200, radius: 34, innerPadding: 13 }
   };
 
   await renderCardSlot(ctx, slots[0], layout.left);
