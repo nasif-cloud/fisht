@@ -26,6 +26,10 @@ const fs   = require('fs');
 // The User model — needed so we can register new accounts automatically
 const User = require('./models/user');
 
+// The notification scheduler — sends DMs to opted-in players when
+// their pull windows and daily reward reset. Started after login.
+const { startNotifier } = require('./utils/notifier');
+
 // CommandLock — prevents duplicate command handling when two bot instances
 // are running at the same time. See models/commandLock.js for how it works.
 const CommandLock = require('./models/commandLock');
@@ -251,6 +255,10 @@ async function startBot() {
 // ─────────────────────────────────────────────
 client.once('ready', () => {
   console.log(`Ready! Logged in as ${client.user.tag}`);
+
+  // Start the background DM notifier now that the Discord client is live
+  // and can fetch users and send messages
+  startNotifier(client);
 });
 
 // ─────────────────────────────────────────────

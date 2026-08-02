@@ -60,7 +60,18 @@ const userSchema = new mongoose.Schema({
 
   // The user's current combat team, stored as card names.
   // /team and op auto both read and update this list.
-  teamCards: { type: [String], default: [] }
+  teamCards: { type: [String], default: [] },
+
+  // ── NOTIFICATION SETTINGS ──
+  // Both default to true so new players get DMs out of the box.
+  // The /settings command lets each player flip these on or off.
+
+  // If true, the bot will DM this user when their daily resets (10:30 PM ET).
+  dmDailyReady: { type: Boolean, default: true },
+
+  // If true, the bot will DM this user when a pull window resets
+  // (6:30 AM, 2:30 PM, and 10:30 PM ET).
+  dmPullsReady: { type: Boolean, default: true }
 
 });
 
