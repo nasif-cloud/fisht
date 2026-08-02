@@ -9,6 +9,9 @@
 // notified. Past resets are never back-filled, so players won't
 // get spammed when the bot restarts.
 
+// MessageFlags.IsComponentsV2 tells Discord that notification DMs use
+// the newer component layout instead of the older plain-text format.
+const { MessageFlags } = require('discord.js');
 const User = require('../models/user');
 
 // ─────────────────────────────────────────────
@@ -97,7 +100,19 @@ const notifiedDailyResets = new Set();
 async function tryDM(client, userId, content) {
   try {
     const discordUser = await client.users.fetch(userId);
-    await discordUser.send(content);
+
+    // Components V2 text is sent as a type 10 TextDisplay component.
+    // Both pull and daily notifications use this helper, so both messages
+    // automatically use the same component format.
+    await discordUser.send({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        {
+          type: 10,
+          content
+        }
+      ]
+    });
   } catch {
     // The user has DMs disabled, blocked the bot, or was deleted.
     // We silently skip — this should never crash the notifier.
