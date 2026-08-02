@@ -391,6 +391,7 @@ module.exports = {
           .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
           .setDescription('Better luck next time.')
           .setImage(entry.image)
+          .setFooter({ text: `expired` })
           .setColor(embedColor);
         await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
       }
@@ -406,6 +407,7 @@ module.exports = {
         .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
         .setDescription('Better luck next time.')
         .setImage(entry.image)
+        .setFooter({ text: `expired` })
         .setColor(embedColor);
       await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
     });

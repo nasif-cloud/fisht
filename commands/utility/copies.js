@@ -8,6 +8,7 @@
 // - TextInputBuilder / TextInputStyle: the text field inside the modal
 const {
   SlashCommandBuilder,
+  EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -393,8 +394,20 @@ module.exports = {
     });
 
     // After 2 minutes, remove all buttons so old messages stay clean
-    collector.on('end', () => {
-      response.edit({ components: [] }).catch(() => {});
+    collector.on('end', async () => {
+      // Keep the collection visible, but clearly mark its controls as expired.
+      // A text-only footer removes the user's avatar icon from the old footer.
+      try {
+        // Fetch the latest page so the final navigation state is preserved.
+        const latestResponse = await response.fetch();
+        const expiredEmbed = EmbedBuilder
+          .from(latestResponse.embeds[0])
+          .setFooter({ text: `expired` });
+
+        await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+      } catch {
+        // The message may have been deleted while the collector was ending.
+      }
     });
   }
 };

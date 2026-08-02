@@ -195,6 +195,7 @@ module.exports = {
         .setTitle('Vegapunk\'s Trivia Challenge')
         .setDescription(timeoutDesc)
         .setThumbnail(THUMBNAIL_URL)
+        .setFooter({ text: `expired` })
         .setColor(COLOR_WRONG);
 
       await response.edit({ embeds: [timeoutEmbed], components: [] }).catch(() => {});

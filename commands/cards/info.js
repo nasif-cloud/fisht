@@ -1,5 +1,5 @@
 // discord.js components we need for this command
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 // Card data and helper functions from the central card library
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
@@ -168,8 +168,20 @@ module.exports = {
     });
 
     // After 60 seconds, remove the buttons so the message stays clean
-    collector.on('end', () => {
-      response.edit({ components: [] }).catch(() => {});
+    collector.on('end', async () => {
+      // Keep the card visible, but show that its Previous/Next controls expired.
+      // A footer containing only text removes the previous avatar icon.
+      try {
+        // Fetch the latest mastery embed so the final selected version is preserved.
+        const latestResponse = await response.fetch();
+        const expiredEmbed = EmbedBuilder
+          .from(latestResponse.embeds[0])
+          .setFooter({ text: `expired` });
+
+        await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+      } catch {
+        // The message may have been deleted while the collector was ending.
+      }
     });
   }
 };
