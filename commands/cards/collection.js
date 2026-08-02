@@ -171,7 +171,7 @@ function searchFooter(cardName) {
 // PREFIX: 2 rows — nav buttons (including direction), sort dropdown
 // SLASH:  1 row  — nav buttons only (sort is set at invocation via slash options)
 // ─────────────────────────────────────────────
-function buildNormalComponents(total, page, sortMode, isSlash) {
+function buildNormalComponents(total, page, sortMode, isSlash, isAscending = false) {
   const navRow = new ActionRowBuilder().addComponents(
     // 🔍 Search button — opens a modal to find a specific owned card
     new ButtonBuilder()
@@ -184,7 +184,9 @@ function buildNormalComponents(total, page, sortMode, isSlash) {
     new ButtonBuilder()
       .setCustomId('col_desc')
       .setEmoji(DESC_EMOJI)
-      .setStyle(ButtonStyle.Secondary),
+      // Green means the reverse/descending sort is currently turned on.
+      // Grey means the normal/highest-first sort is currently active.
+      .setStyle(isAscending ? ButtonStyle.Success : ButtonStyle.Secondary),
 
     // Navigate backwards through the sorted list
     new ButtonBuilder()
@@ -351,7 +353,7 @@ module.exports = {
     } else {
       // Normal browse mode
       embed      = buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user);
-      components = buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash);
+      components = buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
     }
 
     // ── STEP 6: Send the initial message ──
@@ -385,7 +387,7 @@ module.exports = {
         currentPage = Math.min(sortedList.length - 1, currentPage + 1);
         await interaction.update({
           embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
@@ -394,7 +396,7 @@ module.exports = {
         currentPage = Math.max(0, currentPage - 1);
         await interaction.update({
           embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
@@ -409,7 +411,7 @@ module.exports = {
         sortedList  = sortOwnedCards(ownedList, sortMode, isAscending); // Re-sort with new direction
         await interaction.update({
           embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
@@ -420,7 +422,7 @@ module.exports = {
         sortedList  = sortOwnedCards(ownedList, sortMode, isAscending); // Re-sort
         await interaction.update({
           embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
@@ -483,7 +485,7 @@ module.exports = {
         currentPage  = 0;
         await interaction.update({
           embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash)
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
     });

@@ -164,7 +164,7 @@ function searchFooter(mastery) {
 // PREFIX: 3 rows — nav buttons (including direction), sort dropdown, mastery dropdown
 // SLASH:  1 row  — nav buttons only (sort/mastery are set via slash options at invocation)
 // ─────────────────────────────────────────────
-function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
+function buildNormalComponents(total, page, sortMode, mastery, isSlash, isAscending = false) {
   const navRow = new ActionRowBuilder().addComponents(
     // 🔍 Search button — opens a modal to search by card name
     new ButtonBuilder()
@@ -177,7 +177,9 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
     new ButtonBuilder()
       .setCustomId('ac_desc')
       .setEmoji(DESC_EMOJI)
-      .setStyle(ButtonStyle.Secondary),
+      // Green means the reverse/descending sort is currently turned on.
+      // Grey means the normal/highest-first sort is currently active.
+      .setStyle(isAscending ? ButtonStyle.Success : ButtonStyle.Secondary),
 
     // Navigate backwards through the sorted list
     new ButtonBuilder()
@@ -362,7 +364,7 @@ module.exports = {
     } else {
       // Normal browse mode: full nav with direction button
       embed      = buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user);
-      components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash);
+      components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending);
     }
 
     // ── STEP 6: Send the message ──
@@ -404,7 +406,7 @@ module.exports = {
           currentPage = Math.min(sortedCards.length - 1, currentPage + 1);
           await interaction.update({
             embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
           });
         }
       }
@@ -421,7 +423,7 @@ module.exports = {
           currentPage = Math.max(0, currentPage - 1);
           await interaction.update({
             embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
           });
         }
       }
@@ -437,7 +439,7 @@ module.exports = {
         sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
         });
       }
 
@@ -448,7 +450,7 @@ module.exports = {
         sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
         });
       }
 
@@ -462,7 +464,7 @@ module.exports = {
 
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
         });
       }
 
@@ -528,7 +530,7 @@ module.exports = {
 
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
         });
       }
     });
