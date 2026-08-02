@@ -101,15 +101,22 @@ async function tryDM(client, userId, content) {
   try {
     const discordUser = await client.users.fetch(userId);
 
-    // Components V2 text is sent as a type 10 TextDisplay component.
+    // Components V2 uses type 17 for a Container. The Container holds
+    // the type 10 TextDisplay, so the notification appears inside a
+    // bordered component card instead of as loose text.
     // Both pull and daily notifications use this helper, so both messages
-    // automatically use the same component format.
+    // automatically use the same container format.
     await discordUser.send({
       flags: MessageFlags.IsComponentsV2,
       components: [
         {
-          type: 10,
-          content
+          type: 17,
+          components: [
+            {
+              type: 10,
+              content
+            }
+          ]
         }
       ]
     });
