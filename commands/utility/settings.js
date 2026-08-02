@@ -19,65 +19,78 @@ const User = require('../../models/user');
 // HELPER — build the Components V2 component array
 // ─────────────────────────────────────────────
 // Components V2 uses raw type numbers instead of builder classes:
+//   type 17 = Container  (the outer card that holds all the settings content)
 //   type  9 = Section    (a row with text on the left, button on the right)
 //   type 10 = TextDisplay (plain text that can use markdown like # headings)
 //   type 14 = Separator  (a horizontal divider line between sections)
 //   type  2 = Button     (inside a Section's "accessory" field)
 //
-// disabled = true locks all buttons (used when the session expires)
+// disabled = true locks all buttons (used when the session expires).
+// Expired settings keep the same text; only their buttons are disabled.
 function buildComponents(dmDailyReady, dmPullsReady, disabled = false) {
   return [
-    // ── HEADER ──
     {
-      type: 10,
-      content: '# Your settings\nManage your user settings.\npage **1** of **1**'
-    },
-
-    // ── DIVIDER ──
-    { type: 14, divider: true, spacing: 1 },
-
-    // ── SETTING 1: DM When Daily Ready ──
-    // The "accessory" is the button shown on the right side of the section.
-    // style 3 = green (Success), style 1 = blue (Primary)
-    {
-      type: 9,
+      // A Container makes the entire settings page appear as one card,
+      // like the example image the user provided.
+      type: 17,
       components: [
+        // ── HEADER ──
         {
           type: 10,
-          // Backtick around "24 hours" renders it as inline code in Discord
-          content: '# DM When Daily Ready\nEvery `24 hours` at **10:30PM ET**.'
+          content: '# Your settings\nManage your user settings.\npage **1** of **1**'
         }
-      ],
-      accessory: {
-        type:      2,                          // Button
-        custom_id: 'settings_daily_dm',        // ID the collector listens for
-        style:     dmDailyReady ? 3 : 1,       // Green when on, blue when off
-        label:     dmDailyReady ? 'Enabled' : 'Disabled',
-        emoji:     dmDailyReady ? { name: '✅', id: null } : null,
-        disabled
-      }
-    },
+        ,
 
-    // ── DIVIDER ──
-    { type: 14, divider: true, spacing: 1 },
+        // ── DIVIDER ──
+        { type: 14, divider: true, spacing: 1 },
 
-    // ── SETTING 2: DM When Pulls Ready ──
-    {
-      type: 9,
-      components: [
+        // ── SETTING 1: DM When Daily Ready ──
+        // The "accessory" is the button shown on the right side of the section.
         {
-          type: 10,
-          content: '# DM When Pulls Ready\nEvery `8 hours`.'
+          type: 9,
+          components: [
+            {
+              type: 10,
+              // Backtick around "24 hours" renders it as inline code in Discord
+              content: '# DM When Daily Ready\nEvery `24 hours` at **10:30PM ET**.'
+            }
+          ],
+          accessory: {
+            type:      2,                          // Button
+            custom_id: 'settings_daily_dm',        // ID the collector listens for
+            // Enabled is green. A setting marked Disabled is always grey.
+            // Expiring the page also forces the button to grey.
+            style:      dmDailyReady && !disabled ? 3 : 2,
+            label:      dmDailyReady ? 'Enabled' : 'Disabled',
+            emoji:      dmDailyReady ? { name: '✅', id: null } : null,
+            disabled
+          }
+        },
+
+        // ── DIVIDER ──
+        { type: 14, divider: true, spacing: 1 },
+
+        // ── SETTING 2: DM When Pulls Ready ──
+        {
+          type: 9,
+          components: [
+            {
+              type: 10,
+              content: '# DM When Pulls Ready\nEvery `8 hours`.'
+            }
+          ],
+          accessory: {
+            type:      2,
+            custom_id: 'settings_pull_dm',
+            // Enabled is green. A setting marked Disabled is always grey.
+            // Expiring the page also forces the button to grey.
+            style:      dmPullsReady && !disabled ? 3 : 2,
+            label:      dmPullsReady ? 'Enabled' : 'Disabled',
+            emoji:      dmPullsReady ? { name: '✅', id: null } : null,
+            disabled
+          }
         }
-      ],
-      accessory: {
-        type:      2,
-        custom_id: 'settings_pull_dm',
-        style:     dmPullsReady ? 3 : 1,
-        label:     dmPullsReady ? 'Enabled' : 'Disabled',
-        emoji:     dmPullsReady ? { name: '✅', id: null } : null,
-        disabled
-      }
+      ]
     }
   ];
 }
