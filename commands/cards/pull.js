@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 
 // Card data, visual config, and helper functions from the central card library
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');

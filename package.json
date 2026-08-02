@@ -28,6 +28,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "face-api.js": "^0.22.2",
+    "jimp": "^0.22.12",
     "mongoose": "^9.8.1",
     "node-vibrant": "^4.0.4"
   }

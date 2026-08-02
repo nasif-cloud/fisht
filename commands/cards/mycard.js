@@ -1,5 +1,11 @@
 // discord.js components needed for this command
-const { SlashCommandBuilder } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
+} = require('discord.js');
 
 // Card data and helper functions from the central card library
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
@@ -7,9 +13,17 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 // The User model so we can look up which cards the player owns
 const User = require('../../models/user');
 
+// Stat boost calculator — applies copies boost (0.1%/copy) and shiny boost (3%)
+const { computeBoosts } = require('../../utils/boosts');
+
+// ─── EMOJI CONSTANTS ───
+// SHINY_EMOJI appears before the card name when the card is shiny.
+// BOOSTS_EMOJI is used as the icon on the active-boosts button.
+const SHINY_EMOJI  = '<:shiny:1533586974764699868>';
+const BOOSTS_EMOJI = '<:boosts:1533587691055349900>';
+
 module.exports = {
   // --- SLASH COMMAND DEFINITION ---
-  // This shows up when a user types /mycard in Discord
   data: new SlashCommandBuilder()
     .setName('mycard')
     .setDescription('Check info about a card you own')
@@ -27,10 +41,8 @@ module.exports = {
     // --- STEP 1: Figure out what the user searched for ---
     let query = '';
     if (interactionOrMessage.isChatInputCommand?.()) {
-      // Slash command: Discord gives us the option value directly
       query = interactionOrMessage.options.getString('query');
     } else {
-      // Prefix command: extract the search term from the message text
       if (args) {
         query = args.join(' ');
       } else {
@@ -40,89 +52,154 @@ module.exports = {
     }
 
     if (!query) {
-      // allowedMentions: { repliedUser: false } prevents pinging on prefix commands
-      return interactionOrMessage.reply({ content: 'Please provide a valid card name.', allowedMentions: { repliedUser: false } });
+      return interactionOrMessage.reply({
+        content: 'Please provide a valid card name.',
+        allowedMentions: { repliedUser: false }
+      });
     }
 
-    // Convert to lowercase so the search isn't case-sensitive
     const search = query.toLowerCase();
 
     // --- STEP 2: Find the card in the card library ---
-    // Searches by name or alias only (titles are not searchable)
     const foundCard = cards.find(c =>
       c.name.toLowerCase().includes(search) ||
       c.aliases.some(alias => alias.toLowerCase().includes(search))
     );
 
     if (!foundCard) {
-      return interactionOrMessage.reply({ content: `**${query}** is not a valid card`, allowedMentions: { repliedUser: false } });
+      return interactionOrMessage.reply({
+        content: `**${query}** is not a valid card`,
+        allowedMentions: { repliedUser: false }
+      });
     }
 
-    // --- STEP 3: Check if the user actually owns this card ---
-    const userData = await User.findOne({ userId: user.id });
+    // --- STEP 3: Check if the user owns this card ---
+    const userData  = await User.findOne({ userId: user.id });
     const copyEntry = userData?.cardCopies?.find(c => c.cardName === foundCard.name);
-    const ownedCopies = copyEntry?.amount || 0;
+    const ownedCopies = copyEntry?.amount ?? 0;
+    // isShiny is stored in the DB entry; defaults to false if never set
+    const isShiny   = copyEntry?.shiny  ?? false;
 
-    // If the user doesn't own this card at all, tell them and stop (no ping)
     if (ownedCopies === 0) {
-      return interactionOrMessage.reply({ content: `You do not own **${foundCard.name}**`, allowedMentions: { repliedUser: false } });
+      return interactionOrMessage.reply({
+        content: `You do not own **${foundCard.name}**`,
+        allowedMentions: { repliedUser: false }
+      });
     }
 
-    // --- STEP 4: Determine their current mastery level ---
-    // Mastery is based on how many copies they own:
-    //   1 copy  → Mastery 1
-    //   2 copies → Mastery 2
-    //   3+ copies → Mastery 3
-    // Math.min ensures we never go above 3 even if they own 10 copies.
+    // --- STEP 4: Determine mastery level ---
+    // 1 copy → M1, 2 copies → M2, 3+ copies → M3
     const masteryLevel = Math.min(ownedCopies, 3);
 
-    // --- STEP 5: Pick the right stat block for their mastery level ---
-    // The base card is M1; M2 and M3 are upgraded versions stored in foundCard.M2 / foundCard.M3
+    // --- STEP 5: Pick the right stat block for their mastery ---
     let cardData = foundCard;              // defaults to M1
     if (masteryLevel === 2) cardData = foundCard.M2;
     if (masteryLevel === 3) cardData = foundCard.M3;
 
-    // safeRank makes sure we never crash if a card has a typo in its rank field
     const rank = safeRank(cardData.rank);
     if (rank !== cardData.rank) {
-      console.warn(`[MyCard] Card "${foundCard.name}" (M${masteryLevel}) has invalid rank "${cardData.rank}". Displaying with fallback rank D.`);
+      console.warn(`[MyCard] "${foundCard.name}" (M${masteryLevel}) has invalid rank "${cardData.rank}". Using fallback D.`);
     }
 
-    // resolveStat converts filter values like '+' or '--' into real numbers.
-    // We pass foundCard.name + masteryLevel so stats are always fixed — same card, same numbers.
-    const resolvedPower  = resolveStat(rank, 'power',  safeStat(cardData.power),  foundCard.name, masteryLevel);
-    const resolvedHealth = resolveStat(rank, 'health', safeStat(cardData.health), foundCard.name, masteryLevel);
-    const resolvedSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  foundCard.name, masteryLevel);
+    // --- STEP 6: Resolve the base stats for this mastery ---
+    // resolveStat gives a fixed number for each card name + mastery + stat combo.
+    const basePower  = resolveStat(rank, 'power',  safeStat(cardData.power),  foundCard.name, masteryLevel);
+    const baseHealth = resolveStat(rank, 'health', safeStat(cardData.health), foundCard.name, masteryLevel);
+    const baseSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  foundCard.name, masteryLevel);
 
-    // Grab the colour and thumbnail icon for this rank + mastery level from rankConfig
+    // --- STEP 7: Apply copies + shiny boosts ---
+    // computeBoosts returns both the final boosted stats and a per-source breakdown.
+    // The breakdown is saved here so the boosts button can display it.
+    const {
+      health: finalHealth,
+      power:  finalPower,
+      speed:  finalSpeed,
+      copyBoost,
+      shinyBoost
+    } = computeBoosts(baseHealth, basePower, baseSpeed, ownedCopies, isShiny);
+
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
-    // --- STEP 6: Build and send the embed ---
-    // No Previous/Next buttons here — we only show the mastery the user currently owns.
+    // --- STEP 8: Build the embed ---
+    // Shiny emoji appears before the name if the card is shiny
+    const cardTitle = isShiny ? `${SHINY_EMOJI} ${foundCard.name}` : foundCard.name;
+
     const embed = {
-      title: foundCard.name,
+      title: cardTitle,
       description: [
         `${cardData.title}`,
         ` `,
         `**Rank:** ${cardData.rank}`,
-        `**Health:** ${resolvedHealth}`,
-        `**Power:** ${resolvedPower}`,
-        `**Speed:** ${resolvedSpeed}`,
+        `**Health:** ${finalHealth}`,
+        `**Power:** ${finalPower}`,
+        `**Speed:** ${finalSpeed}`,
         `**Copies:** ${ownedCopies}`
       ].join('\n'),
       footer: {
         icon_url: user.displayAvatarURL({ dynamic: true }),
         text: `Mastery ${masteryLevel}/3`
       },
-      color: visual.color,
+      color:     visual.color,
       thumbnail: { url: visual.icon },
-      image: { url: cardData.image }
+      image:     { url: cardData.image }
     };
 
+    // --- STEP 9: Build the boosts button ---
+    // Grey (Secondary) button with only the boosts emoji — no text label.
+    // It opens an ephemeral breakdown of how the card's stats are being boosted.
+    const boostsRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('mc_boosts')
+        .setEmoji(BOOSTS_EMOJI)
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+    // --- STEP 10: Send the message ---
+    // fetchReply: true gives us the message object so we can attach a collector
+    const payload = { embeds: [embed], components: [boostsRow], fetchReply: true };
+    let response;
     if (interactionOrMessage.isChatInputCommand?.()) {
-      await interactionOrMessage.reply({ embeds: [embed] });
+      response = await interactionOrMessage.reply(payload);
     } else {
-      await interactionOrMessage.channel.send({ embeds: [embed] });
+      response = await interactionOrMessage.channel.send(payload);
     }
+
+    // --- STEP 11: Listen for the boosts button ---
+    // 60-second timeout — same as the info command
+    const collector = response.createMessageComponentCollector({ time: 60000 });
+
+    collector.on('collect', async (interaction) => {
+      // Only the person who ran the command can click the button
+      if (interaction.user.id !== user.id) {
+        return interaction.reply({ content: `This isn't yours`, flags: 64 });
+      }
+
+      if (interaction.customId === 'mc_boosts') {
+        // Build the boost breakdown text.
+        // The Copies line always shows (every card has >= 1 copy, so boost is always >= 1
+        // due to Math.ceil). The Shiny line only appears if the card is actually shiny.
+        const lines = ['**Active Boosts**'];
+        lines.push(`Copies: \`+${copyBoost.health}hp\`, \`+${copyBoost.power}pwr\`, \`+${copyBoost.speed}spd\``);
+        if (isShiny) {
+          lines.push(`Shiny: \`+${shinyBoost.health}hp\`, \`+${shinyBoost.power}pwr\`, \`+${shinyBoost.speed}spd\``);
+        }
+        // flags: 64 = ephemeral — only visible to the user who clicked
+        return interaction.reply({ content: lines.join('\n'), flags: 64 });
+      }
+    });
+
+    // After 60 seconds of inactivity, remove the button and mark the footer as expired.
+    // This matches the expiry behaviour of all other button-based card embeds.
+    collector.on('end', async () => {
+      try {
+        const latestResponse = await response.fetch();
+        const expiredEmbed = EmbedBuilder
+          .from(latestResponse.embeds[0])
+          .setFooter({ text: 'expired' });
+        await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+      } catch {
+        // Message may have been deleted — silently ignore
+      }
+    });
   }
 };

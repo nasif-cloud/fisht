@@ -51,11 +51,15 @@ const userSchema = new mongoose.Schema({
   lastTriviaClaim: { type: Date, default: null },
 
   // A list of every card the user has collected, with how many copies they own.
-  // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, lastObtained: <date> }
+  // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, lastObtained: <date>, shiny: false }
   cardCopies: [{
-    cardName:     { type: String, required: true },
-    amount:       { type: Number, default: 1 },
-    lastObtained: { type: Date,   default: Date.now }
+    cardName:     { type: String,  required: true },
+    amount:       { type: Number,  default: 1 },
+    lastObtained: { type: Date,    default: Date.now },
+    // Whether this card is shiny for this player.
+    // Shiny is "sticky" — once a card becomes shiny it never goes back to normal,
+    // even if the player pulls additional non-shiny copies later.
+    shiny:        { type: Boolean, default: false }
   }],
 
   // The user's current combat team, stored as card names.

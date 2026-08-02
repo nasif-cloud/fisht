@@ -4,9 +4,12 @@
 // Shows all the cards the player personally owns, one per page.
 // Supports sorting, searching, and a direction-flip button.
 //
+// Each card is shown at the mastery the player actually owns (M1/M2/M3),
+// and all stats include copies + shiny boosts.
+//
 // Prefix aliases: col, mycards
 // Prefix controls:
-//   Row 1 — 🔍 (search), ↕ (flip direction), Previous, Next
+//   Row 1 — 🔍 (search), ↕ (flip direction), Previous, Next, boosts button
 //   Row 2 — Sort dropdown (copies / health / power / speed / rank)
 //
 // Slash controls: sort and card are options at invocation.
@@ -15,7 +18,7 @@
 //   /collection card:luffy   → jump directly to Luffy (no sort/direction button)
 //
 // Search mode (🔍 button or card slash option):
-//   Shows the single card with only a red Back button.
+//   Shows the single card with only a red Back button and the boosts button.
 //   The direction button is HIDDEN in this mode.
 
 const {
@@ -33,14 +36,15 @@ const {
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const User = require('../../models/user');
 
+// Stat boost calculator — applies copies boost (0.1%/copy) and shiny boost (3%)
+const { computeBoosts } = require('../../utils/boosts');
+
 // ─────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────
 
-// Rank from highest to lowest — used for rank-based sorting
 const RANK_ORDER = ['UR', 'SS', 'S', 'A', 'B', 'C', 'D'];
 
-// Human-readable label for each sort mode, shown in the embed footer
 const SORT_LABELS = {
   copies: 'By copies',
   health: 'By health',
@@ -49,21 +53,21 @@ const SORT_LABELS = {
   rank:   'By rank'
 };
 
-// The emoji used on the direction-flip button (both ascending and descending states)
-const DESC_EMOJI = '<:descending:1533566429180330286>';
+const DESC_EMOJI   = '<:descending:1533566429180330286>';
+const SHINY_EMOJI  = '<:shiny:1533586974764699868>';
+const BOOSTS_EMOJI = '<:boosts:1533587691055349900>';
 
 // ─────────────────────────────────────────────
 // HELPER — get the stat block for a card at a given mastery level
-// Falls back gracefully if M2/M3 data is missing on that card
 // ─────────────────────────────────────────────
 function getCardData(card, mastery) {
   if (mastery === 2) return card.M2 || card;
   if (mastery === 3) return card.M3 || card.M2 || card;
-  return card; // M1 always uses the base card object
+  return card;
 }
 
 // ─────────────────────────────────────────────
-// HELPER — resolve a single stat for a card at a given mastery
+// HELPER — resolve a single base stat for a card at a given mastery
 // ─────────────────────────────────────────────
 function resolveCardStat(card, mastery, statType) {
   const cardData = getCardData(card, mastery);
@@ -72,62 +76,104 @@ function resolveCardStat(card, mastery, statType) {
 }
 
 // ─────────────────────────────────────────────
+// HELPER — compute the fully boosted value of one stat for an owned-card entry
+// Used by sortOwnedCards to sort by real effective stats (including all boosts).
+//
+// entry = { card, copies, isShiny }
+// ─────────────────────────────────────────────
+function getBoostedStat(entry, statType) {
+  const mastery  = Math.min(entry.copies, 3); // owned mastery level
+  const base     = resolveCardStat(entry.card, mastery, statType);
+  const copyPct  = entry.copies * 0.001;       // 0.1% per copy
+  const shinyPct = entry.isShiny ? 0.03 : 0;  // 3% if shiny
+  // Round each boost up separately, then sum — matches computeBoosts() logic
+  return base + Math.ceil(base * copyPct) + Math.ceil(base * shinyPct);
+}
+
+// ─────────────────────────────────────────────
 // HELPER — sort an owned-card list
-// Each entry is: { card, copies }
+// Each entry is: { card, copies, isShiny }
 //
-// isAscending controls direction:
-//   false (default) → highest/most first  (e.g. 100 power → 1 power)
-//   true            → lowest/least first  (e.g. 1 power → 100 power)
-//
-// Stat-based sorts always use M1 values (mastery view is fixed at M1)
+// Stat sorts (health / power / speed) use fully boosted values so that a
+// high-copy or shiny card ranks correctly against others.
 // ─────────────────────────────────────────────
 function sortOwnedCards(ownedList, sortMode, isAscending = false) {
-  const copy = [...ownedList]; // Don't mutate the original array
+  const copy = [...ownedList];
 
   let sorted;
 
   if (sortMode === 'copies') {
-    // Sort by number of copies — most copies first by default
     sorted = copy.sort((a, b) => b.copies - a.copies);
   } else if (sortMode === 'rank') {
-    // Sort by rank — highest rank (UR) first by default
     sorted = copy.sort((a, b) => {
       const rankA = safeRank(a.card.rank);
       const rankB = safeRank(b.card.rank);
       return RANK_ORDER.indexOf(rankA) - RANK_ORDER.indexOf(rankB);
     });
   } else {
-    // Sort by a stat (health / power / speed) — highest value first by default
-    sorted = copy.sort((a, b) =>
-      resolveCardStat(b.card, 1, sortMode) - resolveCardStat(a.card, 1, sortMode)
-    );
+    // health / power / speed — sort by the fully boosted stat value
+    sorted = copy.sort((a, b) => getBoostedStat(b, sortMode) - getBoostedStat(a, sortMode));
   }
 
-  // If the player toggled the direction button, flip the entire list
   return isAscending ? sorted.reverse() : sorted;
 }
 
 // ─────────────────────────────────────────────
-// HELPER — build the embed for one owned card at a given mastery
-// Always shows the real Copies count regardless of which mastery is displayed
+// HELPER — build the boost breakdown text for the boosts button popup
+// Shows the per-source stat gains: Copies always shown; Shiny only if shiny.
 // ─────────────────────────────────────────────
-function buildCardEmbed(entry, mastery, footerText, user) {
-  const { card, copies } = entry;
+function buildBoostMessage(entry) {
+  const { card, copies, isShiny } = entry;
+  const mastery  = Math.min(copies, 3);
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
 
-  // Warn in logs if the rank value is invalid so the owner can find and fix it
+  const baseHealth = resolveStat(rank, 'health', safeStat(cardData.health), card.name, mastery);
+  const basePower  = resolveStat(rank, 'power',  safeStat(cardData.power),  card.name, mastery);
+  const baseSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  card.name, mastery);
+
+  const { copyBoost, shinyBoost } = computeBoosts(baseHealth, basePower, baseSpeed, copies, isShiny);
+
+  const lines = ['**Active Boosts**'];
+  lines.push(`Copies: \`+${copyBoost.health}hp\`, \`+${copyBoost.power}pwr\`, \`+${copyBoost.speed}spd\``);
+  if (isShiny) {
+    lines.push(`Shiny: \`+${shinyBoost.health}hp\`, \`+${shinyBoost.power}pwr\`, \`+${shinyBoost.speed}spd\``);
+  }
+  return lines.join('\n');
+}
+
+// ─────────────────────────────────────────────
+// HELPER — build the embed for one owned card
+//
+// Mastery is derived from entry.copies (1 copy = M1, 2 = M2, 3+ = M3).
+// Stats shown are the BOOSTED values (copies + shiny), not the base values.
+// info/allcards show base stats; collection always shows what you actually own.
+// ─────────────────────────────────────────────
+function buildCardEmbed(entry, footerText, user) {
+  const { card, copies, isShiny } = entry;
+  const mastery  = Math.min(copies, 3);
+  const cardData = getCardData(card, mastery);
+  const rank     = safeRank(cardData.rank || card.rank);
+
   if (rank !== (cardData.rank || card.rank)) {
     console.warn(`[Collection] "${card.name}" M${mastery} has invalid rank "${cardData.rank}". Using fallback D.`);
   }
 
   const visual = rankConfig[rank][`M${mastery}`];
-  const health = resolveStat(rank, 'health', safeStat(cardData.health), card.name, mastery);
-  const power  = resolveStat(rank, 'power',  safeStat(cardData.power),  card.name, mastery);
-  const speed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  card.name, mastery);
+
+  // Resolve base stats at the owned mastery level
+  const baseHealth = resolveStat(rank, 'health', safeStat(cardData.health), card.name, mastery);
+  const basePower  = resolveStat(rank, 'power',  safeStat(cardData.power),  card.name, mastery);
+  const baseSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  card.name, mastery);
+
+  // Apply copies + shiny boosts to get the displayed stat values
+  const { health, power, speed } = computeBoosts(baseHealth, basePower, baseSpeed, copies, isShiny);
+
+  // Shiny emoji appears before the card name when the card is shiny
+  const title = isShiny ? `${SHINY_EMOJI} ${card.name}` : card.name;
 
   return {
-    title: card.name,
+    title,
     description: [
       `${cardData.title}`,
       ` `,
@@ -135,7 +181,7 @@ function buildCardEmbed(entry, mastery, footerText, user) {
       `**Health:** ${health}`,
       `**Power:** ${power}`,
       `**Speed:** ${speed}`,
-      `**Copies:** ${copies}` // Real copy count — not tied to which mastery is displayed
+      `**Copies:** ${copies}`
     ].join('\n'),
     footer: {
       icon_url: user.displayAvatarURL({ dynamic: true }),
@@ -149,7 +195,6 @@ function buildCardEmbed(entry, mastery, footerText, user) {
 
 // ─────────────────────────────────────────────
 // HELPER — normal-mode footer text
-// Example: `Card 3/12 - By copies`
 // ─────────────────────────────────────────────
 function normalFooter(page, total, sortMode) {
   return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By copies'}`;
@@ -157,7 +202,6 @@ function normalFooter(page, total, sortMode) {
 
 // ─────────────────────────────────────────────
 // HELPER — search-mode footer text
-// Example: `Viewing: Figarland Shanks`
 // ─────────────────────────────────────────────
 function searchFooter(cardName) {
   return `Viewing: ${cardName}`;
@@ -166,48 +210,43 @@ function searchFooter(cardName) {
 // ─────────────────────────────────────────────
 // HELPER — components for normal (browsing) mode
 //
-// The direction button (↕) is always visible in normal mode for both slash and prefix.
-// It is NEVER shown in search mode (search mode shows a single card, direction is meaningless).
-//
-// PREFIX: 2 rows — nav buttons (including direction), sort dropdown
-// SLASH:  1 row  — nav buttons only (sort is set at invocation via slash options)
+// Nav row has 5 buttons (Discord maximum per row):
+//   🔍 search | ↕ direction | Previous | Next | boosts
+// PREFIX also gets a sort dropdown on a second row.
 // ─────────────────────────────────────────────
 function buildNormalComponents(total, page, sortMode, isSlash, isAscending = false) {
   const navRow = new ActionRowBuilder().addComponents(
-    // 🔍 Search button — opens a modal to find a specific owned card
     new ButtonBuilder()
       .setCustomId('col_search')
       .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
 
-    // ↕ Direction button — flips the sort between highest-first and lowest-first.
-    // Always grey (Secondary). Same emoji for both directions — clicking it just flips the list.
     new ButtonBuilder()
       .setCustomId('col_desc')
       .setEmoji(DESC_EMOJI)
-      // Green means the reverse/descending sort is currently turned on.
-      // Grey means the normal/highest-first sort is currently active.
       .setStyle(isAscending ? ButtonStyle.Success : ButtonStyle.Secondary),
 
-    // Navigate backwards through the sorted list
     new ButtonBuilder()
       .setCustomId('col_prev')
       .setLabel('Previous')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
 
-    // Navigate forwards through the sorted list (blue so it stands out as the primary action)
     new ButtonBuilder()
       .setCustomId('col_next')
       .setLabel('Next')
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(page >= total - 1)
+      .setDisabled(page >= total - 1),
+
+    // Boosts button — grey icon-only button, always present
+    new ButtonBuilder()
+      .setCustomId('col_boosts')
+      .setEmoji(BOOSTS_EMOJI)
+      .setStyle(ButtonStyle.Secondary)
   );
 
-  // Slash users set their sort via the command option — no dropdown needed mid-session
   if (isSlash) return [navRow];
 
-  // PREFIX: add a sort dropdown below the nav buttons
   const sortRow = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('col_sort')
@@ -226,7 +265,7 @@ function buildNormalComponents(total, page, sortMode, isSlash, isAscending = fal
 
 // ─────────────────────────────────────────────
 // HELPER — components for search (single-card) mode
-// Only a red Back button — no direction button (it would have nothing to do here)
+// Back button + boosts button. No direction button.
 // ─────────────────────────────────────────────
 function buildSearchComponents() {
   return [
@@ -234,7 +273,12 @@ function buildSearchComponents() {
       new ButtonBuilder()
         .setCustomId('col_back')
         .setLabel('Back')
-        .setStyle(ButtonStyle.Danger)
+        .setStyle(ButtonStyle.Danger),
+
+      new ButtonBuilder()
+        .setCustomId('col_boosts')
+        .setEmoji(BOOSTS_EMOJI)
+        .setStyle(ButtonStyle.Secondary)
     )
   ];
 }
@@ -243,7 +287,6 @@ function buildSearchComponents() {
 // COMMAND EXPORT
 // ─────────────────────────────────────────────
 module.exports = {
-  // Slash command definition (/collection)
   data: new SlashCommandBuilder()
     .setName('collection')
     .setDescription('Browse the cards you own')
@@ -267,7 +310,6 @@ module.exports = {
         .setRequired(false)
     ),
 
-  // Prefix command definition (op collection / op col / op mycards)
   name: 'collection',
   aliases: ['col', 'mycards'],
 
@@ -275,7 +317,7 @@ module.exports = {
     const user    = interactionOrMessage.user || interactionOrMessage.author;
     const isSlash = interactionOrMessage.isChatInputCommand?.();
 
-    // ── STEP 1: Read slash options (slash only) ──
+    // ── STEP 1: Read slash options ──
     let slashSort = null;
     let slashCard = null;
 
@@ -283,28 +325,31 @@ module.exports = {
       slashSort = interactionOrMessage.options.getString('sort');
       slashCard = interactionOrMessage.options.getString('card');
 
-      // Using both 'card' and 'sort' at the same time doesn't make sense
       if (slashCard && slashSort) {
         return interactionOrMessage.reply({
           content: 'You cannot use **card** together with **sort**. Pick one.',
-          flags: 64 // Ephemeral — only the user sees this error
+          flags: 64
         });
       }
     }
 
-    // ── STEP 2: Load the user's owned cards from the database ──
+    // ── STEP 2: Load owned cards ──
     const userData = await User.findOne({ userId: user.id });
 
-    // Build a list of owned cards — each entry holds the card object and copy count
+    // Build the owned list — each entry carries the card object, copy count, and shiny flag.
+    // The shiny flag comes from the DB entry (defaults to false if not set on older entries).
     const ownedList = [];
     for (const entry of (userData?.cardCopies || [])) {
-      if (!entry.amount || entry.amount <= 0) continue; // Skip zero-copy entries
+      if (!entry.amount || entry.amount <= 0) continue;
       const card = cards.find(c => c.name === entry.cardName);
-      if (!card) continue; // Skip cards that were removed from the card library
-      ownedList.push({ card, copies: entry.amount });
+      if (!card) continue;
+      ownedList.push({
+        card,
+        copies:  entry.amount,
+        isShiny: entry.shiny ?? false
+      });
     }
 
-    // If the player owns nothing, tell them (no ping on prefix)
     if (ownedList.length === 0) {
       return interactionOrMessage.reply({
         content: `You don't own any cards yet. Use \`op pull\` to start pulling`,
@@ -312,19 +357,16 @@ module.exports = {
       });
     }
 
-    // ── STEP 3: Set up state ──
-    // This state lives in memory for the lifetime of this message's collector.
-    // Every button/dropdown interaction reads and/or updates these values.
-    let sortMode     = slashSort || 'power'; // Default sort: by power
-    let isAscending  = false;                // false = highest first, true = lowest first
+    // ── STEP 3: Initial state ──
+    let sortMode     = slashSort || 'power';
+    let isAscending  = false;
     let currentPage  = 0;
     let isSearchMode = false;
-    let searchEntry  = null; // Holds the single card shown during search mode
+    let searchEntry  = null;
 
-    // Apply the initial sort
     let sortedList = sortOwnedCards(ownedList, sortMode, isAscending);
 
-    // ── STEP 4: Handle the 'card' slash option — enter search mode immediately ──
+    // ── STEP 4: Handle 'card' slash option — enter search mode immediately ──
     if (slashCard) {
       const query = slashCard.toLowerCase().trim();
       const found = ownedList.find(e =>
@@ -344,21 +386,18 @@ module.exports = {
       searchEntry  = found;
     }
 
-    // ── STEP 5: Build the initial embed and components ──
+    // ── STEP 5: Build initial embed and components ──
     let embed, components;
 
     if (isSearchMode) {
-      // Search mode: single card, no direction button
-      embed      = buildCardEmbed(searchEntry, 1, searchFooter(searchEntry.card.name), user);
+      embed      = buildCardEmbed(searchEntry, searchFooter(searchEntry.card.name), user);
       components = buildSearchComponents();
     } else {
-      // Normal browse mode
-      embed      = buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user);
+      embed      = buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user);
       components = buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
     }
 
     // ── STEP 6: Send the initial message ──
-    // fetchReply: true gives us back the message object so we can attach a collector to it
     const payload = { embeds: [embed], components, fetchReply: true };
     let response;
 
@@ -368,26 +407,21 @@ module.exports = {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // ── STEP 7: Set up the interaction collector ──
-    // A "collector" listens for button clicks and dropdown changes on this specific message.
-    // The timer starts when the message is sent and resets each time the user interacts.
+    // ── STEP 7: Interaction collector ──
     const collector = response.createMessageComponentCollector({ time: 120000 });
 
     collector.on('collect', async (interaction) => {
-      // Only the person who ran the command can use the buttons
       if (interaction.user.id !== user.id) {
         return interaction.reply({ content: `This isn't yours`, flags: 64 });
       }
 
-      // Reset the 2-minute inactivity timer every time the user clicks anything.
-      // Without this, the buttons would disappear 2 minutes after the FIRST interaction.
       collector.resetTimer();
 
       // ── NEXT ──
       if (interaction.customId === 'col_next') {
         currentPage = Math.min(sortedList.length - 1, currentPage + 1);
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
@@ -396,38 +430,42 @@ module.exports = {
       else if (interaction.customId === 'col_prev') {
         currentPage = Math.max(0, currentPage - 1);
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
-      // ── DIRECTION TOGGLE BUTTON ──
-      // Flips the sort between highest-first (default) and lowest-first.
-      // Example with power sort:
-      //   isAscending = false → 100 power, 95 power, 80 power ... (highest first)
-      //   isAscending = true  →  1 power,   5 power, 12 power ... (lowest first)
+      // ── DIRECTION TOGGLE ──
       else if (interaction.customId === 'col_desc') {
-        isAscending = !isAscending;     // Flip the direction
-        currentPage = 0;                // Go back to page 1 so nothing feels broken
-        sortedList  = sortOwnedCards(ownedList, sortMode, isAscending); // Re-sort with new direction
+        isAscending = !isAscending;
+        currentPage = 0;
+        sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
       // ── SORT DROPDOWN (prefix only) ──
       else if (interaction.customId === 'col_sort') {
-        sortMode    = interaction.values[0]; // The value the player selected from the dropdown
-        currentPage = 0;                     // Reset to first card when the sort changes
-        sortedList  = sortOwnedCards(ownedList, sortMode, isAscending); // Re-sort
+        sortMode    = interaction.values[0];
+        currentPage = 0;
+        sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
 
-      // ── SEARCH BUTTON (🔍) — opens a modal so the player can type a card name ──
+      // ── BOOSTS BUTTON — show an ephemeral breakdown of all active stat boosts ──
+      else if (interaction.customId === 'col_boosts') {
+        // currentEntry is the card currently displayed — either the search result or the
+        // current page in the sorted list
+        const currentEntry = isSearchMode ? searchEntry : sortedList[currentPage];
+        return interaction.reply({ content: buildBoostMessage(currentEntry), flags: 64 });
+      }
+
+      // ── SEARCH BUTTON (🔍) ──
       else if (interaction.customId === 'col_search') {
         const modal = new ModalBuilder()
           .setCustomId('col_search_modal')
@@ -444,7 +482,6 @@ module.exports = {
 
         await interaction.showModal(modal);
 
-        // Wait up to 30 seconds for the player to type and submit the modal
         try {
           const submit = await interaction.awaitModalSubmit({
             time:   30000,
@@ -453,58 +490,51 @@ module.exports = {
 
           const query = submit.fields.getTextInputValue('col_search_query').toLowerCase().trim();
 
-          // Only search within cards the player actually owns
           const found = ownedList.find(e =>
             e.card.name.toLowerCase().includes(query) ||
             e.card.aliases.some(a => a && a.toLowerCase().includes(query))
           );
 
           if (!found) {
-            // Card not in their collection — ephemeral error, leave the embed as-is
             await submit.reply({ content: `You don't own a card matching **${query}**`, flags: 64 });
             return;
           }
 
-          // Enter search mode — no direction button in this mode
           isSearchMode = true;
           searchEntry  = found;
 
           await submit.update({
-            embeds:     [buildCardEmbed(searchEntry, 1, searchFooter(searchEntry.card.name), user)],
+            embeds:     [buildCardEmbed(searchEntry, searchFooter(searchEntry.card.name), user)],
             components: buildSearchComponents()
           });
 
         } catch {
-          // Modal was dismissed or timed out — do nothing, the embed stays as-is
+          // Modal dismissed or timed out — leave the embed unchanged
         }
       }
 
-      // ── BACK BUTTON — exit search mode and return to the sorted list ──
+      // ── BACK BUTTON ──
       else if (interaction.customId === 'col_back') {
         isSearchMode = false;
         searchEntry  = null;
         currentPage  = 0;
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], 1, normalFooter(currentPage, sortedList.length, sortMode), user)],
+          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
     });
 
-    // After 2 minutes of inactivity, remove all buttons so old messages stay clean
+    // After 2 minutes of inactivity, remove buttons and mark as expired
     collector.on('end', async () => {
-      // Keep the card visible, but clearly mark the controls as expired.
-      // Building a new footer with only text removes the user's avatar icon.
       try {
-        // Fetch the latest version so navigation changes are not overwritten.
         const latestResponse = await response.fetch();
         const expiredEmbed = EmbedBuilder
           .from(latestResponse.embeds[0])
-          .setFooter({ text: `expired` });
-
+          .setFooter({ text: 'expired' });
         await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
       } catch {
-        // The message may have been deleted while the collector was ending.
+        // Message may have been deleted — silently ignore
       }
     });
   }
