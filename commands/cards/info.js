@@ -149,8 +149,12 @@ module.exports = {
     collector.on('collect', async (interaction) => {
       // Only the person who ran the command can click the buttons
       if (interaction.user.id !== user.id) {
-        return interaction.reply({ content: "This isn't yours.", flags: 64 });
+        return interaction.reply({ content: `This isn't yours`, flags: 64 });
       }
+
+      // Reset the 60-second inactivity timer every time the user clicks a button.
+      // Without this, the buttons would disappear 60 seconds after the FIRST interaction.
+      collector.resetTimer();
 
       // Move one mastery level up or down depending on which button was clicked
       if (interaction.customId === 'next_mastery') currentMastery++;

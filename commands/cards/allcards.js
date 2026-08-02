@@ -6,17 +6,18 @@
 //
 // Prefix aliases: ac, cards
 // Prefix controls:
-//   Row 1 — 🔍 (search by name), Previous, Next
+//   Row 1 — 🔍 (search by name), ↕ (flip direction), Previous, Next
 //   Row 2 — Sort dropdown (health / power / speed / rank)
 //   Row 3 — Mastery dropdown (M1's / M2's / M3's)
 //
 // Slash controls: sort, mastery, and card are options at invocation.
 //   /allcards               → default (power, M1)
 //   /allcards sort:rank mastery:M2  → sorted and filtered, still interactive
-//   /allcards card:luffy    → search mode for Luffy (can't combine with sort/mastery)
+//   /allcards card:luffy    → search mode for Luffy (no direction button in this mode)
 //
 // Search mode (via 🔍 button or card option):
-//   Shows a specific card's M1 → M2 → M3 with Prev/Next and a red Back button.
+//   Shows M1 → M2 → M3 for a specific card with Prev/Next and a red Back button.
+//   The direction button is HIDDEN in search mode.
 
 const {
   SlashCommandBuilder,
@@ -30,11 +31,13 @@ const {
 } = require('discord.js');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
-// Note: User is not needed here — allcards shows all cards without personal data.
+// Note: User is not needed here — allcards shows every card, no personal data involved
 
 // ─────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────
+
+// Rank from highest to lowest — used for rank-based sorting
 const RANK_ORDER = ['UR', 'SS', 'S', 'A', 'B', 'C', 'D'];
 
 // Human-readable label for each sort mode, used in the embed footer
@@ -45,17 +48,22 @@ const SORT_LABELS = {
   rank:   'By rank'
 };
 
+// The emoji used on the direction-flip button (both ascending and descending states)
+const DESC_EMOJI = '<:descending:1533566429180330286>';
+
 // ─────────────────────────────────────────────
-// HELPER — resolve a stat for a specific card + mastery level
-// Handles missing M2/M3 by falling back to the base card data
+// HELPER — get the stat block for a card at a given mastery level
+// Falls back to a lower mastery if the card doesn't have M2/M3 data
 // ─────────────────────────────────────────────
 function getCardData(card, mastery) {
-  // Try to get the right mastery block; fall back to the base card if it's missing
   if (mastery === 2) return card.M2 || card;
   if (mastery === 3) return card.M3 || card.M2 || card;
   return card; // M1 always uses the base card
 }
 
+// ─────────────────────────────────────────────
+// HELPER — resolve a single stat for a specific card + mastery level
+// ─────────────────────────────────────────────
 function resolveCardStat(card, mastery, statType) {
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
@@ -64,22 +72,32 @@ function resolveCardStat(card, mastery, statType) {
 
 // ─────────────────────────────────────────────
 // HELPER — sort a list of card objects by the given mode
+//
+// isAscending controls direction:
+//   false (default) → highest/best first  (e.g. UR → D, 100 power → 1 power)
+//   true            → lowest/worst first  (e.g. D → UR, 1 power → 100 power)
 // ─────────────────────────────────────────────
-function sortCards(cardList, sortMode, mastery) {
-  const copy = [...cardList]; // Don't mutate the original
+function sortCards(cardList, sortMode, mastery, isAscending = false) {
+  const copy = [...cardList]; // Never mutate the original array
+
+  let sorted;
 
   if (sortMode === 'rank') {
-    return copy.sort((a, b) => {
+    // Sort by rank — highest rank (UR) first by default
+    sorted = copy.sort((a, b) => {
       const rankA = safeRank(getCardData(a, mastery).rank || a.rank);
       const rankB = safeRank(getCardData(b, mastery).rank || b.rank);
       return RANK_ORDER.indexOf(rankA) - RANK_ORDER.indexOf(rankB);
     });
+  } else {
+    // Sort by a stat (health / power / speed) — highest value first by default
+    sorted = copy.sort((a, b) =>
+      resolveCardStat(b, mastery, sortMode) - resolveCardStat(a, mastery, sortMode)
+    );
   }
 
-  // health, power, or speed — highest value first
-  return copy.sort((a, b) => {
-    return resolveCardStat(b, mastery, sortMode) - resolveCardStat(a, mastery, sortMode);
-  });
+  // If the player toggled the direction button, flip the entire sorted list
+  return isAscending ? sorted.reverse() : sorted;
 }
 
 // ─────────────────────────────────────────────
@@ -90,7 +108,7 @@ function buildCardEmbed(card, mastery, footerText, user) {
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
 
-  // Warn in logs if the rank is invalid so the owner knows about a data problem
+  // Warn in the logs if the rank is invalid so the owner knows to fix it in cards.js
   if (rank !== (cardData.rank || card.rank)) {
     console.warn(`[AllCards] "${card.name}" M${mastery} has invalid rank "${cardData.rank}". Using fallback D.`);
   }
@@ -123,7 +141,7 @@ function buildCardEmbed(card, mastery, footerText, user) {
 
 // ─────────────────────────────────────────────
 // HELPER — normal mode footer text
-// Example: "Card 3/34 - By power [M1's]"
+// Example: `Card 3/34 - By power [M1's]`
 // ─────────────────────────────────────────────
 function normalFooter(page, total, sortMode, mastery) {
   return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By power'} [M${mastery}'s]`;
@@ -131,16 +149,20 @@ function normalFooter(page, total, sortMode, mastery) {
 
 // ─────────────────────────────────────────────
 // HELPER — search mode footer text
-// Example: "Card 2/3 - [Monkey D. Luffy]"
+// Example: `Card 2/3`
 // ─────────────────────────────────────────────
-function searchFooter(mastery, cardName) {
+function searchFooter(mastery) {
   return `Card ${mastery}/3`;
 }
 
 // ─────────────────────────────────────────────
 // HELPER — components for normal (browsing) mode
-// PREFIX: 3 rows — nav buttons, sort dropdown, mastery dropdown
-// SLASH:  1 row  — nav buttons only (sort/mastery are slash options)
+//
+// The direction button (↕) is always visible in normal mode for BOTH slash and prefix.
+// It is NEVER shown in search mode (search mode shows a single card, direction is meaningless).
+//
+// PREFIX: 3 rows — nav buttons (including direction), sort dropdown, mastery dropdown
+// SLASH:  1 row  — nav buttons only (sort/mastery are set via slash options at invocation)
 // ─────────────────────────────────────────────
 function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
   const navRow = new ActionRowBuilder().addComponents(
@@ -149,13 +171,22 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
       .setCustomId('ac_search')
       .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
-    // Previous card
+
+    // ↕ Direction button — flips the sort between highest-first and lowest-first.
+    // Always grey (Secondary). Same emoji for both directions.
+    new ButtonBuilder()
+      .setCustomId('ac_desc')
+      .setEmoji(DESC_EMOJI)
+      .setStyle(ButtonStyle.Secondary),
+
+    // Navigate backwards through the sorted list
     new ButtonBuilder()
       .setCustomId('ac_prev')
       .setLabel('Previous')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
-    // Next card (blue = primary to stand out)
+
+    // Navigate forwards through the sorted list (blue = primary action)
     new ButtonBuilder()
       .setCustomId('ac_next')
       .setLabel('Next')
@@ -163,7 +194,7 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
       .setDisabled(page >= total - 1)
   );
 
-  // Slash commands set sort/mastery via options — no dropdowns needed
+  // Slash commands set sort/mastery via options — no dropdowns needed mid-session
   if (isSlash) return [navRow];
 
   // PREFIX: add sort and mastery dropdowns below the nav buttons
@@ -195,12 +226,13 @@ function buildNormalComponents(total, page, sortMode, mastery, isSlash) {
 
 // ─────────────────────────────────────────────
 // HELPER — components for search (single-card) mode
-// Back button (red) + Previous/Next for M1 → M2 → M3
+// Shows Back + Previous/Next for M1 → M2 → M3.
+// No direction button — it would have nothing to do here.
 // ─────────────────────────────────────────────
 function buildSearchComponents(searchMastery) {
   return [
     new ActionRowBuilder().addComponents(
-      // Back goes back to the main sorted list — red so it stands out
+      // Back goes to the main sorted list — red so it stands out
       new ButtonBuilder()
         .setCustomId('ac_back')
         .setLabel('Back')
@@ -226,7 +258,7 @@ module.exports = {
   // Slash command definition (/allcards)
   data: new SlashCommandBuilder()
     .setName('allcards')
-    .setDescription('See a list of all the all the cards.')
+    .setDescription('See a list of all the cards in the game')
     .addStringOption(option =>
       option
         .setName('sort')
@@ -242,7 +274,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('mastery')
-        .setDescription('Sort by a specific mastery level')
+        .setDescription('Filter by mastery level')
         .setRequired(false)
         .addChoices(
           { name: "Only M1's", value: '1' },
@@ -253,11 +285,11 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('card')
-        .setDescription('Search for a specific card')
+        .setDescription('Search for a specific card directly')
         .setRequired(false)
     ),
 
-  // Prefix command definition
+  // Prefix command definition (op allcards / op ac / op cards)
   name: 'allcards',
   aliases: ['ac', 'cards'],
 
@@ -275,7 +307,7 @@ module.exports = {
       slashMastery = interactionOrMessage.options.getString('mastery');
       slashCard    = interactionOrMessage.options.getString('card');
 
-      // 'card' can't be combined with sort or mastery — they conflict
+      // 'card' conflicts with sort/mastery — they serve different purposes
       if (slashCard && (slashSort || slashMastery)) {
         return interactionOrMessage.reply({
           content: 'You cannot use **card** together with **sort** or **mastery**. Pick one.',
@@ -284,15 +316,18 @@ module.exports = {
       }
     }
 
-    // ── STEP 2: Set up initial state ──
-    let sortMode    = slashSort    || 'power';       // Default sort: by power
-    let mastery     = parseInt(slashMastery) || 1;   // Default mastery: M1
-    let currentPage = 0;
+    // ── STEP 2: Set up state ──
+    // This state lives in memory for the lifetime of this message's collector.
+    // Every button/dropdown interaction reads and/or updates these values.
+    let sortMode      = slashSort    || 'power';       // Default sort: by power
+    let mastery       = parseInt(slashMastery) || 1;   // Default mastery: M1
+    let isAscending   = false;                         // false = highest first, true = lowest first
+    let currentPage   = 0;
     let isSearchMode  = false;
     let searchCard    = null; // The card object being shown in search mode
     let searchMastery = 1;   // Which mastery (1/2/3) is showing in search mode
 
-    // ── STEP 4: Handle 'card' option / enter search mode immediately ──
+    // ── STEP 3: Handle the 'card' slash option — enter search mode immediately ──
     if (slashCard) {
       const query = slashCard.toLowerCase().trim();
       const found = cards.find(c =>
@@ -302,7 +337,8 @@ module.exports = {
 
       if (!found) {
         return interactionOrMessage.reply({
-          content: `**${slashCard}** is not a valid card.`,
+          content: `**${slashCard}** is not a valid card`,
+          allowedMentions: { repliedUser: false },
           flags: 64
         });
       }
@@ -312,22 +348,25 @@ module.exports = {
       searchMastery = 1;
     }
 
-    // ── STEP 5: Build the initial sorted card list ──
-    let sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery);
+    // ── STEP 4: Build the initial sorted card list ──
+    // Filter out any blank/unnamed entries that might exist in the card data
+    let sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
 
-    // ── STEP 6: Build the initial embed and components ──
+    // ── STEP 5: Build the initial embed and components ──
     let embed, components;
 
     if (isSearchMode) {
-      embed      = buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery, searchCard.name), user);
+      // Search mode: single card, no direction button
+      embed      = buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user);
       components = buildSearchComponents(searchMastery);
     } else {
+      // Normal browse mode: full nav with direction button
       embed      = buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user);
       components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash);
     }
 
-    // ── STEP 7: Send the message ──
-    // fetchReply: true gives us back the sent message so we can attach a collector
+    // ── STEP 6: Send the message ──
+    // fetchReply: true gives us back the sent message object so we can attach a collector to it
     const payload = { embeds: [embed], components, fetchReply: true };
     let response;
 
@@ -337,23 +376,28 @@ module.exports = {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // ── STEP 8: Set up the interaction collector ──
-    // Watches for button clicks and dropdown selections on this message for 2 minutes
+    // ── STEP 7: Set up the interaction collector ──
+    // A "collector" listens for button clicks and dropdown changes on this specific message.
+    // The timer starts when the message is sent and resets each time the user interacts.
     const collector = response.createMessageComponentCollector({ time: 120000 });
 
     collector.on('collect', async (interaction) => {
       // Only the person who ran the command can interact with it
       if (interaction.user.id !== user.id) {
-        return interaction.reply({ content: "This isn't yours", flags: 64 });
+        return interaction.reply({ content: `This isn't yours`, flags: 64 });
       }
 
-      // ── NEXT (normal mode: advance to next card) ──
+      // Reset the 2-minute inactivity timer every time the user clicks anything.
+      // Without this, the buttons would disappear 2 minutes after the FIRST interaction.
+      collector.resetTimer();
+
+      // ── NEXT ──
       if (interaction.customId === 'ac_next') {
         if (isSearchMode) {
-          // In search mode: move to the next mastery level (M1 → M2 → M3)
+          // In search mode: move to the next mastery (M1 → M2 → M3)
           searchMastery = Math.min(3, searchMastery + 1);
           await interaction.update({
-            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery, searchCard.name), user)],
+            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user)],
             components: buildSearchComponents(searchMastery)
           });
         } else {
@@ -370,7 +414,7 @@ module.exports = {
         if (isSearchMode) {
           searchMastery = Math.max(1, searchMastery - 1);
           await interaction.update({
-            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery, searchCard.name), user)],
+            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user)],
             components: buildSearchComponents(searchMastery)
           });
         } else {
@@ -382,12 +426,26 @@ module.exports = {
         }
       }
 
+      // ── DIRECTION TOGGLE BUTTON ──
+      // Flips the sort between highest-first (default) and lowest-first.
+      // Example with power sort:
+      //   isAscending = false → 100 power, 95 power, 80 power ... (highest first)
+      //   isAscending = true  →  1 power,   5 power, 12 power ... (lowest first)
+      else if (interaction.customId === 'ac_desc') {
+        isAscending = !isAscending;    // Flip the direction
+        currentPage = 0;               // Go back to page 1 so nothing feels broken
+        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
+        await interaction.update({
+          embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
+        });
+      }
+
       // ── SORT DROPDOWN (prefix only) ──
       else if (interaction.customId === 'ac_sort') {
-        sortMode    = interaction.values[0];
-        currentPage = 0; // Reset to first card when sort changes
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery);
-
+        sortMode    = interaction.values[0]; // The value the player selected
+        currentPage = 0;                     // Reset to first card when sort changes
+        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
           components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash)
@@ -399,8 +457,8 @@ module.exports = {
         mastery     = parseInt(interaction.values[0]); // '1', '2', or '3' → 1, 2, 3
         currentPage = 0; // Reset to first card when mastery changes
 
-        // Re-sort with the new mastery so stat values reflect the displayed level
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery);
+        // Re-sort because stat values change between masteries (e.g. M2 has different power than M1)
+        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
 
         await interaction.update({
           embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
@@ -425,7 +483,7 @@ module.exports = {
 
         await interaction.showModal(modal);
 
-        // Wait up to 30 seconds for the user to submit the modal
+        // Wait up to 30 seconds for the player to type and submit the modal
         try {
           const submit = await interaction.awaitModalSubmit({
             time:   30000,
@@ -434,15 +492,15 @@ module.exports = {
 
           const query = submit.fields.getTextInputValue('ac_search_query').toLowerCase().trim();
 
-          // Find the card by name or alias
+          // Search across all cards in the game
           const found = cards.find(c =>
             c.name.toLowerCase().includes(query) ||
             c.aliases.some(a => a && a.toLowerCase().includes(query))
           );
 
           if (!found) {
-            // Card not found — tell the user and stay on the current embed
-            await submit.reply({ content: `**${query}** is not a valid card.`, flags: 64 });
+            // Card not found — tell the user and leave the embed unchanged
+            await submit.reply({ content: `**${query}** is not a valid card`, flags: 64 });
             return;
           }
 
@@ -452,12 +510,12 @@ module.exports = {
           searchMastery = 1;
 
           await submit.update({
-            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery, searchCard.name), user)],
+            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user)],
             components: buildSearchComponents(searchMastery)
           });
 
         } catch {
-          // Modal was dismissed or timed out — do nothing, embed stays as-is
+          // Modal was dismissed or timed out — do nothing, the embed stays as-is
         }
       }
 
@@ -475,7 +533,7 @@ module.exports = {
       }
     });
 
-    // After 2 minutes, remove all buttons so old messages stay clean
+    // After 2 minutes of inactivity, remove all buttons so old messages stay clean
     collector.on('end', () => {
       response.edit({ components: [] }).catch(() => {});
     });
