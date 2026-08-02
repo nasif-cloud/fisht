@@ -409,21 +409,21 @@ const cards = [
     aliases: ['Ryuma',],
 
 
-    title: 'Legendary Samurai - MONSTERS',
-    rank: 'S',
+    title: 'Thriller Bark Zombie',
+    rank: 'B',
     health: '-',
     power: '+',
     speed: '=',
-    image: 'https://i.postimg.cc/zDwmPFwh/16.png', 
+    image: 'https://i.postimg.cc/7P1vQn11/17.png', 
     
   
     M2: {
-      title: 'Thriller Bark Zombie',
+      title: 'Legendary Samurai - MONSTERS',
       rank: 'S', 
       health: '=',
       power: '++',
       speed: '+',
-      image: 'https://i.postimg.cc/7P1vQn11/17.png'
+      image: 'https://i.postimg.cc/zDwmPFwh/16.png'
     },
     
  
@@ -864,7 +864,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://i.postimg.cc/Bv8bxVKg/83.png', 
+    image: 'https://files.catbox.moe/aih8k3.png', 
     
     M2: {
     title: 'Red Hair Pirates',
@@ -1261,6 +1261,937 @@ const cards = [
     image: 'https://files.catbox.moe/ho9b7z.webp', 
     }
   },
+  
+  {
+    name: 'Acrobatic Fuwa 1',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/lfq6s6.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/0klqia.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/ot9zpx.png', 
+    }
+  },
+  {
+    name: 'Acrobatic Fuwa 2',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/0o3whl.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/orxg5a.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/tym0ly.png', 
+    }
+  },
+  {
+    name: 'Acrobatic Fuwa 3',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/yh46hk.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/h4c0aj.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/yt3ycm.png', 
+    }
+  },
+  {
+    name: 'Acrobatic Fuwa 4',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/uyszd1.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/i4rhj5.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/kxpec1.png', 
+    }
+  },
+  {
+    name: 'Banchina',
+    aliases: ['',],
+
+    title: 'Usopp\'s Mother',
+    rank: 'D',
+    health: '--',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/7eaa9e.png', 
+    
+    M2: {
+    title: 'Usopp\'s Mother',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/fov3dp.png', 
+    }, 
+  },
+  {
+    name: 'Boodle',
+    aliases: ['',],
+
+    title: 'Mayor of Orange town',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/u0vao2.png', 
+    
+    M2: {
+    title: 'Mayor of Orange town',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/e3918i.png', 
+    }, 
+  
+    M3: {
+    title: 'Mayor of Orange town',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/1l7e64.png', 
+    }
+  },
+  {
+    name: 'Sham',
+    aliases: ['Siam',],
+
+    title: 'Black Cat Pirates',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/ga132i.png', 
+    
+    M2: {
+    title: 'Black Cat Pirates',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://files.catbox.moe/2s8lbf.png', 
+    }, 
+  
+    M3: {
+    title: 'Black Cat Pirates',
+    rank: 'B',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/y6ccno.png', 
+    }
+  },
+  {
+    name: 'Building Snake',
+    aliases: ['',],
+
+    title: 'Red Hair Pirates',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/1787of.png', 
+    
+    M2: {
+    title: 'Red Hair Pirates',
+    rank: 'A',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/dvgi02.png', 
+    }, 
+  
+    M3: {
+    title: 'Red Hair Pirates',
+    rank: 'A',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/v4f3vn.png', 
+    }
+  },
+  {
+    name: 'Cabaji',
+    aliases: ['',],
+
+    title: 'The Acrobat',
+    rank: 'B',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/97lpbi.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'B',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/z0wumw.png', 
+    }, 
+  
+    M3: {
+    title: 'Cross Guild',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/oalo77.png', 
+    }
+  },
+  {
+    name: 'Chouchou',
+    aliases: ['Shushu', 'Chou-Chou'],
+
+    title: 'Pet Shop Keeper',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/04gx4w.png', 
+    
+    M2: {
+    title: 'Pet Shop Keeper',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/tbnxs5.png', 
+    }, 
+  
+    M3: {
+    title: 'Pet Shop Keeper',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/pmhz48.png', 
+    }
+  },
+  {
+    name: 'Gol D. Roger',
+    aliases: ['Gold Roger',],
+
+    title: 'Captain of the Roger Pirates',
+    rank: 'SS',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/ykb3vc.png', 
+    
+    M2: {
+    title: 'Captain of the Roger Pirates',
+    rank: 'SS',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://files.catbox.moe/vzm6v6.png', 
+    }, 
+  
+    M3: {
+    title: 'King of the Pirates',
+    rank: 'UR',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/9nmlyu.png', 
+    }
+  },
+  {
+    name: 'Buchi',
+    aliases: ['Butchie',],
+
+    title: 'Nyaban Brother',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/050jwf.png', 
+    
+    M2: {
+    title: 'Black Cat Pirates',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/93qnsv.png', 
+    }, 
+  
+    M3: {
+    title: 'Black Cat Pirates',
+    rank: 'B',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/l0j5c9.png', 
+    }
+  },
+  {
+    name: 'Hocker',
+    aliases: ['',],
+
+    title: 'Pet Shop Owner',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/hz6wyj.png', 
+    
+    M2: {
+    title: 'Pet Shop Owner',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/mu40gf.png', 
+    }, 
+  
+    M3: {
+    title: 'Pet Shop Owner',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/0va7qz.png', 
+    }
+  },
+  {
+    name: 'Jango',
+    aliases: ['Django',],
+
+    title: 'The turncoat',
+    rank: 'B',
+    health: '-',
+    power: '+',
+    speed: '-',
+    image: 'https://files.catbox.moe/wh81on.png', 
+    
+    M2: {
+    title: '"One Two" Django',
+    rank: 'B',
+    health: '=',
+    power: '++',
+    speed: '=',
+    image: 'https://files.catbox.moe/n6n1dy.png', 
+    }, 
+  
+    M3: {
+    title: 'Marine Lieutenant',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/edqvmp.png', 
+    }
+  },
+  {
+    name: 'Kaya',
+    aliases: ['',],
+
+    title: 'Syrup Village',
+    rank: 'C',
+    health: '--',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/f7a8xv.png', 
+    
+    M2: {
+    title: 'Syrup Village',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/av6jol.png', 
+    }, 
+  
+    M3: {
+    title: 'Medical Student',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/55m1rv.png', 
+    }
+  },
+  {
+    name: 'Kuro',
+    aliases: ['',],
+
+    title: 'Of a Hundred Plans',
+    rank: 'B',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: '', 
+    
+    M2: {
+    title: 'Captain of the Black Cat Pirates',
+    rank: 'B',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://files.catbox.moe/bnm8v2.png', 
+    }, 
+  
+    M3: {
+    title: 'Captain of the Black Cat Pirates',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '+',
+    image: 'https://files.catbox.moe/3s6dgt.png', 
+    }
+  },
+  {
+    name: 'Lord of the Coast',
+    aliases: ['Lord Sea Monster', 'Master of the Near Sea', ],
+
+    title: 'Take D. Arm',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/s36ner.png', 
+    
+    M2: {
+    title: 'Foosha Village\'s local Sea King',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://files.catbox.moe/qqcx96.png', 
+    }, 
+  
+    M3: {
+    title: 'Foosha Village\'s local Sea King',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/2ikxhx.png', 
+    }
+  },
+  {
+    name: 'Mansion Guard 1',
+    aliases: ['',],
+
+    title: 'Kaya\'s security Guard',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/lt0c2h.png', 
+    
+    M2: {
+    title: 'Kaya\'s security Guard',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/icjvii.png', 
+    }, 
+  
+    M3: {
+    title: 'Kaya\'s security Guard',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://files.catbox.moe/1utn61.png', 
+    }
+  },
+  {
+    name: 'Mansion Guard 2',
+    aliases: ['',],
+
+    title: 'Kaya\'s security Guard',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/haxqrd.png', 
+    
+    M2: {
+    title: 'Kaya\'s security Guard',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/ne1clc.png', 
+    }, 
+  
+    M3: {
+    title: 'kaya\'s security Guard',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://files.catbox.moe/40zfcb.png', 
+    }
+  },
+  {
+    name: 'Merry',
+    aliases: ['',],
+
+    title: 'Butler',
+    rank: 'C',
+    health: '=',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/w1zwcm.png', 
+    
+    M2: {
+    title: 'Butler',
+    rank: 'C',
+    health: '+',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/bx7jlm.png', 
+    }, 
+  
+    M3: {
+    title: 'Butler',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/wk665q.png', 
+    }
+  },
+  {
+    name: 'Mohji',
+    aliases: ['Morji',],
+
+    title: 'The Beast Tamer',
+    rank: 'B',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/y8zkf7.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'B',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/nrbinf.png', 
+    }, 
+  
+    M3: {
+    title: 'Cross Guild - Fat Chud',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '--',
+    image: 'https://files.catbox.moe/gbvcfu.png', 
+    }
+  },
+  {
+    name: 'Ninjin',
+    aliases: ['Carrot',],
+
+    title: 'Usopp Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/sbns17.png', 
+    
+    M2: {
+    title: 'Usopp Security Force',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/99hsmz.png', 
+    }, 
+  
+    M3: {
+    title: 'Usopp Security Force',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/xvcoih.png', 
+    }
+  },
+  {
+    name: 'Nugire Yainu',
+    aliases: ['',],
+
+    title: 'Black Cat Pirates',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/84vwz6.png', 
+  },
+  {
+    name: 'Piiman',
+    aliases: ['Pepper',],
+
+    title: 'Usopp Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/qbioo7.png', 
+    
+    M2: {
+    title: 'Usopp security Force',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/g27sa9.png', 
+    }, 
+  
+    M3: {
+    title: 'Security Force',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/v3eqrt.png', 
+    }
+  },
+  {
+    name: 'Pinky',
+    aliases: ['',],
+
+    title: 'Monstrous Bird',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/h5e1cr.png', 
+    
+    M2: {
+    title: 'Monstrous Bird',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/7zdukf.png', 
+    }, 
+  
+    M3: {
+    title: 'Monstrous Bird',
+    rank: 'D',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://files.catbox.moe/tgcs21.png', 
+    }
+  },
+  {
+    name: 'Poro',
+    aliases: ['',],
+
+    title: 'Bookstore Owner',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/d24drj.png', 
+    
+    M2: {
+    title: 'Bookstore Owner',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/m649yu.png', 
+    }, 
+  
+    M3: {
+    title: 'Bookstore Owner',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/ax1yok.png', 
+    }
+  },
+  {
+    name: 'Silvers Rayleigh',
+    aliases: ['',],
+
+    title: 'Coating Mechanic',
+    rank: 'SS',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/l8gfu8.png', 
+    
+    M2: {
+    title: 'Dark King',
+    rank: 'SS',
+    health: '=',
+    power: '++',
+    speed: '++',
+    image: 'https://files.catbox.moe/z8o8bw.png', 
+    }, 
+  
+    M3: {
+    title: 'Right Hand of the Pirate King',
+    rank: 'UR',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://files.catbox.moe/tc2763.png', 
+    }
+  },
+  {
+    name: 'Richie',
+    aliases: ['Richy',],
+
+    title: 'Buggy Pirates',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'B',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: '', 
+    }, 
+  
+    M3: {
+    title: 'Cross Guild - Fat chud',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '--',
+    image: '', 
+    }
+  },
+  {
+    name: 'Superhuman Domingo 1',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/ook9sn.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/hv10w2.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://files.catbox.moe/234cc5.png', 
+    }
+  },
+  {
+    name: 'Superhuman Domingo 2',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/uz3l3g.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/usrvvg.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://files.catbox.moe/imbp7b.png', 
+    }
+  },
+  {
+    name: 'Superhuman Domingo 3',
+    aliases: ['',],
+
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/ncxm3i.png', 
+    
+    M2: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://files.catbox.moe/8yzt8l.png', 
+    }, 
+  
+    M3: {
+    title: 'Buggy Pirates',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://files.catbox.moe/0qimab.png', 
+    }
+  },
+  {
+    name: 'Tamanegi',
+    aliases: ['Onion',],
+
+    title: 'Usopp Pirates',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/wpn841.png', 
+    
+    M2: {
+    title: 'Usopp Security Force',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/9viijb.png', 
+    }, 
+  
+    M3: {
+    title: 'Usopp Security Force',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://files.catbox.moe/0trnf8.png', 
+    }
+  },
+  {
+    name: 'Usopp',
+    aliases: ['',],
+
+    title: 'Usopp Pirates',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://files.catbox.moe/tfbf2x.png', 
+    
+    M2: {
+    title: 'Sogeking',
+    rank: 'B',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/w24pj8.png', 
+    }, 
+  
+    M3: {
+    title: 'Strawhat Pirates',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://files.catbox.moe/g670b4.png', 
+    }
+  },
   /*
   {
     name: '',
@@ -1349,6 +2280,7 @@ const cards = [
     image: '', 
     }
   },
+
   {
     name: '',
     aliases: ['',],
@@ -1436,299 +2368,8 @@ const cards = [
     image: '', 
     }
   },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
   
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
   */
-  
-  
 ];
 
 // Run validation once at startup — logs warnings for any bad card data
