@@ -16,14 +16,73 @@ const SHINY_EMOJI_URL = 'https://cdn.discordapp.com/emojis/1533666993637687466.p
 const imageBufferCache = new Map();
 let shinyEmojiImagePromise = null;
 
-const glowByRank = {
-  D: { blur: 0, alpha: 0 },
-  C: { blur: 0, alpha: 0 },
-  B: { blur: 0, alpha: 0 },
-  A: { blur: 5, alpha: 0.25 },
-  S: { blur: 10, alpha: 0.38 },
-  SS: { blur: 20, alpha: 0.52 },
-  UR: { blur: 30, alpha: 0.7 }
+// Each rank gets its own frame materials. Lower ranks stay simple and
+// practical, while higher ranks gain richer metal colours and restrained
+// corner details instead of a generic all-purpose glow.
+const frameByRank = {
+  D: {
+    outer: '#59616d',
+    highlight: '#aeb7c3',
+    shadow: 'rgba(0, 0, 0, 0.35)',
+    inset: '#202631',
+    innerBorder: '#424b58',
+    detail: 0,
+    shadowBlur: 5
+  },
+  C: {
+    outer: '#9a7435',
+    highlight: '#efd18a',
+    shadow: 'rgba(65, 42, 12, 0.42)',
+    inset: '#332818',
+    innerBorder: '#68502a',
+    detail: 0,
+    shadowBlur: 6
+  },
+  B: {
+    outer: '#315b96',
+    highlight: '#9fc5f4',
+    shadow: 'rgba(20, 53, 96, 0.45)',
+    inset: '#14243c',
+    innerBorder: '#274875',
+    detail: 1,
+    shadowBlur: 7
+  },
+  A: {
+    outer: '#68418e',
+    highlight: '#d8b9f5',
+    shadow: 'rgba(65, 31, 99, 0.48)',
+    inset: '#28183a',
+    innerBorder: '#523170',
+    detail: 1,
+    shadowBlur: 8
+  },
+  S: {
+    outer: '#9d3e65',
+    highlight: '#ffc2d8',
+    shadow: 'rgba(111, 25, 63, 0.52)',
+    inset: '#3b1728',
+    innerBorder: '#792f50',
+    detail: 2,
+    shadowBlur: 9
+  },
+  SS: {
+    outer: '#963329',
+    highlight: '#ffc18b',
+    shadow: 'rgba(114, 24, 19, 0.56)',
+    inset: '#421716',
+    innerBorder: '#762822',
+    detail: 2,
+    shadowBlur: 10
+  },
+  UR: {
+    outer: '#7b438f',
+    highlight: '#ffe0a0',
+    shadow: 'rgba(101, 46, 129, 0.62)',
+    inset: '#281839',
+    innerBorder: '#c17a8d',
+    detail: 3,
+    shadowBlur: 12
+  }
 };
 
 function buildOwnedCardPool(userData) {
@@ -136,49 +195,83 @@ function roundedRectPath(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
-function getRankColor(rank) {
-  const color = rankConfig[safeRank(rank)]?.M1?.color || 0xffffff;
-  return `#${color.toString(16).padStart(6, '0')}`;
+function getFrameStyle(rank) {
+  return frameByRank[safeRank(rank)] || frameByRank.D;
 }
 
-function hexToRgb(hexColor) {
-  const numeric = typeof hexColor === 'number' ? hexColor : parseInt(String(hexColor).replace('#', ''), 16);
-  return {
-    r: (numeric >> 16) & 255,
-    g: (numeric >> 8) & 255,
-    b: numeric & 255
-  };
-}
+// Draw small, symmetrical frame details so stronger ranks feel more valuable
+// without covering the card art with a noisy effect.
+function drawFrameDetails(ctx, x, y, size, detail, color) {
+  if (detail <= 0) return;
 
-function getGlowStyle(rank) {
-  const resolvedRank = safeRank(rank);
-  const style = glowByRank[resolvedRank] || glowByRank.D;
-  const { r, g, b } = hexToRgb(rankConfig[resolvedRank]?.M1?.color || 0xffffff);
-
-  return {
-    shadowBlur: style.blur,
-    shadowColor: `rgba(${r}, ${g}, ${b}, ${style.alpha})`
-  };
-}
-
-function drawCardGlow(ctx, entry, layout) {
-  if (!entry) return;
-
-  const glow = getGlowStyle(entry.rank);
-  if (glow.shadowBlur <= 0 || glow.shadowColor.endsWith(', 0)')) return;
-
-  const { x, y, size, radius } = layout;
-  const glowPadding = 0;
-  const { r, g, b } = hexToRgb(rankConfig[safeRank(entry.rank)]?.M1?.color || 0xffffff);
+  const inset = detail >= 3 ? 12 : 11;
+  const arm = detail >= 3 ? 17 : 12;
+  const positions = [
+    [x + inset, y + inset, 1, 1],
+    [x + size - inset, y + inset, -1, 1],
+    [x + inset, y + size - inset, 1, -1],
+    [x + size - inset, y + size - inset, -1, -1]
+  ];
 
   ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.shadowColor = glow.shadowColor;
-  ctx.shadowBlur = glow.shadowBlur;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.01)';
-  roundedRectPath(ctx, x - glowPadding, y - glowPadding, size + glowPadding * 2, size + glowPadding * 2, radius + glowPadding);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = detail >= 3 ? 2 : 1.5;
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = detail >= 3 ? 0.9 : 0.7;
+
+  for (const [cx, cy, dirX, dirY] of positions) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + dirY * arm);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx + dirX * arm, cy);
+    ctx.stroke();
+
+    // Higher ranks get a tiny rivet at each corner rather than a large glow.
+    if (detail >= 2) {
+      ctx.beginPath();
+      ctx.arc(cx + dirX * 3, cy + dirY * 3, detail >= 3 ? 2.5 : 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawCardFrame(ctx, entry, layout) {
+  const { x, y, size, radius } = layout;
+  const style = getFrameStyle(entry?.rank);
+
+  // A compact shadow separates the frame from the dark team background.
+  ctx.save();
+  ctx.shadowColor = style.shadow;
+  ctx.shadowBlur = style.shadowBlur;
+  ctx.fillStyle = style.outer;
+  roundedRectPath(ctx, x, y, size, size, radius);
   ctx.fill();
   ctx.restore();
+
+  // Fine highlight around the outside gives the frame a physical edge.
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = style.highlight;
+  ctx.globalAlpha = 0.9;
+  roundedRectPath(ctx, x + 1, y + 1, size - 2, size - 2, radius - 1);
+  ctx.stroke();
+  ctx.restore();
+
+  // The dark inset makes the rank trim read like a real card housing.
+  ctx.save();
+  ctx.fillStyle = style.inset;
+  roundedRectPath(ctx, x + 8, y + 8, size - 16, size - 16, radius - 7);
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = style.innerBorder;
+  roundedRectPath(ctx, x + 9, y + 9, size - 18, size - 18, radius - 8);
+  ctx.stroke();
+  ctx.restore();
+
+  drawFrameDetails(ctx, x, y, size, style.detail, style.highlight);
 }
 
 async function fetchImageBuffer(url) {
@@ -265,32 +358,22 @@ async function loadShinyEmojiImage() {
 // so all network work can be done in parallel before any drawing starts.
 function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
   const { x, y, size, radius, innerPadding } = layout;
-  const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
   const cardName = entry?.card?.name || '';
-  const glowStyle = entry ? getGlowStyle(entry.rank) : { shadowBlur: 10, shadowColor: '#25304c' };
 
-  drawCardGlow(ctx, entry, layout);
-
-  ctx.save();
-  ctx.shadowColor = glowStyle.shadowColor;
-  ctx.shadowBlur = glowStyle.shadowBlur;
-  ctx.fillStyle = '#f7f9ff';
-  roundedRectPath(ctx, x, y, size, size, radius);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  ctx.fillStyle = '#10172d';
-  roundedRectPath(ctx, x + 9, y + 9, size - 18, size - 18, radius - 4);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  ctx.lineWidth = 8;
-  ctx.strokeStyle = borderColor;
-  roundedRectPath(ctx, x + 7, y + 7, size - 14, size - 14, radius - 5);
-  ctx.stroke();
-  ctx.restore();
+  if (entry) {
+    drawCardFrame(ctx, entry, layout);
+  } else {
+    // Empty slots use the same dark housing language without a rank accent.
+    ctx.save();
+    ctx.fillStyle = '#202631';
+    roundedRectPath(ctx, x, y, size, size, radius);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#59616d';
+    roundedRectPath(ctx, x + 1, y + 1, size - 2, size - 2, radius - 1);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   if (entry && sourceImage) {
     const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
