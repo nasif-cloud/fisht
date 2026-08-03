@@ -46,6 +46,6 @@ data/
 
 - Always leave comments in code so a beginner can understand it.
 - Bot replies should never ping the user (no @mention in prefix/slash command replies).
-- slash commands are ran, it should reply to the user silently without ping. 
-always favor `` from ""
-- on normal messages that are not embeds, never end the message with a dot.
+- Always favor backticks (`) over double-quotes (`"`) in bot messages.
+- On normal messages that are not embeds, never end the message with a period.
+- For all embeds using buttons, when those embeds expire the footer should update to "expired", clearing the original footer icon and text.
