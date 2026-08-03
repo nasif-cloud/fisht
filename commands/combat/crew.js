@@ -11,8 +11,10 @@ const CANVAS_HEIGHT = 500;
 const SUCCESS_REACTION = '<:Success:1533154745731256531>';
 const TEAM_COOLDOWN_MS = 5000;
 const IMAGE_FETCH_TIMEOUT_MS = 2500;
+const SHINY_EMOJI_URL = 'https://cdn.discordapp.com/emojis/1533666993637687466.png?size=32&quality=lossless';
 
 const imageBufferCache = new Map();
+let shinyEmojiImagePromise = null;
 
 const glowByRank = {
   D: { blur: 0, alpha: 0 },
@@ -244,9 +246,24 @@ async function loadCardImage(entry) {
   }
 }
 
+// Load the small shiny emoji used as a badge on shiny team cards.
+// Cache the promise so simultaneous team renders share one network request.
+async function loadShinyEmojiImage() {
+  if (!shinyEmojiImagePromise) {
+    shinyEmojiImagePromise = fetchImageBuffer(SHINY_EMOJI_URL)
+      .then(buffer => loadImage(buffer))
+      .catch(error => {
+        console.warn(`[Crew] Failed to load shiny emoji: ${error.message}`);
+        return null;
+      });
+  }
+
+  return shinyEmojiImagePromise;
+}
+
 // renderCardSlot now accepts an already-loaded sourceImage (or null for empty slots)
 // so all network work can be done in parallel before any drawing starts.
-function renderCardSlot(ctx, entry, sourceImage, layout) {
+function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
   const { x, y, size, radius, innerPadding } = layout;
   const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
   const cardName = entry?.card?.name || '';
@@ -305,6 +322,32 @@ function renderCardSlot(ctx, entry, sourceImage, layout) {
     ctx.textBaseline = 'middle';
     ctx.fillText(cardName, innerX + innerSize / 2, innerY + innerSize - labelHeight / 2);
     ctx.restore();
+
+    // Put a small shiny emoji badge in the card's top-right corner.
+    // The dark circular backing keeps the icon visible over bright artwork.
+    if (entry.isShiny) {
+      const badgeSize = Math.min(34, size * 0.16);
+      const badgeX = x + size - badgeSize - 14;
+      const badgeY = y + 14;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(7, 18, 45, 0.85)';
+      ctx.beginPath();
+      ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2 + 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (shinyEmojiImage) {
+        ctx.drawImage(shinyEmojiImage, badgeX, badgeY, badgeSize, badgeSize);
+      } else {
+        // Fallback if Discord's emoji CDN is temporarily unavailable.
+        ctx.fillStyle = '#ffd44d';
+        ctx.font = `900 ${Math.floor(badgeSize * 0.8)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('✦', badgeX + badgeSize / 2, badgeY + badgeSize / 2);
+      }
+      ctx.restore();
+    }
   } else {
     ctx.save();
     ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
@@ -362,16 +405,17 @@ async function renderTeamImage(teamEntries, username) {
   };
 
   // Fetch all card images in parallel — one round-trip instead of three sequential ones.
-  const [imgLeft, imgMiddle, imgRight] = await Promise.all([
+  const [imgLeft, imgMiddle, imgRight, shinyEmojiImage] = await Promise.all([
     loadCardImage(slots[0]),
     loadCardImage(slots[1]),
-    loadCardImage(slots[2])
+    loadCardImage(slots[2]),
+    loadShinyEmojiImage()
   ]);
 
   // Drawing is synchronous (no more awaits needed inside renderCardSlot)
-  renderCardSlot(ctx, slots[0], imgLeft,   layout.left);
-  renderCardSlot(ctx, slots[1], imgMiddle, layout.middle);
-  renderCardSlot(ctx, slots[2], imgRight,  layout.right);
+  renderCardSlot(ctx, slots[0], imgLeft,   shinyEmojiImage, layout.left);
+  renderCardSlot(ctx, slots[1], imgMiddle, shinyEmojiImage, layout.middle);
+  renderCardSlot(ctx, slots[2], imgRight,  shinyEmojiImage, layout.right);
 
   return canvas.toBuffer('image/png');
 }
