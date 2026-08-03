@@ -270,40 +270,7 @@ speed: 50 - 60 */
 
 // --- 2. CARD LIBRARY ---
 const cards = [
-  {
   
-    id: 'MDL', 
-    name: 'Monkey D. Luffy',
-    aliases: ['Sun god Nika', 'Warrior of liberation', 'strawhat', 'luffy',],
-
-
-    title: 'Strawhat Luffy',
-    rank: 'B',
-    health: 175,
-    power: 35,
-    speed: 15,
-    image: 'https://i.postimg.cc/C5sWBwMk/1.png', 
-    
-  
-    M2: {
-      title: 'Captain of the Strawhat Pirates',
-      rank: 'S', 
-      health: 460,
-      power: 84,
-      speed: 34,
-      image: 'https://i.postimg.cc/PJQBpdf3/2.png'
-    },
-    
- 
-    M3: {
-      title: 'Warrior of Libration',
-      rank: 'UR',
-      health: 660,
-      power: 113,
-      speed: 53,
-      image: 'https://i.postimg.cc/NFkW9QGP/3.png'
-    }
-  },
   {
   
     name: 'Gill Bastar',
@@ -403,40 +370,6 @@ const cards = [
       image: 'https://i.postimg.cc/v87RSt7V/15.png'
     }
   },
-  {
-  
-    name: 'Shimotsuki Ryuma',
-    aliases: ['Ryuma',],
-
-
-    title: 'Thriller Bark Zombie',
-    rank: 'A',
-    health: '-',
-    power: '+',
-    speed: '=',
-    image: 'https://i.postimg.cc/7P1vQn11/17.png', 
-    
-  
-    M2: {
-      title: 'Legendary Samurai - MONSTERS',
-      rank: 'SS', 
-      health: '=',
-      power: '++',
-      speed: '+',
-      image: 'https://i.postimg.cc/zDwmPFwh/16.png'
-    },
-    
- 
-    M3: {
-      title: 'God of the Blade',
-      rank: 'SS',
-      health: '-',
-      power: '+',
-      speed: '=',
-      image: 'https://i.postimg.cc/WpmRfwmG/18.png'
-    }
-  },
-
   {
     name: 'D.R.',
     aliases: ['DR', 'D.R', 'DR.'],
@@ -1009,7 +942,7 @@ const cards = [
     health: '=',
     power: '+',
     speed: '+',
-    image: 'https://i.postimg.cc/htZhQBfP/68.png', 
+    image: 'https://files.catbox.moe/m9r917.png', 
     
     M2: {
     title: 'Emperor of the Sea',
@@ -1017,7 +950,7 @@ const cards = [
     health: '+',
     power: '++',
     speed: '++',
-    image: 'https://i.postimg.cc/qvDg6Tz7/69.png', 
+    image: 'https://files.catbox.moe/j0roco.png', 
     }, 
   
     M3: {
@@ -1026,7 +959,7 @@ const cards = [
     health: '=',
     power: '++',
     speed: '+',
-    image: 'https://i.postimg.cc/nhSM9JCr/70.png', 
+    image: 'https://files.catbox.moe/1gh9hk.png', 
     }
   },
   {
@@ -1541,35 +1474,6 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/pmhz48.png', 
-    }
-  },
-  {
-    name: 'Gol D. Roger',
-    aliases: ['Gold Roger',],
-
-    title: 'King of the Pirates',
-    rank: 'UR',
-    health: 580,
-    power: 100,
-    speed: 50,
-    image: 'https://files.catbox.moe/9nmlyu.png', 
-    
-    M2: {
-    title: 'Captain of the Roger Pirates',
-    rank: 'UR',
-    health: 630,
-    power: 114,
-    speed: 52,
-    image: 'https://files.catbox.moe/ykb3vc.png', 
-    }, 
-  
-    M3: {
-    title: 'King of the Pirates',
-    rank: 'UR',
-    health: 680,
-    power: 120,
-    speed: 54,
-    image: 'https://files.catbox.moe/vzm6v6.png', 
     }
   },
   {
@@ -2190,6 +2094,528 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/g670b4.png', 
+    }
+  },
+  {
+    name: 'Joy Boy',
+    aliases: ['joy boy', 'joyboy'],
+
+    title: 'Pirate',
+    rank: 'UR',
+    health: 650,
+    power: 120,
+    speed: 52,
+    image: 'https://files.catbox.moe/utdyht.png',
+
+    M2: {
+      title: 'Pirate',
+      rank: 'UR',
+      health: 665,
+      power: 123,
+      speed: 54,
+      image: 'https://files.catbox.moe/7q0bj2.png'
+    },
+
+    M3: {
+      title: 'Pirate',
+      rank: 'UR',
+      health: 670,
+      power: 125,
+      speed: 56,
+      image: 'https://files.catbox.moe/c5fyzi.png'
+    }
+  },
+  {
+    name: 'St. Nerona Imu',
+    aliases: ['imu'],
+
+    title: 'King of the World',
+    rank: 'UR',
+    health: 690,
+    power: 120,
+    speed: 52,
+    image: 'https://files.catbox.moe/tb2da9.png',
+
+    M2: {
+      title: 'King of the World',
+      rank: 'UR',
+      health: 695,
+      power: 123,
+      speed: 54,
+      image: 'https://files.catbox.moe/djtq0l.png'
+    },
+
+    M3: {
+      title: 'King of the World',
+      rank: 'UR',
+      health: 700,
+      power: 125,
+      speed: 56,
+      image: 'https://files.catbox.moe/i9b7vg.png'
+    }
+  },
+  {
+    name: 'Rocks D. Xebec',
+    aliases: ['rocks', 'rocks d. xebec', 'xebec', 'Davy d. Xebec',],
+
+    title: 'Captain of the Rocks Pirates',
+    rank: 'UR',
+    health: 650,
+    power: 118,
+    speed: 50,
+    image: 'https://files.catbox.moe/4l1gzo.png',
+
+    M2: {
+      title: 'Captain of the Rocks Pirates',
+      rank: 'UR',
+      health: 670,
+      power: 120,
+      speed: 52,
+      image: 'https://files.catbox.moe/cys3zt.png'
+    },
+
+    M3: {
+      title: 'Captain of the Rocks Pirates',
+      rank: 'UR',
+      health: 680,
+      power: 122,
+      speed: 55,
+      image: 'https://files.catbox.moe/g19da1.png'
+    }
+  },
+  {
+    name: 'Gol D. Roger',
+    aliases: ['roger', 'gol d. roger'],
+
+    title: 'Captain of the Roger Pirates',
+    rank: 'UR',
+    health: 580,
+    power: 115,
+    speed: 50,
+    image: 'https://files.catbox.moe/7uz9vb.png',
+
+    M2: {
+      title: 'Captain of the Roger Pirates',
+      rank: 'UR',
+      health: 650,
+      power: 118,
+      speed: 52,
+      image: 'https://files.catbox.moe/i1l4v7.png'
+    },
+
+    M3: {
+      title: 'Pirate King',
+      rank: 'UR',
+      health: 665,
+      power: 120,
+      speed: 54,
+      image: 'https://files.catbox.moe/y7foe7.png'
+    }
+  },
+  {
+    name: 'Edward Newgate',
+    aliases: ['whitebeard', 'edward newgate'],
+
+    title: 'Strongest Man in the World',
+    rank: 'SS',
+    health: 500,
+    power: 97,
+    speed: 43,
+    image: 'https://files.catbox.moe/1kezbr.png',
+
+    M2: {
+      title: 'Captain of the Whitebeard Pirates',
+      rank: 'SS',
+      health: 520,
+      power: 99,
+      speed: 44,
+      image: 'https://files.catbox.moe/png58a.png'
+    },
+
+    M3: {
+      title: 'Strongest Man in the World',
+      rank: 'UR',
+      health: 680,
+      power: 120,
+      speed: 54,
+      image: 'https://files.catbox.moe/azabt9.png'
+    }
+  },
+  {
+    name: 'Monkey D. Garp',
+    aliases: ['garp', 'monkey d. garp'],
+
+    title: 'Hero of the Marines',
+    rank: 'SS',
+    health: 555,
+    power: 95,
+    speed: 44,
+    image: 'https://files.catbox.moe/vpmnja.png',
+
+    M2: {
+      title: 'Vice Admiral',
+      rank: 'SS',
+      health: 570,
+      power: 98,
+      speed: 45,
+      image: 'https://files.catbox.moe/a3q39i.png'
+    },
+
+    M3: {
+      title: 'Garp "the fist"',
+      rank: 'UR',
+      health: 670,
+      power: 120,
+      speed: 54,
+      image: 'https://files.catbox.moe/ekecyd.png'
+    }
+  },
+  {
+    name: 'Figarland Garling',
+    aliases: ['garling', 'figarland garling'],
+
+    title: 'Supreme Commander of the Holy Knights',
+    rank: 'UR',
+    health: 580,
+    power: 100,
+    speed: 50,
+    image: 'https://files.catbox.moe/hf368x.png',
+
+    M2: {
+      title: 'Gorosei',
+      rank: 'UR',
+      health: 680,
+      power: 115,
+      speed: 52,
+      image: 'https://files.catbox.moe/8a6r70.png'
+    },
+
+    M3: {
+      title: 'Gorosei',
+      rank: 'UR',
+      health: 700,
+      power: 117,
+      speed: 54,
+      image: 'https://files.catbox.moe/ifxbfq.png'
+    }
+  },
+  {
+    name: 'Kaido',
+    aliases: ['kaido', 'kaidou'],
+
+    title: 'King of the Beasts',
+    rank: 'UR',
+    health: 670,
+    power: 111,
+    speed: 50,
+    image: 'https://files.catbox.moe/852d4p.png',
+
+    M2: {
+      title: 'The Strongest Creature',
+      rank: 'UR',
+      health: 680,
+      power: 112,
+      speed: 52,
+      image: 'https://files.catbox.moe/kl3poy.png'
+    },
+
+    M3: {
+      title: 'Yonko of the sea',
+      rank: 'UR',
+      health: 695,
+      power: 115,
+      speed: 54,
+      image: 'https://files.catbox.moe/pgi3k6.png'
+    }
+  },
+  {
+    name: 'Ryuma',
+    aliases: ['ryuma', 'shimotsuki ryuma'],
+
+    title: 'Thriller Bark Zombie',
+    rank: 'A',
+    health: 300,
+    power: 70,
+    speed: 28,
+    image: 'https://files.catbox.moe/v6573v.png',
+
+    M2: {
+      title: 'Legendary Samurai - Wanted!',
+      rank: 'SS',
+      health: 505,
+      power: 97,
+      speed: 47,
+      image: 'https://files.catbox.moe/ymqtsx.png'
+    },
+
+    M3: {
+      title: 'God of the Blade',
+      rank: 'UR',
+      health: 580,
+      power: 116,
+      speed: 56,
+      image: 'https://files.catbox.moe/k1gkh1.png'
+    }
+  },
+  {
+    name: 'Figarland Shamrock',
+    aliases: ['shamrock', 'figarland shamrock'],
+
+    title: 'Commander of Knights of God',
+    rank: 'SS',
+    health: 510,
+    power: 95,
+    speed: 45,
+    image: 'https://files.catbox.moe/lwzf3l.png',
+
+    M2: {
+      title: 'Commander of Knights of God',
+      rank: 'UR',
+      health: 590,
+      power: 115,
+      speed: 54,
+      image: 'https://files.catbox.moe/en9nbq.png'
+    },
+
+    M3: {
+      title: 'Commander of Knights of God',
+      rank: 'UR',
+      health: 600,
+      power: 117,
+      speed: 55,
+      image: 'https://files.catbox.moe/w3nmp7.png'
+    }
+  },
+  {
+    name: 'Dracule Mihawk',
+    aliases: ['mihawk', 'dracule mihawk'],
+
+    title: 'Strongest Swordsman in the World',
+    rank: 'UR',
+    health: 580,
+    power: 113,
+    speed: 52,
+    image: 'https://files.catbox.moe/pk08dt.png',
+
+    M2: {
+      title: 'Warlord of the Sea',
+      rank: 'UR',
+      health: 590,
+      power: 115,
+      speed: 54,
+      image: 'https://files.catbox.moe/r12lw2.png'
+    },
+
+    M3: {
+      title: 'Cross Guild',
+      rank: 'UR',
+      health: 600,
+      power: 118,
+      speed: 56,
+      image: 'https://files.catbox.moe/o9v79y.png'
+    }
+  },
+  {
+    name: 'Monkey D. Dragon',
+    aliases: ['dragon', 'monkey d. dragon'],
+
+    title: "World's Worst Criminal",
+    rank: 'UR',
+    health: 600,
+    power: 114,
+    speed: 52,
+    image: 'https://files.catbox.moe/aoae8y.png',
+
+    M2: {
+      title: "Supreme Commander of the Revolutionary Army",
+      rank: 'UR',
+      health: 610,
+      power: 116,
+      speed: 53,
+      image: 'https://files.catbox.moe/g375sj.png'
+    },
+
+    M3: {
+      title: "Supreme Commander of the Revolutionary Army",
+      rank: 'UR',
+      health: 620,
+      power: 119,
+      speed: 55,
+      image: 'https://files.catbox.moe/b3ps8t.png'
+    }
+  },
+  {
+    name: 'Monkey D. Luffy',
+    aliases: ['luffy', 'monkey d. luffy'],
+
+    title: 'Foosha Village',
+    rank: 'B',
+    health: 200,
+    power: 40,
+    speed: 15,
+    image: 'https://files.catbox.moe/yegzbg.png',
+
+    M2: {
+      title: 'Worst Generation Pirate',
+      rank: 'S',
+      health: 460,
+      power: 85,
+      speed: 37,
+      image: 'https://files.catbox.moe/hy6w44.png'
+    },
+
+    M3: {
+      title: 'Joy Boy',
+      rank: 'UR',
+      health: 650,
+      power: 113,
+      speed: 57,
+      image: 'https://files.catbox.moe/egnfql.png'
+    }
+  },
+  {
+    name: 'Marshall D. Teach',
+    aliases: ['teach', 'blackbeard', 'marshall d. teach'],
+
+    title: 'Blackbeard',
+    rank: 'SS',
+    health: 530,
+    power: 94,
+    speed: 41,
+    image: 'https://files.catbox.moe/w4vqn3.png',
+
+    M2: {
+      title: 'Captain of the Blackbeard Pirates',
+      rank: 'SS',
+      health: 540,
+      power: 100,
+      speed: 42,
+      image: 'https://files.catbox.moe/xq60yo.png'
+    },
+
+    M3: {
+      title: 'Emperor of the New World',
+      rank: 'UR',
+      health: 630,
+      power: 112,
+      speed: 51,
+      image: 'https://files.catbox.moe/93ymhp.png'
+    }
+  },
+  {
+    name: 'Sakazuki',
+    aliases: ['sakazuki', 'akainu'],
+
+    title: 'Admiral',
+    rank: 'UR',
+    health: 600,
+    power: 106,
+    speed: 52,
+    image: 'https://files.catbox.moe/9cgpa9.png',
+
+    M2: {
+      title: 'Admiral',
+      rank: 'UR',
+      health: 610,
+      power: 108,
+      speed: 53,
+      image: 'https://files.catbox.moe/fdule0.png'
+    },
+
+    M3: {
+      title: 'Fleet Admiral',
+      rank: 'UR',
+      health: 620,
+      power: 111,
+      speed: 55,
+      image: 'https://files.catbox.moe/s0xnu9.png'
+    }
+  },
+  {
+    name: 'Kuzan',
+    aliases: ['kuzan', 'aokiji'],
+
+    title: 'Admiral',
+    rank: 'UR',
+    health: 595,
+    power: 106,
+    speed: 53,
+    image: 'https://files.catbox.moe/j9g39c.png',
+
+    M2: {
+      title: 'Admiral',
+      rank: 'UR',
+      health: 605,
+      power: 108,
+      speed: 54,
+      image: 'https://files.catbox.moe/ydd1ni.png'
+    },
+
+    M3: {
+      title: 'Blackbeard Pirates',
+      rank: 'UR',
+      health: 615,
+      power: 111,
+      speed: 56,
+      image: 'https://files.catbox.moe/w91f9d.png'
+    }
+  },
+  {
+    name: 'Charlotte Linlin',
+    aliases: ['linlin', 'big mom', 'charlotte linlin'],
+
+    title: 'Big Mom',
+    rank: 'UR',
+    health: 660,
+    power: 106,
+    speed: 50,
+    image: 'https://files.catbox.moe/vqj472.png',
+
+    M2: {
+      title: 'Big Mom',
+      rank: 'UR',
+      health: 670,
+      power: 108,
+      speed: 51,
+      image: 'https://files.catbox.moe/u01vx0.png'
+    },
+
+    M3: {
+      title: 'Emperor of the Sea',
+      rank: 'UR',
+      health: 680,
+      power: 110,
+      speed: 52,
+      image: 'https://files.catbox.moe/z3p7zd.png'
+    }
+  },
+  {
+    name: 'Loki',
+    aliases: ['loki'],
+
+    title: 'Prince of Elbaf',
+    rank: 'UR',
+    health: 650,
+    power: 104,
+    speed: 50,
+    image: 'https://files.catbox.moe/z9y293.png',
+
+    M2: {
+      title: 'Prince of Elbaf',
+      rank: 'UR',
+      health: 660,
+      power: 106,
+      speed: 51,
+      image: 'https://files.catbox.moe/0wtg4e.png'
+    },
+
+    M3: {
+      title: 'Prince of Elbaf',
+      rank: 'UR',
+      health: 670,
+      power: 108,
+      speed: 52,
+      image: 'https://files.catbox.moe/0edviq.png'
     }
   },
   /*
