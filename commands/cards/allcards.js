@@ -145,7 +145,7 @@ function buildCardEmbed(card, mastery, footerText, user) {
 // Example: `Card 3/34 - By power [M1's]`
 // ─────────────────────────────────────────────
 function normalFooter(page, total, sortMode, mastery) {
-  return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By power'} [M${mastery}'s]`;
+  return `Card ${page + 1}/${total} - ${SORT_LABELS[sortMode] || 'By power'} - (M${mastery}'s)`;
 }
 
 // ─────────────────────────────────────────────

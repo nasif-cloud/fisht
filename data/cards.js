@@ -1601,7 +1601,7 @@ const cards = [
     health: '=',
     power: '+',
     speed: '+',
-    image: '', 
+    image: 'https://files.catbox.moe/niu5k9.jpg', 
     
     M2: {
     title: 'Captain of the Black Cat Pirates',
@@ -1609,7 +1609,7 @@ const cards = [
     health: '+',
     power: '++',
     speed: '++',
-    image: 'https://files.catbox.moe/bnm8v2.png', 
+    image: 'https://files.catbox.moe/fq03jl.jpg', 
     }, 
   
     M3: {
@@ -1618,7 +1618,7 @@ const cards = [
     health: '-',
     power: '=',
     speed: '+',
-    image: 'https://files.catbox.moe/3s6dgt.png', 
+    image: 'https://files.catbox.moe/rsnmri.jpg', 
     }
   },
   {
@@ -1931,7 +1931,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://files.catbox.moe/afyit4.jpg', 
     
     M2: {
     title: 'Buggy Pirates',
@@ -1939,7 +1939,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '+',
-    image: '', 
+    image: 'https://files.catbox.moe/snvibu.jpg', 
     }, 
   
     M3: {
@@ -1948,7 +1948,7 @@ const cards = [
     health: '-',
     power: '-',
     speed: '--',
-    image: '', 
+    image: 'https://files.catbox.moe/ir5bt3.jpg', 
     }
   },
   {
@@ -2163,7 +2163,7 @@ const cards = [
     health: 650,
     power: 118,
     speed: 50,
-    image: 'https://files.catbox.moe/4l1gzo.png',
+    image: 'https://files.catbox.moe/9twef1.png',
 
     M2: {
       title: 'Captain of the Rocks Pirates',
@@ -2171,7 +2171,7 @@ const cards = [
       health: 670,
       power: 120,
       speed: 52,
-      image: 'https://files.catbox.moe/cys3zt.png'
+      image: 'https://files.catbox.moe/pfci2q.png'
     },
 
     M3: {
@@ -2180,7 +2180,7 @@ const cards = [
       health: 680,
       power: 122,
       speed: 55,
-      image: 'https://files.catbox.moe/g19da1.png'
+      image: 'https://files.catbox.moe/ucwtwi.png'
     }
   },
   {
@@ -2192,7 +2192,7 @@ const cards = [
     health: 580,
     power: 115,
     speed: 50,
-    image: 'https://files.catbox.moe/7uz9vb.png',
+    image: 'https://files.catbox.moe/zt7crw.png',
 
     M2: {
       title: 'Captain of the Roger Pirates',
@@ -2200,7 +2200,7 @@ const cards = [
       health: 650,
       power: 118,
       speed: 52,
-      image: 'https://files.catbox.moe/i1l4v7.png'
+      image: 'https://files.catbox.moe/ywz5io.png'
     },
 
     M3: {
@@ -2209,7 +2209,7 @@ const cards = [
       health: 665,
       power: 120,
       speed: 54,
-      image: 'https://files.catbox.moe/y7foe7.png'
+      image: 'https://files.catbox.moe/k4nfn6.png'
     }
   },
   {
