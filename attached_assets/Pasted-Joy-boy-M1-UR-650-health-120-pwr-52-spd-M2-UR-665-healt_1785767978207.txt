@@ -1,0 +1,311 @@
+Joy boy 
+M1 [UR] -
+650 health
+120 pwr
+52 spd
+
+M2 [UR] -
+665 health
+123 pwr
+54 spd
+
+M3 [UR] -
+670 health
+125pwr
+56spd
+
+- 
+IMU
+M1 [UR] -
+690 health
+120pwr
+52spd
+
+M2 [UR] -
+695health
+123pwr
+54spd
+
+M3 [UR] -
+700health
+125pwr
+56spd 
+'nasif — Yesterday at 4:06 AM
+ROCKS
+M1 [UR] - 
+650 health
+118 pwr
+50spd
+
+M2 [UR] - 
+670 health
+120pwr
+52spd
+
+M3 [UR] -
+680 health
+122pwr
+55spd 
+'nasif — Yesterday at 12:10 PM
+ROGER
+M1 [UR] -
+580 health
+115 pwr
+50spd
+
+M2 [UR] -
+650 health
+118pwr
+52spd
+
+M3 [UR] - 
+665 health
+120pwr
+54spd
+
+- 
+WB
+M1 [SS] -
+500 health
+97pwr
+43spd
+
+M2 [SS] -
+520 health
+99pwr
+44spd
+
+M3 [UR] - 
+680 health
+120pwr
+54spd 
+'nasif — Yesterday at 12:19 PM
+GARP
+M1 [SS] -
+555 health
+95pwr
+44spd
+
+M2 [SS] -
+570 health
+98pwr
+45spd
+
+M3 [UR] - 
+670 health
+120pwr
+54spd 
+'nasif — Yesterday at 1:27 PM
+Garling
+M1 [UR] -
+580 health
+100pwr
+50spd
+
+M2 [UR] -
+680 health
+115pwr
+52spd
+
+M3 [UR] - 
+700 health
+117pwr
+54spd
+
+- 
+Kaidoo
+M1 [UR] -
+670 health
+11ppwr
+50spd
+
+M2 [UR] -
+680 health
+112pwr
+52spd
+
+M3 [UR] - 
+695 health
+115pwr
+54spd 
+'nasif — Yesterday at 1:50 PM
+Ryuma
+M1 [A]
+300health
+70pwr
+28spd
+
+M2 [SS]
+505health
+97pwr
+47spd
+
+M3 [UR]
+580health
+116pwr
+56spd
+
+- 
+Shanks
+M1 [SS] - age 39, New world Yonko
+505health
+100pwr
+47spd
+
+M2 [UR] - age 26, Holy Knight
+590health
+116pwr
+55spd
+
+M3 [UR] - age 27, Foosha Village, right before arm loss
+600health
+118pwr
+56spd 
+'nasif — Yesterday at 2:32 PM
+Shamrock
+M1 [SS] - age 26, Holy Knight debute
+510health
+95pwr
+45spd
+
+M2[UR] - age 39, Holy Knight
+590 health
+115pwr
+54spd
+
+M3[UR] - age 39, Holy Knight
+600health
+117pwr
+55spd
+
+- 
+Mihawk
+M1 [UR] - age 41, pre TS
+580health
+113pwr
+52spd
+
+M2 [UR] - age 41, Pre TS
+590health
+115pwr
+54spd
+
+M3 [UR] - age 43, post TS
+600health
+118pwr
+56spd 
+'nasif — Yesterday at 3:06 PM
+Dragon
+M1 [UR] - age 53, pre TS
+600health
+114pwr
+52spd
+
+M2[UR] - age 53, pre TS
+610health
+116pwr
+53spd
+
+M3[UR] - age 55, post TS
+620health
+119pwr
+55spd
+
+- 
+Luffy
+M1 [B] - age 17, sailing out
+200health
+40pwr
+15spd
+
+M2 [S] - age 19, Gear 4 snakeman
+460health
+85pwr
+37spd
+
+M3 [UR] - age 19, Gear 5 Nika
+650health
+113pwr
+57spd
+'nasif — Yesterday at 3:20 PM
+Teach
+M1 [SS] - age 38, Jaya
+530health
+94pwr
+41spd
+
+M2 [SS] - age 38, Marineford, 2 DF's
+540health
+100pwr
+42spd
+
+M3 [UR] - Age 40, New world Yonko
+630health
+112pwr
+51spd
+
+- 
+Sakazuki
+M1 [UR] - age 53, pre TS
+600health
+106pwr
+52spd
+
+M2 [UR] - age 53, pre TS
+610health
+108pwr
+53spd
+
+M3 [UR] - age 55, pre TS
+620health
+111pwr
+55spd 
+'nasif — Yesterday at 3:30 PM
+Kuzan
+M1 [UR] - age 47, pre TS
+595health
+106pwr
+53spd
+
+M2 [UR] - age 47, pre TS
+605health
+108pwr
+54spd
+
+M3 [UR] - age 49, post TS
+615health
+111pwr
+56spd
+
+- 
+Linlin
+M1 [UR] - age 68, post TS
+660health
+106pwr
+50spd
+
+M2 [UR] - age 68, post TS
+670health
+108pwr
+51spd
+
+M3 [UR] - age 68, post TS
+680health
+110pwr
+52spd
+'nasif — Yesterday at 3:39 PM
+Loki
+M1 [UR] - age 63, post TS
+650health
+104pwr
+50spd
+
+M2 [UR] - age 63, post TS
+660health
+106pwr
+51spd
+
+M3 [UR] - age 63, post TS
+670health
+108pwr
+52spd
