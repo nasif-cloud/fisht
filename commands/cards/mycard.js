@@ -40,11 +40,12 @@ module.exports = {
   aliases: ['mc'], // 'op mc luffy' works the same as 'op mycard luffy'
 
   async execute(interactionOrMessage, args) {
-    const user = interactionOrMessage.user || interactionOrMessage.author;
+    const user    = interactionOrMessage.user || interactionOrMessage.author;
+    const isSlash = interactionOrMessage.isChatInputCommand?.();
 
     // --- STEP 1: Figure out what the user searched for ---
     let query = '';
-    if (interactionOrMessage.isChatInputCommand?.()) {
+    if (isSlash) {
       query = interactionOrMessage.options.getString('query');
     } else {
       if (args) {
@@ -62,9 +63,9 @@ module.exports = {
       });
     }
 
-    const search = query.toLowerCase();
-
     // --- STEP 2: Find the card in the card library ---
+    // This is synchronous, so it can happen before we defer.
+    const search    = query.toLowerCase();
     const foundCard = cards.find(c =>
       c.name.toLowerCase().includes(search) ||
       c.aliases.some(alias => alias.toLowerCase().includes(search))
@@ -77,26 +78,37 @@ module.exports = {
       });
     }
 
-    // --- STEP 3: Check if the user owns this card ---
+    // --- STEP 3: Defer slash commands immediately before any async work ---
+    // Discord requires a response within 3 seconds. Deferring tells Discord
+    // "I got this — I'll send the actual content shortly." We can then take
+    // as long as we need to load from the database and generate shiny images.
+    // Prefix commands have no time limit, so they don't need deferring.
+    if (isSlash) await interactionOrMessage.deferReply();
+
+    // --- STEP 4: Check if the user owns this card ---
     const userData  = await User.findOne({ userId: user.id });
     const copyEntry = userData?.cardCopies?.find(c => c.cardName === foundCard.name);
     const ownedCopies = copyEntry?.amount ?? 0;
     // isShiny is stored in the DB entry; defaults to false if never set
-    const isShiny   = copyEntry?.shiny  ?? false;
+    const isShiny   = copyEntry?.shiny ?? false;
 
     if (ownedCopies === 0) {
-      return interactionOrMessage.reply({
+      const notOwned = {
         content: `You do not own **${foundCard.name}**`,
         allowedMentions: { repliedUser: false }
-      });
+      };
+      // For slash: we already deferred, so we must use editReply instead of reply
+      return isSlash
+        ? interactionOrMessage.editReply(notOwned)
+        : interactionOrMessage.reply(notOwned);
     }
 
-    // --- STEP 4: Determine mastery level ---
+    // --- STEP 5: Determine mastery level ---
     // Mastery is stored separately from copy count — owning 3+ copies does NOT mean M3.
     // The mastery field defaults to 1 for any card that predates this field being added.
     const masteryLevel = copyEntry.mastery ?? 1;
 
-    // --- STEP 5: Pick the right stat block for their mastery ---
+    // --- STEP 6: Pick the right stat block for their mastery ---
     let cardData = foundCard;              // defaults to M1
     if (masteryLevel === 2) cardData = foundCard.M2;
     if (masteryLevel === 3) cardData = foundCard.M3;
@@ -106,13 +118,13 @@ module.exports = {
       console.warn(`[MyCard] "${foundCard.name}" (M${masteryLevel}) has invalid rank "${cardData.rank}". Using fallback D.`);
     }
 
-    // --- STEP 6: Resolve the base stats for this mastery ---
+    // --- STEP 7: Resolve the base stats for this mastery ---
     // resolveStat gives a fixed number for each card name + mastery + stat combo.
     const basePower  = resolveStat(rank, 'power',  safeStat(cardData.power),  foundCard.name, masteryLevel);
     const baseHealth = resolveStat(rank, 'health', safeStat(cardData.health), foundCard.name, masteryLevel);
     const baseSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  foundCard.name, masteryLevel);
 
-    // --- STEP 7: Apply copies + shiny boosts ---
+    // --- STEP 8: Apply copies + shiny boosts ---
     // computeBoosts returns both the final boosted stats and a per-source breakdown.
     // The breakdown is saved here so the boosts button can display it.
     const {
@@ -125,7 +137,7 @@ module.exports = {
 
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
-    // --- STEP 8: Prepare shiny image files (if the card is shiny) ---
+    // --- STEP 9: Prepare shiny image files (if the card is shiny) ---
     // For shiny cards we generate a holographic overlay on both the card image
     // and the rank icon, attach them as files, and reference them via attachment:// URLs.
     // For non-shiny cards we just use the plain image URLs as normal.
@@ -147,7 +159,7 @@ module.exports = {
       iconUrl  = `attachment://shiny_icon.png`;
     }
 
-    // --- STEP 9: Build the embed ---
+    // --- STEP 10: Build the embed ---
     // Shiny emoji appears before the name if the card is shiny
     const cardTitle = isShiny ? `${SHINY_EMOJI} ${foundCard.name}` : foundCard.name;
 
@@ -171,7 +183,7 @@ module.exports = {
       image:     { url: imageUrl }
     };
 
-    // --- STEP 10: Build the boosts button ---
+    // --- STEP 11: Build the boosts button ---
     // Grey (Secondary) button with only the boosts emoji — no text label.
     // It opens an ephemeral breakdown of how the card's stats are being boosted.
     const boostsRow = new ActionRowBuilder().addComponents(
@@ -181,18 +193,20 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // --- STEP 11: Send the message ---
-    // fetchReply: true gives us the message object so we can attach a collector
-    const payload = { embeds: [embed], components: [boostsRow], files, fetchReply: true };
+    // --- STEP 12: Send the message ---
+    // Slash: use editReply (because we deferred in step 3).
+    // Prefix: use channel.send (no defer was needed, no time limit).
     let response;
-    if (interactionOrMessage.isChatInputCommand?.()) {
-      response = await interactionOrMessage.reply(payload);
+    const payload = { embeds: [embed], components: [boostsRow], files };
+
+    if (isSlash) {
+      response = await interactionOrMessage.editReply(payload);
     } else {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // --- STEP 12: Listen for the boosts button ---
-    // 60-second timeout — same as the info command
+    // --- STEP 13: Listen for the boosts button ---
+    // 60-second timeout — same as the info command.
     const collector = response.createMessageComponentCollector({ time: 60000 });
 
     collector.on('collect', async (interaction) => {
