@@ -35,19 +35,26 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
   try {
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-    // Option A: Register to a SINGLE server for instant testing
+    // Clear global commands first. This removes stale commands accidentally
+    // deployed by another service; global command deletion can take time to
+    // disappear from Discord everywhere.
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: [] }
+    );
+    console.log('Cleared global application (/) commands.');
+
+    // Clear the guild commands too, then register only this project commands.
+    await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      { body: [] }
+    );
+    console.log('Cleared guild application (/) commands.');
+
     const data = await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
       { body: commands },
     );
-
-    /* 
-    // Option B: Register GLOBALLY to all servers (Can take up to an hour to update everywhere)
-    const data = await rest.put(
-      Routes.applicationCommands(clientId),
-      { body: commands },
-    );
-    */
 
     console.log(`Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {

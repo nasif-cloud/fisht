@@ -3,6 +3,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 
 // Card data and helper functions from the central card library
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
+const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 
 
 module.exports = {
@@ -12,12 +13,22 @@ module.exports = {
     .setName('info')
     .setDescription('Check info about a card')
     .addStringOption(option =>
-      option.setName('query').setDescription('Name').setRequired(true)
+      option
+        .setName('query')
+        .setDescription('Name')
+        .setRequired(true)
+        .setAutocomplete(true)
     ),
 
   // --- PREFIX COMMAND DEFINITION ---
   name: 'info',
   aliases: ['i', 'card'], // 'op i luffy' works the same as 'op info luffy'
+
+  // Supplies card-name suggestions while a user types /info query
+  async autocomplete(interaction) {
+    const focused = interaction.options.getFocused();
+    return interaction.respond(getCardAutocompleteChoices(cards, focused));
+  },
 
   async execute(interactionOrMessage, args) {
     // Works for both slash commands (/info luffy) and prefix commands (op info luffy)

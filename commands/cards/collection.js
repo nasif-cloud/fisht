@@ -32,6 +32,7 @@ const {
 } = require('discord.js');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
+const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
 
 // Stat boost calculator — applies copies boost (0.3%/copy) and shiny boost (30%)
@@ -380,10 +381,17 @@ module.exports = {
         .setName('card')
         .setDescription('Search for a specific card you own')
         .setRequired(false)
+         .setAutocomplete(true)
     ),
 
   name: 'collection',
   aliases: ['col', 'mycards'],
+
+  // Supplies card-name suggestions while a user types /collection card
+  async autocomplete(interaction) {
+    const focused = interaction.options.getFocused();
+    return interaction.respond(getCardAutocompleteChoices(cards, focused));
+  },
 
   async execute(interactionOrMessage, args) {
     const user    = interactionOrMessage.user || interactionOrMessage.author;

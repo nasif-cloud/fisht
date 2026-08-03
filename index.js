@@ -293,6 +293,26 @@ client.on('error', (error) => {
 // ─────────────────────────────────────────────
 // This fires every time someone uses a / command in Discord.
 client.on('interactionCreate', async interaction => {
+  // Autocomplete interactions only need a short list of suggestions.
+  // Handle them before the normal slash-command path, which expects a
+  // command execution and would otherwise ignore these interactions.
+  if (interaction.isAutocomplete()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command?.autocomplete) return interaction.respond([]);
+
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      console.error(`[Autocomplete] ${interaction.commandName} failed:`, error.message);
+      try {
+        await interaction.respond([]);
+      } catch {
+        // The autocomplete interaction may already have expired.
+      }
+    }
+    return;
+  }
+
   // Ignore anything that isn't a slash command (e.g. buttons, dropdowns)
   // — those are handled inside their own command files via collectors.
   if (!interaction.isChatInputCommand()) return;

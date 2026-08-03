@@ -32,6 +32,7 @@ const {
 } = require('discord.js');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
+const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 // Note: User is not needed here — allcards shows every card, no personal data involved
 
 // ─────────────────────────────────────────────
@@ -290,11 +291,18 @@ module.exports = {
         .setName('card')
         .setDescription('Search for a specific card directly')
         .setRequired(false)
+         .setAutocomplete(true)
     ),
 
   // Prefix command definition (op allcards / op ac / op cards)
   name: 'allcards',
   aliases: ['ac', 'cards'],
+
+  // Supplies card-name suggestions while a user types /allcards card
+  async autocomplete(interaction) {
+    const focused = interaction.options.getFocused();
+    return interaction.respond(getCardAutocompleteChoices(cards, focused));
+  },
 
   async execute(interactionOrMessage, args) {
     const user    = interactionOrMessage.user || interactionOrMessage.author;
