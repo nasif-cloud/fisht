@@ -331,10 +331,12 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
       const badgeY = y + 14;
 
       ctx.save();
-      ctx.fillStyle = 'rgba(7, 18, 45, 0.85)';
+      // Use a transparent badge with a thin black outline instead of a filled circle.
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.95)';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2 + 4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2 + 2, 0, Math.PI * 2);
+      ctx.stroke();
 
       if (shinyEmojiImage) {
         ctx.drawImage(shinyEmojiImage, badgeX, badgeY, badgeSize, badgeSize);

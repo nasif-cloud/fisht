@@ -44,6 +44,7 @@ const ServiceLease = require('./models/serviceLease');
 // maintenance.full   → everyone blocked including owner (except down/downall).
 // Importing the same module object means all files see the same flags in memory.
 const maintenance = require('./data/maintenance');
+const { getCommandRestriction } = require('./utils/channelRestrictions');
 
 // The bot owner's Discord user ID — used to allow owner through normal maintenance.
 const OWNER_ID = '1257718161298690119';
@@ -328,6 +329,30 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
+  // Channel restrictions are checked centrally so they apply to every slash
+  // command, including commands added later without extra command-file code.
+  // The allow/disallow commands themselves always pass through so admins can
+  // restore access to a restricted channel.
+  if (!['allow', 'disallow'].includes(command.name)) {
+    try {
+      const restriction = await getCommandRestriction(
+        interaction.guildId,
+        interaction.channelId,
+        command.name
+      );
+      if (restriction.blocked) {
+        return interaction.reply({
+          content: restriction.blockAll
+            ? `This bots commands can't be used here`
+            : `**${command.name}** can't be used here**`,
+          flags: 64
+        });
+      }
+    } catch (restrictionError) {
+      console.error('[ChannelRestriction] Slash check failed:', restrictionError.message);
+    }
+  }
+
   // ── GLOBAL COOLDOWN CHECK (slash) ──
   // Blocks the same user from spamming the same slash command within 2 seconds.
   // The cooldown key combines the user ID and command name so different commands
@@ -415,6 +440,30 @@ client.on('messageCreate', async (message) => {
     }
     if (maintenance.active && message.author.id !== OWNER_ID) {
       return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
+    }
+  }
+
+  // Apply persistent channel restrictions before running the command.
+  // Restriction-management commands are exempt so admins can always use
+  // `op allow` to restore a channel.
+  if (!['allow', 'disallow'].includes(command.name)) {
+    try {
+      const restriction = await getCommandRestriction(
+        message.guild.id,
+        message.channel.id,
+        command.name
+      );
+      if (restriction.blocked) {
+        const blockedMessage = restriction.blockAll
+          ? `This bots commands can't be used here`
+          : `**${command.name}** can't be used here**`;
+        return message.reply({
+          content: blockedMessage,
+          allowedMentions: { repliedUser: false }
+        });
+      }
+    } catch (restrictionError) {
+      console.error('[ChannelRestriction] Prefix check failed:', restrictionError.message);
     }
   }
 
