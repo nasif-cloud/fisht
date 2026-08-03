@@ -1,159 +1,90 @@
 // ─────────────────────────────────────────────
 // MANGA CHALLENGE DATA
 // ─────────────────────────────────────────────
-// Each entry needs two things:
-//   image:  A direct URL to the manga panel image shown in the embed.
-//   answer: The correct One Piece volume number for that image.
-//
-// Replace every PLACEHOLDER_IMAGE_URL with a real image link,
-// and replace every 0 with the correct volume number.
-// You can add or remove entries freely — the command picks one at random.
+// The gallery is ordered from volume 1 through volume 82.
+// The command uses the answer value to award the correct reward.
 
 module.exports = [
-  {
-    image:  'https://i.postimg.cc/90rV3B47/image.png', // Replace with real image URL
-    answer: 1                         // Replace with correct volume number
-  },
-  {
-    image:  'https://i.postimg.cc/mgx4qCTT/image.png',
-    answer: 2
-  },
-  {
-    image:  'https://i.postimg.cc/k5LXnzmz/image.png',
-    answer: 3
-  },
-  {
-    image:  'https://i.postimg.cc/8kRPSZn7/image.png',
-    answer: 4
-  },
-  {
-    image:  'https://i.postimg.cc/tCDq1YbF/image.png',
-    answer: 5
-  },
-  {
-    image:  'https://files.catbox.moe/plqt70.webp',
-    answer: 6
-  },
-{
-  image:  'https://files.catbox.moe/w4ofh7.webp',
-  answer: 7
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 8
-},
-{
-  image:  'https://files.catbox.moe/62jloy.webp',
-  answer: 9
-},
-{
-  image:  'https://files.catbox.moe/oneth9.webp',
-  answer: 10
-},
-{
-  image:  'https://files.catbox.moe/1zged8.webp',
-  answer: 11
-},
-{
-  image:  'https://files.catbox.moe/ddjmba.webp',
-  answer: 12
-},
-{
-  image:  'https://files.catbox.moe/82m16h.webp',
-  answer: 13
-},
-{
-  image:  'https://files.catbox.moe/o381bq.webp',
-  answer: 14
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-{
-  image:  'https://files.catbox.moe/plqt70.webp',
-  answer: 6
-},
-
-  
+  { image: 'https://i.imgur.com/aTlabI3.jpeg', answer: 1 },
+  { image: 'https://i.imgur.com/OYQlHQV.jpeg', answer: 2 },
+  { image: 'https://i.imgur.com/4JPxZtj.jpeg', answer: 3 },
+  { image: 'https://i.imgur.com/79hybVm.jpeg', answer: 4 },
+  { image: 'https://i.imgur.com/5dD8idZ.jpeg', answer: 5 },
+  { image: 'https://i.imgur.com/SWRdvDb.jpeg', answer: 6 },
+  { image: 'https://i.imgur.com/mSoBGEk.jpeg', answer: 7 },
+  { image: 'https://i.imgur.com/ITOTyAV.jpeg', answer: 8 },
+  { image: 'https://i.imgur.com/m8gty3O.jpeg', answer: 9 },
+  { image: 'https://i.imgur.com/rlTQ9cs.jpeg', answer: 10 },
+  { image: 'https://i.imgur.com/qQqmRDa.jpeg', answer: 11 },
+  { image: 'https://i.imgur.com/UUOU1Vq.jpeg', answer: 12 },
+  { image: 'https://i.imgur.com/0MVo2u2.jpeg', answer: 13 },
+  { image: 'https://i.imgur.com/OopdRY7.jpeg', answer: 14 },
+  { image: 'https://i.imgur.com/xyxydNh.jpeg', answer: 15 },
+  { image: 'https://i.imgur.com/pzykFfq.jpeg', answer: 16 },
+  { image: 'https://i.imgur.com/RVIhrxn.jpeg', answer: 17 },
+  { image: 'https://i.imgur.com/d5xa7PJ.jpeg', answer: 18 },
+  { image: 'https://i.imgur.com/z6LZQIO.jpeg', answer: 19 },
+  { image: 'https://i.imgur.com/nHBIBnj.jpeg', answer: 20 },
+  { image: 'https://i.imgur.com/SZrfX2a.jpeg', answer: 21 },
+  { image: 'https://i.imgur.com/AlUA6NF.jpeg', answer: 22 },
+  { image: 'https://i.imgur.com/IDyUHqx.jpeg', answer: 23 },
+  { image: 'https://i.imgur.com/weFeoo6.jpeg', answer: 24 },
+  { image: 'https://i.imgur.com/FfqMYnA.jpeg', answer: 25 },
+  { image: 'https://i.imgur.com/nOH8Yff.jpeg', answer: 26 },
+  { image: 'https://i.imgur.com/Z03wYAB.jpeg', answer: 27 },
+  { image: 'https://i.imgur.com/WL66g5E.jpeg', answer: 28 },
+  { image: 'https://i.imgur.com/ZEVuXg7.jpeg', answer: 29 },
+  { image: 'https://i.imgur.com/QDdaokM.jpeg', answer: 30 },
+  { image: 'https://i.imgur.com/e0TzMXA.jpeg', answer: 31 },
+  { image: 'https://i.imgur.com/g2UsmZU.jpeg', answer: 32 },
+  { image: 'https://i.imgur.com/YkkGNem.jpeg', answer: 33 },
+  { image: 'https://i.imgur.com/s1Ug3bm.jpeg', answer: 34 },
+  { image: 'https://i.imgur.com/R09RZgr.jpeg', answer: 35 },
+  { image: 'https://i.imgur.com/bTDLfxi.jpeg', answer: 36 },
+  { image: 'https://i.imgur.com/Aic36pR.jpeg', answer: 37 },
+  { image: 'https://i.imgur.com/MyVw7dG.jpeg', answer: 38 },
+  { image: 'https://i.imgur.com/vaJqpMY.jpeg', answer: 39 },
+  { image: 'https://i.imgur.com/xzWUhHp.jpeg', answer: 40 },
+  { image: 'https://i.imgur.com/m8OmKXL.jpeg', answer: 41 },
+  { image: 'https://i.imgur.com/nDSNf8G.jpeg', answer: 42 },
+  { image: 'https://i.imgur.com/BHTDCDm.jpeg', answer: 43 },
+  { image: 'https://i.imgur.com/Trh7dzm.jpeg', answer: 44 },
+  { image: 'https://i.imgur.com/rlRJjLE.jpeg', answer: 45 },
+  { image: 'https://i.imgur.com/ieuvB9C.jpeg', answer: 46 },
+  { image: 'https://i.imgur.com/ImzhNnW.jpeg', answer: 47 },
+  { image: 'https://i.imgur.com/57pXFun.jpeg', answer: 48 },
+  { image: 'https://i.imgur.com/2XLVYVt.jpeg', answer: 49 },
+  { image: 'https://i.imgur.com/mDa0vrA.jpeg', answer: 50 },
+  { image: 'https://i.imgur.com/Zi0hREL.jpeg', answer: 51 },
+  { image: 'https://i.imgur.com/9GjVDWU.jpeg', answer: 52 },
+  { image: 'https://i.imgur.com/XPNNFBk.jpeg', answer: 53 },
+  { image: 'https://i.imgur.com/NtyCqCr.jpeg', answer: 54 },
+  { image: 'https://i.imgur.com/3hchTGl.jpeg', answer: 55 },
+  { image: 'https://i.imgur.com/zYrxA4Y.jpeg', answer: 56 },
+  { image: 'https://i.imgur.com/Wg1Odip.jpeg', answer: 57 },
+  { image: 'https://i.imgur.com/JTSdZAY.jpeg', answer: 58 },
+  { image: 'https://i.imgur.com/p1pZiFI.jpeg', answer: 59 },
+  { image: 'https://i.imgur.com/Fu1vfqI.jpeg', answer: 60 },
+  { image: 'https://i.imgur.com/8g9drEl.jpeg', answer: 61 },
+  { image: 'https://i.imgur.com/mZBrS8g.jpeg', answer: 62 },
+  { image: 'https://i.imgur.com/tqQZP1v.jpeg', answer: 63 },
+  { image: 'https://i.imgur.com/J92w3rn.jpeg', answer: 64 },
+  { image: 'https://i.imgur.com/Vl11aj9.jpeg', answer: 65 },
+  { image: 'https://i.imgur.com/7gsdtmZ.jpeg', answer: 66 },
+  { image: 'https://i.imgur.com/jFXMMsE.jpeg', answer: 67 },
+  { image: 'https://i.imgur.com/AoFHuXC.jpeg', answer: 68 },
+  { image: 'https://i.imgur.com/n2eTal8.jpeg', answer: 69 },
+  { image: 'https://i.imgur.com/Ipm0tRu.jpeg', answer: 70 },
+  { image: 'https://i.imgur.com/OF1StfZ.jpeg', answer: 71 },
+  { image: 'https://i.imgur.com/26HZp7l.jpeg', answer: 72 },
+  { image: 'https://i.imgur.com/dxX4TZS.jpeg', answer: 73 },
+  { image: 'https://i.imgur.com/JWQdDmK.jpeg', answer: 74 },
+  { image: 'https://i.imgur.com/zqcAP3t.jpeg', answer: 75 },
+  { image: 'https://i.imgur.com/6sWVDvb.jpeg', answer: 76 },
+  { image: 'https://i.imgur.com/E3SggoJ.jpeg', answer: 77 },
+  { image: 'https://i.imgur.com/09QWTGz.jpeg', answer: 78 },
+  { image: 'https://i.imgur.com/A8K4Hah.jpeg', answer: 79 },
+  { image: 'https://i.imgur.com/dj4lZ4a.jpeg', answer: 80 },
+  { image: 'https://i.imgur.com/kTLnGLE.png', answer: 81 },
+  { image: 'https://i.imgur.com/W0eQxu8.png', answer: 82 }
 ];

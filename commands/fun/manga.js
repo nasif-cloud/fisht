@@ -26,6 +26,7 @@ const {
   TextInputStyle
 } = require('discord.js');
 
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const zlib = require('node:zlib');
 
 const mangaPool = require('../../data/manga');
@@ -188,6 +189,58 @@ const GAME_TIME_MS = 10000;           // 10 seconds to press the Guess button
 const REWARD_EXACT = 300; // Spot on
 const REWARD_CLOSE = 150; // 1–5 volumes off
 const REWARD_FAR   = 50;  // 6–20 volumes off
+const MASKED_COVER_FILENAME = 'manga-cover.png';
+
+// Keep processed covers in memory so repeated rounds do not download and
+// redraw the same cover every time the bot picks it.
+const maskedCoverCache = new Map();
+
+// The volume number is printed in the lower-right corner of these covers.
+// This helper blurs that area and adds a translucent overlay so the number
+// cannot be read from the image sent to players.
+async function createMaskedCover(imageUrl) {
+  if (maskedCoverCache.has(imageUrl)) return maskedCoverCache.get(imageUrl);
+
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Cover request failed with status ${response.status}`);
+  }
+
+  const sourceImage = await loadImage(Buffer.from(await response.arrayBuffer()));
+  const canvas = createCanvas(sourceImage.width, sourceImage.height);
+  const ctx = canvas.getContext('2d');
+
+  ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
+
+  // Use percentages so the mask works for the different cover resolutions.
+  const maskX = Math.floor(sourceImage.width * 0.58);
+  const maskY = Math.floor(sourceImage.height * 0.76);
+  const maskWidth = Math.ceil(sourceImage.width * 0.42);
+  const maskHeight = Math.ceil(sourceImage.height * 0.24);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(maskX, maskY, maskWidth, maskHeight);
+  ctx.clip();
+  ctx.filter = 'blur(18px)';
+  ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
+  ctx.restore();
+
+  // A dark translucent layer makes the blur unreadable even on covers with
+  // very high contrast around the printed volume number.
+  ctx.save();
+  ctx.fillStyle = 'rgba(18, 18, 24, 0.58)';
+  ctx.fillRect(maskX, maskY, maskWidth, maskHeight);
+  ctx.restore();
+
+  const maskedCover = canvas.toBuffer('image/png');
+  maskedCoverCache.set(imageUrl, maskedCover);
+  return maskedCover;
+}
+
+function buildMaskedCoverAttachment(maskedCover) {
+  return { attachment: maskedCover, name: MASKED_COVER_FILENAME };
+}
 
 // ─────────────────────────────────────────────
 // HELPER — format remaining cooldown as "Xm Ys"
@@ -247,6 +300,8 @@ module.exports = {
     // Reads the image and pulls out the most prominent colour so the embed
     // matches the panel's art style. Falls back to a random colour on error.
     const embedColor = await getDominantColor(entry.image);
+    const maskedCover = await createMaskedCover(entry.image);
+    const maskedCoverAttachment = buildMaskedCoverAttachment(maskedCover);
 
     // ── STEP 4: BUILD THE INITIAL EMBED ──
     const activeEmbed = new EmbedBuilder()
@@ -255,7 +310,7 @@ module.exports = {
         "Guess the volume number. Press **Guess** when you're ready. " +
         'Be quick, you only have `10 seconds`.'
       )
-      .setImage(entry.image)  // The manga panel from data/manga.js
+      .setImage(`attachment://${MASKED_COVER_FILENAME}`)
       .setColor(embedColor);
 
     // Blue "Guess" button — clicking this opens the number input form
@@ -268,7 +323,12 @@ module.exports = {
 
     // ── STEP 5: SEND THE MESSAGE ──
     // fetchReply: true lets us get back the message object to attach a collector
-    const payload = { embeds: [activeEmbed], components: [navRow], fetchReply: true };
+    const payload = {
+      embeds: [activeEmbed],
+      components: [navRow],
+      files: [maskedCoverAttachment],
+      fetchReply: true
+    };
     let response;
 
     if (isSlash) {
@@ -332,9 +392,13 @@ module.exports = {
           const wrongEmbed = new EmbedBuilder()
             .setTitle(`The answer was **${entry.answer}**, you answered **${rawAnswer}**.`)
             .setDescription('Better luck next time.')
-            .setImage(entry.image)
+            .setImage(`attachment://${MASKED_COVER_FILENAME}`)
             .setColor(embedColor);
-          return submit.editReply({ embeds: [wrongEmbed], components: [] });
+          return submit.editReply({
+            embeds: [wrongEmbed],
+            components: [],
+            files: [maskedCoverAttachment]
+          });
         }
 
         // Calculate how far off the guess was
@@ -379,10 +443,14 @@ module.exports = {
         const resultEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered **${userAnswer}**.`)
           .setDescription(resultDesc)
-          .setImage(entry.image)
+          .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setColor(embedColor);
 
-        await submit.editReply({ embeds: [resultEmbed], components: [] });
+        await submit.editReply({
+          embeds: [resultEmbed],
+          components: [],
+          files: [maskedCoverAttachment]
+        });
 
       } catch {
         // awaitModalSubmit timed out — user dismissed the modal or ran out of time.
@@ -390,10 +458,14 @@ module.exports = {
         const timedEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
           .setDescription('Better luck next time.')
-          .setImage(entry.image)
+          .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setFooter({ text: `expired` })
           .setColor(embedColor);
-        await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
+        await response.edit({
+          embeds: [timedEmbed],
+          components: [],
+          files: [maskedCoverAttachment]
+        }).catch(() => {});
       }
     });
 
@@ -406,10 +478,14 @@ module.exports = {
       const timedEmbed = new EmbedBuilder()
         .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
         .setDescription('Better luck next time.')
-        .setImage(entry.image)
+        .setImage(`attachment://${MASKED_COVER_FILENAME}`)
         .setFooter({ text: `expired` })
         .setColor(embedColor);
-      await response.edit({ embeds: [timedEmbed], components: [] }).catch(() => {});
+      await response.edit({
+        embeds: [timedEmbed],
+        components: [],
+        files: [maskedCoverAttachment]
+      }).catch(() => {});
     });
   }
 };
