@@ -9,6 +9,9 @@ const User = require('../../models/user');
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 
+// Boost calculator — applies copies boost and shiny boost to base stats
+const { computeBoosts } = require('../../utils/boosts');
+
 // ─────────────────────────────────────────────
 // CONFIGURATION — easy values to tweak later
 // ─────────────────────────────────────────────
@@ -16,8 +19,8 @@ const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImag
 // How many pulls each player gets per reset window
 const PULL_LIMIT = 8;
 
-// How long a player must wait between pulls (in milliseconds). 3000ms = 3 seconds.
-const COOLDOWN_MS = 3000;
+// How long a player must wait between pulls (in milliseconds). 2000ms = 2 seconds.
+const COOLDOWN_MS = 2000;
 
 // 1% chance that any pull lands as a shiny version of the card.
 // A shiny card is permanent — pulling duplicates later never removes the shiny status.
@@ -253,6 +256,8 @@ module.exports = {
     const resolvedSpeed  = resolveStat(resolvedRank, 'speed',  safeStat(pulledCard.speed),  pulledCard.name, 1);
 
     // ── STEP 7: Track the copy in the player's collection ──
+    // We also capture finalCopies here so the embed can show boosted stats correctly.
+    let finalCopies;
     const existingCopy = userData.cardCopies?.find(c => c.cardName === pulledCard.name);
     if (existingCopy) {
       // They already have at least one copy — increment the count
@@ -262,6 +267,7 @@ module.exports = {
       if (isShinyPull && !existingCopy.shiny) {
         existingCopy.shiny = true;
       }
+      finalCopies = existingCopy.amount;
     } else {
       // First time they've pulled this card — add a new entry to their collection
       userData.cardCopies.push({
@@ -270,6 +276,7 @@ module.exports = {
         lastObtained: now,
         shiny: isShinyPull // true only if this pull rolled shiny
       });
+      finalCopies = 1;
     }
 
     // ── STEP 8: Save everything to the database ──
@@ -302,14 +309,22 @@ module.exports = {
     }
 
     // ── STEP 10: Build and send the pull embed ──
+    // Apply copies + shiny boosts so the stats shown match what the player actually has.
+    // On a shiny pull the 30% shiny bonus is real and should be visible right away.
+    const {
+      health: displayHealth,
+      power:  displayPower,
+      speed:  displaySpeed
+    } = computeBoosts(resolvedHealth, resolvedPower, resolvedSpeed, finalCopies, isShinyPull);
+
     const embed = {
       title: cardTitle,
       description: [
         `${pulledCard.title}`,
         ``,
-        `**Health:** ${resolvedHealth}`,
-        `**Power:** ${resolvedPower}`,
-        `**Speed:** ${resolvedSpeed}`
+        `**Health:** ${displayHealth}`,
+        `**Power:** ${displayPower}`,
+        `**Speed:** ${displaySpeed}`
       ].join('\n'),
       thumbnail: { url: iconUrl },
       color: visualSettings.color,

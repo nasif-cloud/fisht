@@ -310,12 +310,12 @@ const cards = [
     aliases: ['Gill Bastar',],
 
 
-    title: 'Pirate - Wanted!',
-    rank: 'A',
+    title: 'Thriller Bark Zombie',
+    rank: 'B',
     health: '-',
-    power: '+',
+    power: '=',
     speed: '-',
-    image: 'https://i.postimg.cc/yxywg76L/4.png', 
+    image: 'https://i.postimg.cc/bY0XF90f/6.png', 
     
   
     M2: {
@@ -324,7 +324,7 @@ const cards = [
       health: '=',
       power: '+',
       speed: '=',
-      image: 'https://i.postimg.cc/GtxZ8b3q/5.png'
+      image: 'https://i.postimg.cc/yxywg76L/4.png'
     },
     
  
@@ -334,7 +334,7 @@ const cards = [
       health: '-',
       power: '+',
       speed: '-',
-      image: 'https://i.postimg.cc/bY0XF90f/6.png'
+      image: 'https://i.postimg.cc/GtxZ8b3q/5.png'
     }
   },
   {

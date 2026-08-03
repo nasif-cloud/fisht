@@ -47,6 +47,16 @@ const maintenance = require('./data/maintenance');
 
 // The bot owner's Discord user ID — used to allow owner through normal maintenance.
 const OWNER_ID = '1257718161298690119';
+
+// ─────────────────────────────────────────────
+// GLOBAL COMMAND COOLDOWN
+// ─────────────────────────────────────────────
+// Prevents any user from spamming the same command back-to-back.
+// Entries are keyed as `${userId}:${commandName}` and store the last-used timestamp.
+// Lives in memory only — resets if the bot restarts (that's fine for a 2-second guard).
+const GLOBAL_COOLDOWN_MS = 2000; // 2 seconds between repeated uses of the same command
+const globalCooldowns    = new Map();
+
 const SERVICE_LEASE_ID = 'fisht-command-handler';
 const SERVICE_LEASE_HEARTBEAT_MS = 5000;
 const SERVICE_LEASE_STALE_MS = 15000;
@@ -314,6 +324,20 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
+  // ── GLOBAL COOLDOWN CHECK (slash) ──
+  // Blocks the same user from spamming the same slash command within 2 seconds.
+  // The cooldown key combines the user ID and command name so different commands
+  // each get their own independent 2-second window per user.
+  const slashCooldownKey = `${interaction.user.id}:${interaction.commandName}`;
+  const slashLastUsed    = globalCooldowns.get(slashCooldownKey);
+  const slashNow         = Date.now();
+  if (slashLastUsed && (slashNow - slashLastUsed) < GLOBAL_COOLDOWN_MS) {
+    const secsLeft = Math.ceil((GLOBAL_COOLDOWN_MS - (slashNow - slashLastUsed)) / 1000);
+    const label    = secsLeft === 1 ? `second` : `seconds`;
+    return interaction.reply({ content: `Wait **${secsLeft} ${label}** before using this command again`, flags: 64 });
+  }
+  globalCooldowns.set(slashCooldownKey, slashNow);
+
   try {
     // Register the account before running the command so the user always
     // has a save file by the time the command code runs.
@@ -389,6 +413,18 @@ client.on('messageCreate', async (message) => {
       return message.reply({ content: 'Bot is in Maintenance, come back later', allowedMentions: { repliedUser: false } });
     }
   }
+
+  // ── GLOBAL COOLDOWN CHECK (prefix) ──
+  // Same 2-second per-user-per-command guard as the slash handler above.
+  const prefixCooldownKey = `${message.author.id}:${commandName}`;
+  const prefixLastUsed    = globalCooldowns.get(prefixCooldownKey);
+  const prefixNow         = Date.now();
+  if (prefixLastUsed && (prefixNow - prefixLastUsed) < GLOBAL_COOLDOWN_MS) {
+    const secsLeft = Math.ceil((GLOBAL_COOLDOWN_MS - (prefixNow - prefixLastUsed)) / 1000);
+    const label    = secsLeft === 1 ? `second` : `seconds`;
+    return message.reply({ content: `Wait **${secsLeft} ${label}** before using this command again`, allowedMentions: { repliedUser: false } });
+  }
+  globalCooldowns.set(prefixCooldownKey, prefixNow);
 
   try {
     // Register the account before running the command
