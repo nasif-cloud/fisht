@@ -19,6 +19,8 @@ module.exports = {
       'op nomeat @user [amount]        — remove Meat from a user',
       'op ocard @user [cardname] [amount]   — give card copies (name/alias search)',
       'op nocard @user [cardname] [amount]  — remove card copies (name/alias search)',
+      'op oshinify @user [cardname]       — make all copies of a card shiny',
+      'op noshinify @user [cardname]      — remove shiny status from all copies',
       'op oreset @user [command]            — reset a user\'s rolling cooldown (daily, manga)',
       'op down                              — toggle normal maintenance (owner still works)',
       'op downall                           — toggle hard lockdown (blocks everyone)',
