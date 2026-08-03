@@ -47,6 +47,7 @@ const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImag
 const RANK_ORDER = ['UR', 'SS', 'S', 'A', 'B', 'C', 'D'];
 
 const SORT_LABELS = {
+  shinies: 'By shinies',
   copies: 'By copies',
   health: 'By health',
   power:  'By power',
@@ -102,7 +103,10 @@ function sortOwnedCards(ownedList, sortMode, isAscending = false) {
   const copy = [...ownedList];
   let sorted;
 
-  if (sortMode === 'copies') {
+  if (sortMode === 'shinies') {
+    // Put shiny cards first by default. The direction button reverses this order.
+    sorted = copy.sort((a, b) => Number(b.isShiny) - Number(a.isShiny));
+  } else if (sortMode === 'copies') {
     sorted = copy.sort((a, b) => b.copies - a.copies);
   } else if (sortMode === 'rank') {
     sorted = copy.sort((a, b) => {
@@ -319,6 +323,7 @@ function buildNormalComponents(total, page, sortMode, isSlash, isAscending = fal
       .setCustomId('col_sort')
       .setPlaceholder('Sort by...')
       .addOptions([
+        { label: 'By shinies', value: 'shinies', default: sortMode === 'shinies' },
         { label: 'By copies', value: 'copies', default: sortMode === 'copies' },
         { label: 'By health', value: 'health', default: sortMode === 'health' },
         { label: 'By power',  value: 'power',  default: sortMode === 'power'  },
@@ -362,6 +367,7 @@ module.exports = {
         .setDescription('Sort by a specific filter')
         .setRequired(false)
         .addChoices(
+          { name: 'By shinies', value: 'shinies' },
           { name: 'By copies', value: 'copies' },
           { name: 'By health', value: 'health' },
           { name: 'By power',  value: 'power'  },
