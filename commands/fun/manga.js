@@ -85,16 +85,17 @@ async function loadCoverAssets(imageUrl) {
   ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
   const cleanCover = canvas.toBuffer('image/png');
 
-  // The volume number is printed in the lower-right corner. Use percentages
-  // so the mask works for the different cover resolutions in the gallery.
-  const maskX = Math.floor(sourceImage.width * 0.58);
-  const maskY = Math.floor(sourceImage.height * 0.76);
-  const maskWidth = Math.ceil(sourceImage.width * 0.42);
-  const maskHeight = Math.ceil(sourceImage.height * 0.24);
+  // The volume number sits inside the crescent-like circle in the lower-right
+  // corner. Keep the same proportions for every cover size in the gallery.
+  const maskCenterX = sourceImage.width * 0.86;
+  const maskCenterY = sourceImage.height * 0.88;
+  const maskRadius = sourceImage.width * 0.155;
 
   ctx.save();
   ctx.fillStyle = `#${dominantColor.toString(16).padStart(6, '0')}`;
-  ctx.fillRect(maskX, maskY, maskWidth, maskHeight);
+  ctx.beginPath();
+  ctx.arc(maskCenterX, maskCenterY, maskRadius, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
   const maskedCover = canvas.toBuffer('image/png');
