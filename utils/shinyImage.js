@@ -1,13 +1,16 @@
 // ─────────────────────────────────────────────
 // SHINY IMAGE GENERATOR
 // ─────────────────────────────────────────────
-// Takes a card's image URL and overlays a holographic shiny effect on it.
-// Returns a PNG buffer that can be attached to a Discord message.
+// Takes a card's image URL (or rank icon URL) and overlays a holographic
+// rainbow effect on it. Returns a PNG buffer for attaching to Discord messages.
 //
-// The effect has three layers:
+// The card effect has three layers:
 //   1. Rainbow shimmer — a diagonal colour gradient blended into the image
 //   2. Brightness boost — makes the whole card look more vibrant and lit
 //   3. Sparkle stars   — 8 four-pointed stars at positions seeded by the card name
+//
+// The icon effect uses the same rainbow blend but with a stronger mix,
+// so the small rank icon reads as holographic even at thumbnail size.
 //
 // Using jimp (pure JavaScript, no native dependencies) so it runs anywhere.
 
@@ -68,6 +71,29 @@ function rainbowAt(t) {
 }
 
 // ─────────────────────────────────────────────
+// RAINBOW OVERLAY — shared by card and icon
+// ─────────────────────────────────────────────
+// Blends the rainbow gradient diagonally across every non-transparent pixel.
+// mix controls the strength: 0.0 = no change, 1.0 = fully rainbow.
+function applyRainbowOverlay(img, mix) {
+  const { width, height } = img.bitmap;
+  img.scan(0, 0, width, height, (x, y, idx) => {
+    // Skip pixels that are fully transparent (e.g. card borders)
+    if (img.bitmap.data[idx + 3] < 10) return;
+
+    // Gradient position: 0.0 at top-left, 1.0 at bottom-right
+    const t = x / width * 0.5 + y / height * 0.5;
+    const [r, g, b] = rainbowAt(t);
+
+    // Blend: newColour = existing × (1 - mix) + rainbow × mix
+    img.bitmap.data[idx + 0] = Math.round(img.bitmap.data[idx + 0] * (1 - mix) + r * mix);
+    img.bitmap.data[idx + 1] = Math.round(img.bitmap.data[idx + 1] * (1 - mix) + g * mix);
+    img.bitmap.data[idx + 2] = Math.round(img.bitmap.data[idx + 2] * (1 - mix) + b * mix);
+    // Alpha channel (idx + 3) is untouched — preserve original transparency
+  });
+}
+
+// ─────────────────────────────────────────────
 // SPARKLE STAR DRAWING
 // ─────────────────────────────────────────────
 // Draws a 4-pointed star (+ shape with shorter × arms) centred at (cx, cy).
@@ -100,50 +126,34 @@ function drawSparkle(img, cx, cy, armLen) {
 }
 
 // ─────────────────────────────────────────────
-// MAIN EXPORT
+// MAIN EXPORTS
 // ─────────────────────────────────────────────
+
 /**
- * Generates a shiny version of a card image.
+ * Generates a shiny (holographic rainbow) version of a card's main image.
+ * Applies a diagonal rainbow shimmer, a brightness boost, and sparkle stars.
  *
  * @param {string} imageUrl  The original card image URL
- * @param {string} cardName  The card name — used to seed sparkle positions
- * @returns {Promise<Buffer>} PNG image buffer ready to attach to a Discord message
+ * @param {string} cardName  The card name — seeds sparkle positions so they're fixed per card
+ * @returns {Promise<Buffer>} PNG buffer ready to attach to a Discord message
  */
 async function generateShinyImage(imageUrl, cardName) {
   // Load the card image from its URL (jimp supports remote URLs natively)
   const img = await Jimp.read(imageUrl);
-  const { width, height } = img.bitmap;
 
-  // ── LAYER 1: Rainbow shimmer gradient ──
-  // Scan every pixel and blend a rainbow colour into it at ~28% opacity.
-  // The gradient runs diagonally from top-left to bottom-right.
-  img.scan(0, 0, width, height, (x, y, idx) => {
-    // Skip pixels that are fully transparent (e.g. transparent card borders)
-    if (img.bitmap.data[idx + 3] < 10) return;
-
-    // Gradient position: 0.0 at top-left corner, 1.0 at bottom-right corner
-    const t = x / width * 0.5 + y / height * 0.5;
-    const [r, g, b] = rainbowAt(t);
-
-    // Blend the rainbow colour onto the existing pixel at 28% opacity.
-    // "Blend" here means: newColour = existing × 0.72 + rainbow × 0.28
-    const mix = 0.28;
-    img.bitmap.data[idx + 0] = Math.round(img.bitmap.data[idx + 0] * (1 - mix) + r * mix);
-    img.bitmap.data[idx + 1] = Math.round(img.bitmap.data[idx + 1] * (1 - mix) + g * mix);
-    img.bitmap.data[idx + 2] = Math.round(img.bitmap.data[idx + 2] * (1 - mix) + b * mix);
-    // Alpha channel (idx + 3) is untouched — we keep the original transparency
-  });
+  // ── LAYER 1: Rainbow shimmer (28% blend — subtle but visible) ──
+  applyRainbowOverlay(img, 0.28);
 
   // ── LAYER 2: Brightness boost ──
-  // A small positive brightness modifier makes the card look more vibrant and
-  // "glowing" — like a foil card held up to the light.
+  // Makes the card look more vibrant and "glowing" — like a foil card held to the light.
   // jimp's .brightness() scale: 0.0 = no change, 1.0 = pure white, -1.0 = pure black.
   img.brightness(0.07);
 
   // ── LAYER 3: Sparkle stars ──
-  // 8 four-pointed stars are placed at fixed positions seeded by the card name,
+  // 8 four-pointed stars at fixed positions seeded by the card name,
   // so every player sees the same sparkle layout for a given card.
   const SPARKLE_COUNT = 8;
+  const { width, height } = img.bitmap;
   for (let i = 0; i < SPARKLE_COUNT; i++) {
     const cx     = Math.floor(seededRandom(hashString(`${cardName}|sx|${i}`)) * width);
     const cy     = Math.floor(seededRandom(hashString(`${cardName}|sy|${i}`)) * height);
@@ -151,9 +161,28 @@ async function generateShinyImage(imageUrl, cardName) {
     drawSparkle(img, cx, cy, armLen);
   }
 
-  // Convert to a PNG buffer.
-  // This buffer can be passed directly to Discord.js AttachmentBuilder.
+  // Return a PNG buffer — pass directly to Discord.js AttachmentBuilder
   return img.getBufferAsync(Jimp.MIME_PNG);
 }
 
-module.exports = { generateShinyImage };
+/**
+ * Generates a holographic rainbow version of a rank icon.
+ * Uses a stronger rainbow blend (45%) so the small icon reads clearly as shiny.
+ * No sparkles — the icon is too small for them to look good.
+ *
+ * @param {string} iconUrl  The original rank icon URL
+ * @returns {Promise<Buffer>} PNG buffer ready to attach to a Discord message
+ */
+async function generateShinyIcon(iconUrl) {
+  const img = await Jimp.read(iconUrl);
+
+  // Stronger rainbow blend for the small icon — 45% so it's visibly holographic
+  applyRainbowOverlay(img, 0.45);
+
+  // Slightly stronger brightness boost to make the icon pop at small size
+  img.brightness(0.12);
+
+  return img.getBufferAsync(Jimp.MIME_PNG);
+}
+
+module.exports = { generateShinyImage, generateShinyIcon };

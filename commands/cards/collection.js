@@ -7,6 +7,9 @@
 // Each card is shown at the mastery the player actually owns (M1/M2/M3),
 // and all stats include copies + shiny boosts.
 //
+// Shiny cards are displayed with a holographic rainbow overlay on both the
+// card image and the rank icon, generated on the fly via utils/shinyImage.js.
+//
 // Prefix aliases: col, mycards
 // Prefix controls:
 //   Row 1 — 🔍 (search), ↕ (flip direction), Previous, Next, boosts button
@@ -30,14 +33,18 @@ const {
   StringSelectMenuBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle
+  TextInputStyle,
+  AttachmentBuilder  // needed for shiny image file attachments
 } = require('discord.js');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const User = require('../../models/user');
 
-// Stat boost calculator — applies copies boost (0.1%/copy) and shiny boost (3%)
+// Stat boost calculator — applies copies boost (0.3%/copy) and shiny boost (30%)
 const { computeBoosts } = require('../../utils/boosts');
+
+// Shiny image generators — holographic overlay for card image and rank icon
+const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -53,9 +60,9 @@ const SORT_LABELS = {
   rank:   'By rank'
 };
 
-const DESC_EMOJI   = '<:descending:1533566429180330286>';
-const SHINY_EMOJI  = '<:shiny:1533586974764699868>';
-const BOOSTS_EMOJI = '<:boosts:1533587691055349900>';
+const DESC_EMOJI   = `<:descending:1533566429180330286>`;
+const SHINY_EMOJI  = `<:shiny:1533586974764699868>`;
+const BOOSTS_EMOJI = `<:boosts:1533587691055349900>`;
 
 // ─────────────────────────────────────────────
 // HELPER — get the stat block for a card at a given mastery level
@@ -83,17 +90,21 @@ function resolveCardStat(card, mastery, statType) {
 // ─────────────────────────────────────────────
 function getBoostedStat(entry, statType) {
   // Use the stored mastery level directly — do not derive it from copy count
-  const mastery  = entry.mastery ?? 1;
-  const base     = resolveCardStat(entry.card, mastery, statType);
-  const copyPct  = entry.copies * 0.001;       // 0.1% per copy
-  const shinyPct = entry.isShiny ? 0.03 : 0;  // 3% if shiny
-  // Round each boost up separately, then sum — matches computeBoosts() logic
-  return base + Math.ceil(base * copyPct) + Math.ceil(base * shinyPct);
+  const mastery = entry.mastery ?? 1;
+
+  // Resolve all three base stats so we can pass them to computeBoosts
+  const baseHealth = resolveCardStat(entry.card, mastery, 'health');
+  const basePower  = resolveCardStat(entry.card, mastery, 'power');
+  const baseSpeed  = resolveCardStat(entry.card, mastery, 'speed');
+
+  // Use computeBoosts so sort order always matches displayed values
+  const boosted = computeBoosts(baseHealth, basePower, baseSpeed, entry.copies, entry.isShiny);
+  return boosted[statType]; // 'health', 'power', or 'speed'
 }
 
 // ─────────────────────────────────────────────
 // HELPER — sort an owned-card list
-// Each entry is: { card, copies, isShiny }
+// Each entry is: { card, copies, mastery, isShiny }
 //
 // Stat sorts (health / power / speed) use fully boosted values so that a
 // high-copy or shiny card ranks correctly against others.
@@ -145,13 +156,16 @@ function buildBoostMessage(entry) {
 }
 
 // ─────────────────────────────────────────────
-// HELPER — build the embed for one owned card
+// HELPER — build the embed data for one owned card
 //
-// Mastery is derived from entry.copies (1 copy = M1, 2 = M2, 3+ = M3).
+// Mastery is taken from entry.mastery (stored in DB, defaults to 1).
 // Stats shown are the BOOSTED values (copies + shiny), not the base values.
 // info/allcards show base stats; collection always shows what you actually own.
+//
+// imageUrl and iconUrl are optional overrides — supply attachment:// URLs here
+// when building a shiny card embed so the files are referenced correctly.
 // ─────────────────────────────────────────────
-function buildCardEmbed(entry, footerText, user) {
+function buildCardEmbed(entry, footerText, user, imageUrl, iconUrl) {
   const { card, copies, mastery: storedMastery, isShiny } = entry;
   // Use the stored mastery level — do not derive it from copy count
   const mastery  = storedMastery ?? 1;
@@ -191,8 +205,52 @@ function buildCardEmbed(entry, footerText, user) {
       text: footerText
     },
     color:     visual.color,
-    thumbnail: { url: visual.icon },
-    image:     { url: cardData.image }
+    // Use provided URL overrides (attachment:// for shiny), or fall back to the real URLs
+    thumbnail: { url: iconUrl  || visual.icon    },
+    image:     { url: imageUrl || cardData.image }
+  };
+}
+
+// ─────────────────────────────────────────────
+// HELPER — resolve the full embed payload for one card, including shiny assets
+//
+// For non-shiny cards: returns the embed and an empty files array.
+// For shiny cards: generates the holographic card image and rank icon,
+// attaches them as files, and returns attachment:// URLs in the embed.
+//
+// Returns: { embeds: [...], files: [...] }
+// ─────────────────────────────────────────────
+async function buildCardPayload(entry, footerText, user) {
+  // Non-shiny cards: just build the embed with plain URLs — no file upload needed
+  if (!entry.isShiny) {
+    return { embeds: [buildCardEmbed(entry, footerText, user)], files: [] };
+  }
+
+  // Shiny cards: generate holographic images for the card and rank icon
+  const { card, mastery: storedMastery } = entry;
+  const mastery  = storedMastery ?? 1;
+  const cardData = getCardData(card, mastery);
+  const rank     = safeRank(cardData.rank || card.rank);
+  const visual   = rankConfig[rank][`M${mastery}`];
+
+  // Generate both images in parallel for speed
+  const [cardBuf, iconBuf] = await Promise.all([
+    generateShinyImage(cardData.image, card.name),
+    generateShinyIcon(visual.icon)
+  ]);
+
+  const files = [
+    new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
+    new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
+  ];
+
+  return {
+    embeds: [buildCardEmbed(
+      entry, footerText, user,
+      `attachment://shiny_card.png`,
+      `attachment://shiny_icon.png`
+    )],
+    files
   };
 }
 
@@ -221,7 +279,7 @@ function buildNormalComponents(total, page, sortMode, isSlash, isAscending = fal
   const navRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('col_search')
-      .setEmoji('<:magnifyingglass:1532884937294741645>')
+      .setEmoji(`<:magnifyingglass:1532884937294741645>`)
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
@@ -339,8 +397,8 @@ module.exports = {
     // ── STEP 2: Load owned cards ──
     const userData = await User.findOne({ userId: user.id });
 
-    // Build the owned list — each entry carries the card object, copy count, and shiny flag.
-    // The shiny flag comes from the DB entry (defaults to false if not set on older entries).
+    // Build the owned list — each entry carries the card object, copy count,
+    // mastery level, and shiny flag.
     const ownedList = [];
     for (const entry of (userData?.cardCopies || [])) {
       if (!entry.amount || entry.amount <= 0) continue;
@@ -391,19 +449,25 @@ module.exports = {
       searchEntry  = found;
     }
 
-    // ── STEP 5: Build initial embed and components ──
-    let embed, components;
+    // ── STEP 5: Build initial embed payload and components ──
+    // buildCardPayload is async — for shiny cards it generates the holographic images.
+    // For non-shiny cards it resolves instantly with empty files.
+    let cardPayload, components;
 
     if (isSearchMode) {
-      embed      = buildCardEmbed(searchEntry, searchFooter(searchEntry.card.name), user);
-      components = buildSearchComponents();
+      cardPayload = await buildCardPayload(searchEntry, searchFooter(searchEntry.card.name), user);
+      components  = buildSearchComponents();
     } else {
-      embed      = buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user);
+      cardPayload = await buildCardPayload(
+        sortedList[currentPage],
+        normalFooter(currentPage, sortedList.length, sortMode),
+        user
+      );
       components = buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
     }
 
     // ── STEP 6: Send the initial message ──
-    const payload = { embeds: [embed], components, fetchReply: true };
+    const payload = { ...cardPayload, components, fetchReply: true };
     let response;
 
     if (isSlash) {
@@ -425,8 +489,13 @@ module.exports = {
       // ── NEXT ──
       if (interaction.customId === 'col_next') {
         currentPage = Math.min(sortedList.length - 1, currentPage + 1);
+        const cp = await buildCardPayload(
+          sortedList[currentPage],
+          normalFooter(currentPage, sortedList.length, sortMode),
+          user
+        );
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
+          ...cp,
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
@@ -434,8 +503,13 @@ module.exports = {
       // ── PREVIOUS ──
       else if (interaction.customId === 'col_prev') {
         currentPage = Math.max(0, currentPage - 1);
+        const cp = await buildCardPayload(
+          sortedList[currentPage],
+          normalFooter(currentPage, sortedList.length, sortMode),
+          user
+        );
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
+          ...cp,
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
@@ -445,8 +519,13 @@ module.exports = {
         isAscending = !isAscending;
         currentPage = 0;
         sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
+        const cp = await buildCardPayload(
+          sortedList[currentPage],
+          normalFooter(currentPage, sortedList.length, sortMode),
+          user
+        );
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
+          ...cp,
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
@@ -456,8 +535,13 @@ module.exports = {
         sortMode    = interaction.values[0];
         currentPage = 0;
         sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
+        const cp = await buildCardPayload(
+          sortedList[currentPage],
+          normalFooter(currentPage, sortedList.length, sortMode),
+          user
+        );
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
+          ...cp,
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
@@ -508,10 +592,8 @@ module.exports = {
           isSearchMode = true;
           searchEntry  = found;
 
-          await submit.update({
-            embeds:     [buildCardEmbed(searchEntry, searchFooter(searchEntry.card.name), user)],
-            components: buildSearchComponents()
-          });
+          const cp = await buildCardPayload(searchEntry, searchFooter(searchEntry.card.name), user);
+          await submit.update({ ...cp, components: buildSearchComponents() });
 
         } catch {
           // Modal dismissed or timed out — leave the embed unchanged
@@ -523,14 +605,21 @@ module.exports = {
         isSearchMode = false;
         searchEntry  = null;
         currentPage  = 0;
+        const cp = await buildCardPayload(
+          sortedList[currentPage],
+          normalFooter(currentPage, sortedList.length, sortMode),
+          user
+        );
         await interaction.update({
-          embeds:     [buildCardEmbed(sortedList[currentPage], normalFooter(currentPage, sortedList.length, sortMode), user)],
+          ...cp,
           components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
         });
       }
     });
 
-    // After 2 minutes of inactivity, remove buttons and mark as expired
+    // After 2 minutes of inactivity, remove buttons and mark as expired.
+    // EmbedBuilder.from() picks up the Discord CDN URL that was resolved from the
+    // attachment:// reference, so shiny card images remain visible after expiry.
     collector.on('end', async () => {
       try {
         const latestResponse = await response.fetch();

@@ -6,6 +6,9 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 // The User model so we can read/write each player's save data in MongoDB
 const User = require('../../models/user');
 
+// Shiny image generators — create the holographic card image and rank icon
+const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
+
 // ─────────────────────────────────────────────
 // CONFIGURATION — easy values to tweak later
 // ─────────────────────────────────────────────
@@ -15,6 +18,13 @@ const PULL_LIMIT = 8;
 
 // How long a player must wait between pulls (in milliseconds). 3000ms = 3 seconds.
 const COOLDOWN_MS = 3000;
+
+// 1% chance that any pull lands as a shiny version of the card.
+// A shiny card is permanent — pulling duplicates later never removes the shiny status.
+const SHINY_CHANCE = 0.01;
+
+// Emoji that appears before a shiny card's name in the pull embed title
+const SHINY_EMOJI = `<:shiny:1533586974764699868>`;
 
 // Pull odds for each rank — these must add up to exactly 100.
 // Higher weight = more likely to appear. UR at 0.01% means ~1 in 10,000 pulls.
@@ -193,7 +203,6 @@ module.exports = {
       userData.lastPullReset = lastReset;
     }
     // If they've used all their pulls, tell them when the next reset is.
-    // We show the time as "Xh Ym" instead of a Discord timestamp so it always reads clearly.
     if (userData.pullsUsed >= PULL_LIMIT) {
       const nextReset    = getNextReset(now);
       const remainingMs  = nextReset - now;
@@ -223,7 +232,13 @@ module.exports = {
     // Pick a random card from the pool
     const pulledCard = pool[Math.floor(Math.random() * pool.length)];
 
-    // ── STEP 5: Resolve the card's stats ──
+    // ── STEP 5: Roll for shiny ──
+    // Each pull has a 1% chance of being a shiny version of the card.
+    // Shiny is permanent — once a card is shiny, it stays shiny forever.
+    // Pulling a non-shiny duplicate later does NOT remove the shiny status.
+    const isShinyPull = Math.random() < SHINY_CHANCE;
+
+    // ── STEP 6: Resolve the card's stats ──
     // safeRank catches invalid rank values; resolveStat converts filter strings to numbers.
     // We pass pulledCard.name + mastery 1 so stats are fixed — the same card always
     // shows the same numbers no matter who pulls it or how many times.
@@ -237,26 +252,58 @@ module.exports = {
     const resolvedPower  = resolveStat(resolvedRank, 'power',  safeStat(pulledCard.power),  pulledCard.name, 1);
     const resolvedSpeed  = resolveStat(resolvedRank, 'speed',  safeStat(pulledCard.speed),  pulledCard.name, 1);
 
-    // ── STEP 6: Track the copy in the player's collection ──
-    // Look for this card in the player's existing collection
+    // ── STEP 7: Track the copy in the player's collection ──
     const existingCopy = userData.cardCopies?.find(c => c.cardName === pulledCard.name);
     if (existingCopy) {
       // They already have at least one copy — increment the count
       existingCopy.amount += 1;
-      existingCopy.lastObtained = now; // Update the date so "By date" sort stays accurate
+      existingCopy.lastObtained = now;
+      // Only upgrade to shiny — never remove an existing shiny status
+      if (isShinyPull && !existingCopy.shiny) {
+        existingCopy.shiny = true;
+      }
     } else {
       // First time they've pulled this card — add a new entry to their collection
-      userData.cardCopies.push({ cardName: pulledCard.name, amount: 1, lastObtained: now });
+      userData.cardCopies.push({
+        cardName: pulledCard.name,
+        amount: 1,
+        lastObtained: now,
+        shiny: isShinyPull // true only if this pull rolled shiny
+      });
     }
 
-    // ── STEP 7: Save everything to the database ──
+    // ── STEP 8: Save everything to the database ──
     userData.pullsUsed   += 1;
     userData.lastPullTime = now;
     await userData.save(); // Writes all the changes above to MongoDB
 
-    // ── STEP 8: Build and send the pull embed ──
+    // ── STEP 9: Build the shiny image files (if this pull is shiny) ──
+    // Generates a holographic rainbow overlay on both the card image and the rank icon.
+    // Both are uploaded as Discord file attachments and referenced via attachment:// URLs.
+    let files      = [];
+    let imageUrl   = pulledCard.image;    // Default: plain card image URL
+    let iconUrl    = visualSettings.icon; // Default: plain rank icon URL
+    const cardTitle = isShinyPull
+      ? `${SHINY_EMOJI} ${pulledCard.name}` // Shiny prefix emoji before the name
+      : pulledCard.name;
+
+    if (isShinyPull) {
+      // Generate both images in parallel so we don't wait for one before starting the other
+      const [cardBuf, iconBuf] = await Promise.all([
+        generateShinyImage(pulledCard.image, pulledCard.name),
+        generateShinyIcon(visualSettings.icon)
+      ]);
+      files    = [
+        new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
+        new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
+      ];
+      imageUrl = `attachment://shiny_card.png`;
+      iconUrl  = `attachment://shiny_icon.png`;
+    }
+
+    // ── STEP 10: Build and send the pull embed ──
     const embed = {
-      title: pulledCard.name,
+      title: cardTitle,
       description: [
         `${pulledCard.title}`,
         ``,
@@ -264,21 +311,21 @@ module.exports = {
         `**Power:** ${resolvedPower}`,
         `**Speed:** ${resolvedSpeed}`
       ].join('\n'),
-      thumbnail: { url: visualSettings.icon },
+      thumbnail: { url: iconUrl },
       color: visualSettings.color,
       // Footer shows pull count so players always know how many they have left
       footer: { text: `This card was pulled by ${user.username} · ${userData.pullsUsed}/${PULL_LIMIT}` },
-      image: { url: pulledCard.image }
+      image: { url: imageUrl }
     };
 
     if (interactionOrMessage.isChatInputCommand?.()) {
       if (interactionOrMessage.replied || interactionOrMessage.deferred) {
-        await interactionOrMessage.followUp({ embeds: [embed] });
+        await interactionOrMessage.followUp({ embeds: [embed], files });
       } else {
-        await interactionOrMessage.reply({ embeds: [embed] });
+        await interactionOrMessage.reply({ embeds: [embed], files });
       }
     } else {
-      await interactionOrMessage.channel.send({ embeds: [embed] });
+      await interactionOrMessage.channel.send({ embeds: [embed], files });
     }
   },
 };

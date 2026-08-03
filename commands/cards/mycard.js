@@ -4,7 +4,8 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder
+  EmbedBuilder,
+  AttachmentBuilder
 } = require('discord.js');
 
 // Card data and helper functions from the central card library
@@ -13,14 +14,17 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 // The User model so we can look up which cards the player owns
 const User = require('../../models/user');
 
-// Stat boost calculator — applies copies boost (0.1%/copy) and shiny boost (3%)
+// Stat boost calculator — applies copies boost (0.3%/copy) and shiny boost (30%)
 const { computeBoosts } = require('../../utils/boosts');
+
+// Shiny image generators — produce the holographic card image and rank icon
+const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 
 // ─── EMOJI CONSTANTS ───
 // SHINY_EMOJI appears before the card name when the card is shiny.
 // BOOSTS_EMOJI is used as the icon on the active-boosts button.
-const SHINY_EMOJI  = '<:shiny:1533586974764699868>';
-const BOOSTS_EMOJI = '<:boosts:1533587691055349900>';
+const SHINY_EMOJI  = `<:shiny:1533586974764699868>`;
+const BOOSTS_EMOJI = `<:boosts:1533587691055349900>`;
 
 module.exports = {
   // --- SLASH COMMAND DEFINITION ---
@@ -121,7 +125,29 @@ module.exports = {
 
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
-    // --- STEP 8: Build the embed ---
+    // --- STEP 8: Prepare shiny image files (if the card is shiny) ---
+    // For shiny cards we generate a holographic overlay on both the card image
+    // and the rank icon, attach them as files, and reference them via attachment:// URLs.
+    // For non-shiny cards we just use the plain image URLs as normal.
+    let files      = [];
+    let imageUrl   = cardData.image; // Default: plain card image
+    let iconUrl    = visual.icon;    // Default: plain rank icon
+
+    if (isShiny) {
+      // Generate both images in parallel for speed
+      const [cardBuf, iconBuf] = await Promise.all([
+        generateShinyImage(cardData.image, foundCard.name),
+        generateShinyIcon(visual.icon)
+      ]);
+      files    = [
+        new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
+        new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
+      ];
+      imageUrl = `attachment://shiny_card.png`;
+      iconUrl  = `attachment://shiny_icon.png`;
+    }
+
+    // --- STEP 9: Build the embed ---
     // Shiny emoji appears before the name if the card is shiny
     const cardTitle = isShiny ? `${SHINY_EMOJI} ${foundCard.name}` : foundCard.name;
 
@@ -141,11 +167,11 @@ module.exports = {
         text: `Mastery ${masteryLevel}/3`
       },
       color:     visual.color,
-      thumbnail: { url: visual.icon },
-      image:     { url: cardData.image }
+      thumbnail: { url: iconUrl },
+      image:     { url: imageUrl }
     };
 
-    // --- STEP 9: Build the boosts button ---
+    // --- STEP 10: Build the boosts button ---
     // Grey (Secondary) button with only the boosts emoji — no text label.
     // It opens an ephemeral breakdown of how the card's stats are being boosted.
     const boostsRow = new ActionRowBuilder().addComponents(
@@ -155,9 +181,9 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // --- STEP 10: Send the message ---
+    // --- STEP 11: Send the message ---
     // fetchReply: true gives us the message object so we can attach a collector
-    const payload = { embeds: [embed], components: [boostsRow], fetchReply: true };
+    const payload = { embeds: [embed], components: [boostsRow], files, fetchReply: true };
     let response;
     if (interactionOrMessage.isChatInputCommand?.()) {
       response = await interactionOrMessage.reply(payload);
@@ -165,7 +191,7 @@ module.exports = {
       response = await interactionOrMessage.channel.send(payload);
     }
 
-    // --- STEP 11: Listen for the boosts button ---
+    // --- STEP 12: Listen for the boosts button ---
     // 60-second timeout — same as the info command
     const collector = response.createMessageComponentCollector({ time: 60000 });
 
@@ -177,8 +203,7 @@ module.exports = {
 
       if (interaction.customId === 'mc_boosts') {
         // Build the boost breakdown text.
-        // The Copies line always shows (every card has >= 1 copy, so boost is always >= 1
-        // due to Math.ceil). The Shiny line only appears if the card is actually shiny.
+        // The Copies line always shows. The Shiny line only appears if the card is shiny.
         const lines = ['**Active Boosts**'];
         lines.push(`Copies: \`+${copyBoost.health}hp\`, \`+${copyBoost.power}pwr\`, \`+${copyBoost.speed}spd\``);
         if (isShiny) {
