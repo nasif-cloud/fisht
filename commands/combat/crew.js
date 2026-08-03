@@ -3,6 +3,8 @@ const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const User = require('../../models/user');
+const { computeBoosts } = require('../../utils/boosts');
+const { generateShinyImage } = require('../../utils/shinyImage');
 
 const CANVAS_WIDTH = 860;
 const CANVAS_HEIGHT = 500;
@@ -30,18 +32,29 @@ function buildOwnedCardPool(userData) {
     if (!card) continue;
 
     const rank = safeRank(card.rank);
-    const power = resolveStat(rank, 'power', safeStat(card.power), card.name, 1);
+    const copies = entry.amount || 1;
+    const isShiny = entry.shiny ?? false;
+    const baseHealth = resolveStat(rank, 'health', safeStat(card.health), card.name, 1);
+    const basePower = resolveStat(rank, 'power', safeStat(card.power), card.name, 1);
+    const baseSpeed = resolveStat(rank, 'speed', safeStat(card.speed), card.name, 1);
+    const boosted = computeBoosts(baseHealth, basePower, baseSpeed, copies, isShiny);
 
     ownedCards.push({
       card,
-      copies: entry.amount || 1,
-      power,
+      copies,
+      isShiny,
+      // Auto-team selection and visual ordering use the same effective power
+      // that the card displays elsewhere in the bot.
+      power: boosted.power,
       rank
     });
   }
 
   return ownedCards.sort((a, b) => {
-    return b.power - a.power || b.copies - a.copies || a.card.name.localeCompare(b.card.name);
+    return b.power - a.power ||
+      Number(b.isShiny) - Number(a.isShiny) ||
+      b.copies - a.copies ||
+      a.card.name.localeCompare(b.card.name);
   });
 }
 
@@ -209,14 +222,19 @@ function getSmartCrop(img) {
 async function loadCardImage(entry) {
   if (!entry) return null;
 
-  const cacheKey = entry.card.image;
+  // Keep normal and shiny versions in separate canvas caches.
+  const cacheKey = `${entry.card.image}|${entry.isShiny ? 'shiny' : 'normal'}`;
   if (imageBufferCache.has(cacheKey)) {
     const cached = imageBufferCache.get(cacheKey);
     return cached ? loadImage(cached) : null;
   }
 
   try {
-    const buffer = await fetchImageBuffer(entry.card.image);
+    // A shiny-owned card must use the generated holographic image, not the
+    // original card URL. The generator has its own buffer cache as well.
+    const buffer = entry.isShiny
+      ? await generateShinyImage(entry.card.image, entry.card.name)
+      : await fetchImageBuffer(entry.card.image);
     imageBufferCache.set(cacheKey, buffer);
     return loadImage(buffer);
   } catch (error) {
@@ -231,7 +249,7 @@ async function loadCardImage(entry) {
 function renderCardSlot(ctx, entry, sourceImage, layout) {
   const { x, y, size, radius, innerPadding } = layout;
   const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
-  const cardName = entry?.card?.name || 'Empty slot';
+  const cardName = entry?.card?.name || '';
   const glowStyle = entry ? getGlowStyle(entry.rank) : { shadowBlur: 10, shadowColor: '#25304c' };
 
   drawCardGlow(ctx, entry, layout);
@@ -292,11 +310,6 @@ function renderCardSlot(ctx, entry, sourceImage, layout) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
     roundedRectPath(ctx, x + innerPadding, y + innerPadding, size - innerPadding * 2, size - innerPadding * 2, Math.max(10, radius - 12));
     ctx.fill();
-    ctx.fillStyle = '#c1ccf8';
-    ctx.font = '700 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Empty slot', x + size / 2, y + size / 2);
     ctx.restore();
   }
 }
