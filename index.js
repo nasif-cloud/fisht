@@ -344,7 +344,7 @@ client.on('interactionCreate', async interaction => {
         return interaction.reply({
           content: restriction.blockAll
             ? `This bots commands can't be used here`
-            : `**${command.name}** can't be used here**`,
+            : `**${command.name}** can't be used here`,
           flags: 64
         });
       }
@@ -456,7 +456,7 @@ client.on('messageCreate', async (message) => {
       if (restriction.blocked) {
         const blockedMessage = restriction.blockAll
           ? `This bots commands can't be used here`
-          : `**${command.name}** can't be used here**`;
+          : `**${command.name}** can't be used here`;
         return message.reply({
           content: blockedMessage,
           allowedMentions: { repliedUser: false }

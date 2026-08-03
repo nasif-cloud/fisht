@@ -323,21 +323,13 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
     ctx.fillText(cardName, innerX + innerSize / 2, innerY + innerSize - labelHeight / 2);
     ctx.restore();
 
-    // Put a small shiny emoji badge in the card's top-right corner.
-    // The dark circular backing keeps the icon visible over bright artwork.
+    // Put only the plain shiny emoji icon in the card's top-right corner.
     if (entry.isShiny) {
       const badgeSize = Math.min(34, size * 0.16);
       const badgeX = x + size - badgeSize - 14;
       const badgeY = y + 14;
 
       ctx.save();
-      // Use a transparent badge with a thin black outline instead of a filled circle.
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.95)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2 + 2, 0, Math.PI * 2);
-      ctx.stroke();
-
       if (shinyEmojiImage) {
         ctx.drawImage(shinyEmojiImage, badgeX, badgeY, badgeSize, badgeSize);
       } else {
