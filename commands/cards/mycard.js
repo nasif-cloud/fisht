@@ -88,8 +88,9 @@ module.exports = {
     }
 
     // --- STEP 4: Determine mastery level ---
-    // 1 copy → M1, 2 copies → M2, 3+ copies → M3
-    const masteryLevel = Math.min(ownedCopies, 3);
+    // Mastery is stored separately from copy count — owning 3+ copies does NOT mean M3.
+    // The mastery field defaults to 1 for any card that predates this field being added.
+    const masteryLevel = copyEntry.mastery ?? 1;
 
     // --- STEP 5: Pick the right stat block for their mastery ---
     let cardData = foundCard;              // defaults to M1

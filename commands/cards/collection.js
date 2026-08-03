@@ -79,10 +79,11 @@ function resolveCardStat(card, mastery, statType) {
 // HELPER — compute the fully boosted value of one stat for an owned-card entry
 // Used by sortOwnedCards to sort by real effective stats (including all boosts).
 //
-// entry = { card, copies, isShiny }
+// entry = { card, copies, mastery, isShiny }
 // ─────────────────────────────────────────────
 function getBoostedStat(entry, statType) {
-  const mastery  = Math.min(entry.copies, 3); // owned mastery level
+  // Use the stored mastery level directly — do not derive it from copy count
+  const mastery  = entry.mastery ?? 1;
   const base     = resolveCardStat(entry.card, mastery, statType);
   const copyPct  = entry.copies * 0.001;       // 0.1% per copy
   const shinyPct = entry.isShiny ? 0.03 : 0;  // 3% if shiny
@@ -123,8 +124,9 @@ function sortOwnedCards(ownedList, sortMode, isAscending = false) {
 // Shows the per-source stat gains: Copies always shown; Shiny only if shiny.
 // ─────────────────────────────────────────────
 function buildBoostMessage(entry) {
-  const { card, copies, isShiny } = entry;
-  const mastery  = Math.min(copies, 3);
+  const { card, copies, mastery: storedMastery, isShiny } = entry;
+  // Use the stored mastery level — do not derive it from copy count
+  const mastery  = storedMastery ?? 1;
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
 
@@ -150,8 +152,9 @@ function buildBoostMessage(entry) {
 // info/allcards show base stats; collection always shows what you actually own.
 // ─────────────────────────────────────────────
 function buildCardEmbed(entry, footerText, user) {
-  const { card, copies, isShiny } = entry;
-  const mastery  = Math.min(copies, 3);
+  const { card, copies, mastery: storedMastery, isShiny } = entry;
+  // Use the stored mastery level — do not derive it from copy count
+  const mastery  = storedMastery ?? 1;
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
 
@@ -346,6 +349,8 @@ module.exports = {
       ownedList.push({
         card,
         copies:  entry.amount,
+        // Use the stored mastery level (defaults to 1 for any card that predates this field)
+        mastery: entry.mastery ?? 1,
         isShiny: entry.shiny ?? false
       });
     }

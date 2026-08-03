@@ -51,10 +51,15 @@ const userSchema = new mongoose.Schema({
   lastTriviaClaim: { type: Date, default: null },
 
   // A list of every card the user has collected, with how many copies they own.
-  // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, lastObtained: <date>, shiny: false }
+  // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, mastery: 1, lastObtained: <date>, shiny: false }
   cardCopies: [{
     cardName:     { type: String,  required: true },
     amount:       { type: Number,  default: 1 },
+    // Mastery level for this card (1, 2, or 3).
+    // This is separate from copy count — having many copies doesn't increase mastery.
+    // Mastery only goes up when the player explicitly upgrades the card.
+    // All cards start at M1, so we default to 1.
+    mastery:      { type: Number,  default: 1 },
     lastObtained: { type: Date,    default: Date.now },
     // Whether this card is shiny for this player.
     // Shiny is "sticky" — once a card becomes shiny it never goes back to normal,
