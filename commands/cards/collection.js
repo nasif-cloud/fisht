@@ -4,8 +4,8 @@
 // Shows all the cards the player personally owns, one per page.
 // Supports sorting, searching, and a direction-flip button.
 //
-// Each card is shown at the mastery the player actually owns (M1/M2/M3).
-// Card stats come from cards.js; boosts are shown separately by the Boosts button.
+// Each card is shown at the mastery the player actually owns (M1/M2/M3),
+// and all stats include copies + shiny boosts.
 //
 // Shiny cards display a holographic rainbow overlay on both the card image
 // and the rank icon, generated on the fly via utils/shinyImage.js.
@@ -34,7 +34,7 @@ const {
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const User = require('../../models/user');
 
-// Stat boost calculator — used for the separate boost breakdown button
+// Stat boost calculator — applies copies boost (0.3%/copy) and shiny boost (30%)
 const { computeBoosts } = require('../../utils/boosts');
 
 // Shiny image generators — holographic overlay for card image and rank icon
@@ -78,14 +78,22 @@ function resolveCardStat(card, mastery, statType) {
 }
 
 // ─────────────────────────────────────────────
-// HELPER — get the base value of one stat for an owned-card entry
-// Sorting uses the same unmodified values that the embed displays.
+// HELPER — compute the fully boosted value of one stat for an owned-card entry
+// Used by sortOwnedCards to sort by real effective stats (including all boosts).
 //
 // entry = { card, copies, mastery, isShiny }
 // ─────────────────────────────────────────────
-function getBaseStat(entry, statType) {
+function getBoostedStat(entry, statType) {
   const mastery = entry.mastery ?? 1;
-  return resolveCardStat(entry.card, mastery, statType);
+
+  // Resolve all three base stats so we can pass them to computeBoosts
+  const baseHealth = resolveCardStat(entry.card, mastery, 'health');
+  const basePower  = resolveCardStat(entry.card, mastery, 'power');
+  const baseSpeed  = resolveCardStat(entry.card, mastery, 'speed');
+
+  // Use computeBoosts so sort order always matches displayed values
+  const boosted = computeBoosts(baseHealth, basePower, baseSpeed, entry.copies, entry.isShiny);
+  return boosted[statType]; // 'health', 'power', or 'speed'
 }
 
 // ─────────────────────────────────────────────
@@ -107,8 +115,7 @@ function sortOwnedCards(ownedList, sortMode, isAscending = false) {
       return RANK_ORDER.indexOf(rankA) - RANK_ORDER.indexOf(rankB);
     });
   } else {
-    // Sort by the same base stat values shown in the card embed.
-    sorted = copy.sort((a, b) => getBaseStat(b, sortMode) - getBaseStat(a, sortMode));
+    sorted = copy.sort((a, b) => getBoostedStat(b, sortMode) - getBoostedStat(a, sortMode));
   }
 
   return isAscending ? sorted.reverse() : sorted;
@@ -159,6 +166,8 @@ function buildCardEmbed(entry, footerText, user, imageUrl, iconUrl) {
   const basePower  = resolveStat(rank, 'power',  safeStat(cardData.power),  card.name, mastery);
   const baseSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  card.name, mastery);
 
+  const { health, power, speed } = computeBoosts(baseHealth, basePower, baseSpeed, copies, isShiny);
+
   const title = isShiny ? `${SHINY_EMOJI} ${card.name}` : card.name;
 
   return {
@@ -167,9 +176,9 @@ function buildCardEmbed(entry, footerText, user, imageUrl, iconUrl) {
       `${cardData.title}`,
       ` `,
       `**Rank:** ${cardData.rank || card.rank}`,
-      `**Health:** ${baseHealth}`,
-      `**Power:** ${basePower}`,
-      `**Speed:** ${baseSpeed}`,
+      `**Health:** ${health}`,
+      `**Power:** ${power}`,
+      `**Speed:** ${speed}`,
       `**Copies:** ${copies}`
     ].join('\n'),
     footer: {

@@ -1171,26 +1171,26 @@ const cards = [
 
     title: 'Red Hair Pirates',
     rank: 'SS',
-    health: '500',
-    power: '90',
-    speed: '40',
+    health: 500,
+    power: 90,
+    speed: 40,
     image: 'https://files.catbox.moe/7w06ob.jpg', 
     
     M2: {
     title: 'Red Hair Pirates',
     rank: 'SS',
-    health: '510',
-    power: '92',
-    speed: '41',
+    health: 510,
+    power: 92,
+    speed: 41,
     image: 'https://files.catbox.moe/5im0b6.webp', 
     }, 
   
     M3: {
     title: 'Red Hair Pirates',
     rank: 'SS',
-    health: '520',
-    power: '94',
-    speed: '42',
+    health: 520,
+    power: 94,
+    speed: 42,
     image: 'https://files.catbox.moe/ho9b7z.webp', 
     }
   },
