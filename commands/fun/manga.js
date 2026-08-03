@@ -27,157 +27,10 @@ const {
 } = require('discord.js');
 
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
-const zlib = require('node:zlib');
+const { Vibrant } = require('node-vibrant/node');
 
 const mangaPool = require('../../data/manga');
 const User      = require('../../models/user');
-
-// ─────────────────────────────────────────────
-// HELPER — extract dominant hex color from a PNG image URL.
-// Falls back to a random color if the fetch fails or the image is not a PNG.
-// ─────────────────────────────────────────────
-async function getDominantColor(imageUrl) {
-  try {
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(`Image request failed with status ${response.status}`);
-    }
-
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
-    if (imageBuffer.length < 8 || !imageBuffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
-      throw new Error('Unsupported image format');
-    }
-
-    const chunks = [];
-    let offset = 8;
-    let width = 0;
-    let height = 0;
-    let bitDepth = 0;
-    let colorType = 0;
-
-    while (offset < imageBuffer.length) {
-      const length = imageBuffer.readUInt32BE(offset);
-      const type = imageBuffer.toString('ascii', offset + 4, offset + 8);
-      const dataStart = offset + 8;
-      const dataEnd = dataStart + length;
-
-      if (type === 'IHDR') {
-        width = imageBuffer.readUInt32BE(dataStart);
-        height = imageBuffer.readUInt32BE(dataStart + 4);
-        bitDepth = imageBuffer[dataStart + 8];
-        colorType = imageBuffer[dataStart + 9];
-      } else if (type === 'IDAT') {
-        chunks.push(imageBuffer.subarray(dataStart, dataEnd));
-      } else if (type === 'IEND') {
-        break;
-      }
-
-      offset = dataEnd + 4;
-    }
-
-    if (!width || !height || bitDepth !== 8 || (colorType !== 2 && colorType !== 6)) {
-      throw new Error('Unsupported PNG encoding');
-    }
-
-    const inflated = zlib.inflateSync(Buffer.concat(chunks));
-    const bytesPerPixel = colorType === 6 ? 4 : 3;
-    const rowSize = width * bytesPerPixel;
-    const histogram = new Map();
-    const previousRow = Buffer.alloc(rowSize);
-    let inputOffset = 0;
-
-    function unfilterSub(row, bpp) {
-      for (let i = bpp; i < row.length; i += 1) {
-        row[i] = (row[i] + row[i - bpp]) & 0xff;
-      }
-    }
-
-    function unfilterUp(row, prior) {
-      for (let i = 0; i < row.length; i += 1) {
-        row[i] = (row[i] + prior[i]) & 0xff;
-      }
-    }
-
-    function paethPredictor(left, up, upLeft) {
-      const p = left + up - upLeft;
-      const pa = Math.abs(p - left);
-      const pb = Math.abs(p - up);
-      const pc = Math.abs(p - upLeft);
-      if (pa <= pb && pa <= pc) return left;
-      if (pb <= pc) return up;
-      return upLeft;
-    }
-
-    for (let y = 0; y < height; y += 1) {
-      const filterType = inflated[inputOffset];
-      inputOffset += 1;
-      const row = Buffer.from(inflated.subarray(inputOffset, inputOffset + rowSize));
-      inputOffset += rowSize;
-
-      switch (filterType) {
-        case 0:
-          break;
-        case 1:
-          unfilterSub(row, bytesPerPixel);
-          break;
-        case 2:
-          unfilterUp(row, previousRow);
-          break;
-        case 3:
-          for (let i = 0; i < row.length; i += 1) {
-            const left = i >= bytesPerPixel ? row[i - bytesPerPixel] : 0;
-            const up = previousRow[i];
-            row[i] = (row[i] + Math.floor((left + up) / 2)) & 0xff;
-          }
-          break;
-        case 4:
-          for (let i = 0; i < row.length; i += 1) {
-            const left = i >= bytesPerPixel ? row[i - bytesPerPixel] : 0;
-            const up = previousRow[i];
-            const upLeft = i >= bytesPerPixel ? previousRow[i - bytesPerPixel] : 0;
-            row[i] = (row[i] + paethPredictor(left, up, upLeft)) & 0xff;
-          }
-          break;
-        default:
-          throw new Error(`Unsupported PNG filter ${filterType}`);
-      }
-
-      row.copy(previousRow);
-
-      for (let i = 0; i < row.length; i += bytesPerPixel) {
-        const alpha = colorType === 6 ? row[i + 3] : 255;
-        if (alpha < 32) continue;
-
-        const red = row[i];
-        const green = row[i + 1];
-        const blue = row[i + 2];
-        const key = `${red >> 3},${green >> 3},${blue >> 3}`;
-        histogram.set(key, (histogram.get(key) || 0) + 1);
-      }
-    }
-
-    let bestKey = null;
-    let bestCount = 0;
-    for (const [key, count] of histogram.entries()) {
-      if (count > bestCount) {
-        bestKey = key;
-        bestCount = count;
-      }
-    }
-
-    if (bestKey) {
-      const [red5, green5, blue5] = bestKey.split(',').map(Number);
-      const red = (red5 << 3) | (red5 >> 2);
-      const green = (green5 << 3) | (green5 >> 2);
-      const blue = (blue5 << 3) | (blue5 >> 2);
-      return (red << 16) | (green << 8) | blue;
-    }
-  } catch {
-    // Network error, bad URL, or unsupported image format — fall through
-  }
-  // Fallback: random colour so the embed isn't always plain white
-  return Math.floor(Math.random() * 0xFFFFFF);
-}
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -191,55 +44,67 @@ const REWARD_CLOSE = 150; // 1–5 volumes off
 const REWARD_FAR   = 50;  // 6–20 volumes off
 const MASKED_COVER_FILENAME = 'manga-cover.png';
 
-// Keep processed covers in memory so repeated rounds do not download and
-// redraw the same cover every time the bot picks it.
-const maskedCoverCache = new Map();
+// Keep each cover's palette and generated images in memory. This avoids
+// downloading and processing the same cover again during later rounds.
+const coverAssetCache = new Map();
 
-// The volume number is printed in the lower-right corner of these covers.
-// This helper blurs that area and adds a translucent overlay so the number
-// cannot be read from the image sent to players.
-async function createMaskedCover(imageUrl) {
-  if (maskedCoverCache.has(imageUrl)) return maskedCoverCache.get(imageUrl);
+function rgbToNumber(rgb) {
+  const [red, green, blue] = rgb;
+  return (red << 16) | (green << 8) | blue;
+}
+
+function getMostPopularColor(palette) {
+  const swatches = Object.values(palette).filter(Boolean);
+  const mostPopular = swatches.reduce((current, swatch) => {
+    if (!current || swatch._population > current._population) return swatch;
+    return current;
+  }, null);
+
+  // A stable dark fallback keeps the embed valid if a palette cannot be read.
+  return mostPopular ? rgbToNumber(mostPopular._rgb) : 0x2f3d5c;
+}
+
+async function loadCoverAssets(imageUrl) {
+  if (coverAssetCache.has(imageUrl)) return coverAssetCache.get(imageUrl);
 
   const response = await fetch(imageUrl);
   if (!response.ok) {
     throw new Error(`Cover request failed with status ${response.status}`);
   }
 
-  const sourceImage = await loadImage(Buffer.from(await response.arrayBuffer()));
+  const sourceBuffer = Buffer.from(await response.arrayBuffer());
+  const [sourceImage, palette] = await Promise.all([
+    loadImage(sourceBuffer),
+    Vibrant.from(sourceBuffer).getPalette()
+  ]);
+  const dominantColor = getMostPopularColor(palette);
   const canvas = createCanvas(sourceImage.width, sourceImage.height);
   const ctx = canvas.getContext('2d');
 
+  // Render a clean PNG for the answer and timeout states.
   ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
+  const cleanCover = canvas.toBuffer('image/png');
 
-  // Use percentages so the mask works for the different cover resolutions.
+  // The volume number is printed in the lower-right corner. Use percentages
+  // so the mask works for the different cover resolutions in the gallery.
   const maskX = Math.floor(sourceImage.width * 0.58);
   const maskY = Math.floor(sourceImage.height * 0.76);
   const maskWidth = Math.ceil(sourceImage.width * 0.42);
   const maskHeight = Math.ceil(sourceImage.height * 0.24);
 
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(maskX, maskY, maskWidth, maskHeight);
-  ctx.clip();
-  ctx.filter = 'blur(18px)';
-  ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
-  ctx.restore();
-
-  // A dark translucent layer makes the blur unreadable even on covers with
-  // very high contrast around the printed volume number.
-  ctx.save();
-  ctx.fillStyle = 'rgba(18, 18, 24, 0.58)';
+  ctx.fillStyle = `#${dominantColor.toString(16).padStart(6, '0')}`;
   ctx.fillRect(maskX, maskY, maskWidth, maskHeight);
   ctx.restore();
 
   const maskedCover = canvas.toBuffer('image/png');
-  maskedCoverCache.set(imageUrl, maskedCover);
-  return maskedCover;
+  const assets = { cleanCover, maskedCover, dominantColor };
+  coverAssetCache.set(imageUrl, assets);
+  return assets;
 }
 
-function buildMaskedCoverAttachment(maskedCover) {
-  return { attachment: maskedCover, name: MASKED_COVER_FILENAME };
+function buildCoverAttachment(buffer) {
+  return { attachment: buffer, name: MASKED_COVER_FILENAME };
 }
 
 // ─────────────────────────────────────────────
@@ -296,12 +161,13 @@ module.exports = {
     // ── STEP 3: PICK A RANDOM MANGA ENTRY ──
     const entry = mangaPool[Math.floor(Math.random() * mangaPool.length)];
 
-    // ── STEP 3b: EXTRACT DOMINANT COLOR ──
-    // Reads the image and pulls out the most prominent colour so the embed
-    // matches the panel's art style. Falls back to a random colour on error.
-    const embedColor = await getDominantColor(entry.image);
-    const maskedCover = await createMaskedCover(entry.image);
-    const maskedCoverAttachment = buildMaskedCoverAttachment(maskedCover);
+    // ── STEP 3b: PREPARE THE COVER ──
+    // Node Vibrant finds the most common palette colour. The active challenge
+    // uses the clean solid mask, while result states use the clean cover.
+    const coverAssets = await loadCoverAssets(entry.image);
+    const embedColor = coverAssets.dominantColor;
+    const maskedCoverAttachment = buildCoverAttachment(coverAssets.maskedCover);
+    const cleanCoverAttachment = buildCoverAttachment(coverAssets.cleanCover);
 
     // ── STEP 4: BUILD THE INITIAL EMBED ──
     const activeEmbed = new EmbedBuilder()
@@ -397,7 +263,7 @@ module.exports = {
           return submit.editReply({
             embeds: [wrongEmbed],
             components: [],
-            files: [maskedCoverAttachment]
+            files: [cleanCoverAttachment]
           });
         }
 
@@ -449,7 +315,7 @@ module.exports = {
         await submit.editReply({
           embeds: [resultEmbed],
           components: [],
-          files: [maskedCoverAttachment]
+          files: [cleanCoverAttachment]
         });
 
       } catch {
@@ -464,7 +330,7 @@ module.exports = {
         await response.edit({
           embeds: [timedEmbed],
           components: [],
-          files: [maskedCoverAttachment]
+          files: [cleanCoverAttachment]
         }).catch(() => {});
       }
     });
@@ -484,7 +350,7 @@ module.exports = {
       await response.edit({
         embeds: [timedEmbed],
         components: [],
-        files: [maskedCoverAttachment]
+        files: [cleanCoverAttachment]
       }).catch(() => {});
     });
   }
