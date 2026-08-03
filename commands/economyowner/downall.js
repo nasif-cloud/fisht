@@ -6,8 +6,12 @@
 // always pass through so the owner can always turn it back off.
 //
 // Usage: op downall
-// Compare: op down → normal maintenance (owner still works)
+// Compare: op down    → normal maintenance (owner still works)
 //          op downall → hard lockdown (nobody works)
+//
+// Reactions:
+//   ⬇️  — bot just went DOWN (hard lockdown enabled)
+//   ⬆️  — bot just came UP   (hard lockdown disabled)
 
 const maintenance = require('../../data/maintenance');
 
@@ -23,7 +27,12 @@ module.exports = {
     // Flip the full-lockdown flag: true → false, false → true
     maintenance.full = !maintenance.full;
 
-    // React with ✅ to confirm
-    await message.react('<:Success:1533154745731256531>');
+    // Persist the new state so it survives bot restarts
+    await maintenance.save();
+
+    // React to show which direction the toggle went:
+    // ⬇️ = hard lockdown enabled (down), ⬆️ = hard lockdown lifted (up)
+    const reaction = maintenance.full ? '⬇️' : '⬆️';
+    await message.react(reaction);
   }
 };

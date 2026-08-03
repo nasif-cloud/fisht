@@ -250,6 +250,10 @@ async function startBot() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Successfully connected to MongoDB Atlas!');
 
+    // Restore maintenance flags from the last saved state so a bot restart
+    // doesn't silently clear a maintenance window the owner had set
+    await maintenance.load();
+
     await maintainServiceLease();
 
     console.log('Logging in to Discord...');

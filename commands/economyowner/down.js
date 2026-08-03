@@ -4,6 +4,10 @@
 //
 // Usage: op down
 // Only the user whose Discord ID matches OWNER_ID can run this.
+//
+// Reactions:
+//   ⬇️  — bot just went DOWN (maintenance enabled)
+//   ⬆️  — bot just came UP   (maintenance disabled)
 
 const maintenance = require('../../data/maintenance');
 
@@ -21,7 +25,12 @@ module.exports = {
     // Flip the maintenance flag: true → false, false → true
     maintenance.active = !maintenance.active;
 
-    // React with a green checkmark to confirm the change
-    await message.react('<:Success:1533154745731256531>');
+    // Persist the new state so it survives bot restarts
+    await maintenance.save();
+
+    // React to show which direction the toggle went:
+    // ⬇️ = going into maintenance (down), ⬆️ = coming out of maintenance (up)
+    const reaction = maintenance.active ? '⬇️' : '⬆️';
+    await message.react(reaction);
   }
 };
