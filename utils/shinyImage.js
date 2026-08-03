@@ -17,6 +17,18 @@
 const Jimp = require('jimp');
 
 // ─────────────────────────────────────────────
+// IN-MEMORY CACHE
+// ─────────────────────────────────────────────
+// Shiny image generation is slow (jimp downloads + processes each image).
+// We cache the resulting buffers in memory so each unique image URL is only
+// processed once per bot uptime — subsequent calls return instantly.
+//
+// Keys for the card cache include the card name because sparkle positions are
+// seeded by name; icon cache keys are just the URL since no name is involved.
+const _cardCache = new Map(); // key: `${imageUrl}|${cardName}`  → Buffer
+const _iconCache = new Map(); // key: iconUrl                    → Buffer
+
+// ─────────────────────────────────────────────
 // SEEDED RNG — same algorithm as cards.js
 // ─────────────────────────────────────────────
 // We reuse the same hash + seededRandom pair from data/cards.js.
@@ -138,6 +150,10 @@ function drawSparkle(img, cx, cy, armLen) {
  * @returns {Promise<Buffer>} PNG buffer ready to attach to a Discord message
  */
 async function generateShinyImage(imageUrl, cardName) {
+  // Return the cached buffer immediately if we've processed this card before
+  const cacheKey = `${imageUrl}|${cardName}`;
+  if (_cardCache.has(cacheKey)) return _cardCache.get(cacheKey);
+
   // Load the card image from its URL (jimp supports remote URLs natively)
   const img = await Jimp.read(imageUrl);
 
@@ -161,8 +177,10 @@ async function generateShinyImage(imageUrl, cardName) {
     drawSparkle(img, cx, cy, armLen);
   }
 
-  // Return a PNG buffer — pass directly to Discord.js AttachmentBuilder
-  return img.getBufferAsync(Jimp.MIME_PNG);
+  // Store the result so future calls for the same card skip all the above work
+  const buffer = await img.getBufferAsync(Jimp.MIME_PNG);
+  _cardCache.set(cacheKey, buffer);
+  return buffer;
 }
 
 /**
