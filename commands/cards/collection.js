@@ -189,26 +189,25 @@ function buildCardEmbed(entry, footerText, user, imageUrl, iconUrl) {
 }
 
 // ─────────────────────────────────────────────
-// HELPER — resolve the full embed payload for one card, including shiny assets
+// HELPER — generate the shiny (holographic) payload for a card
 //
-// For non-shiny cards: returns the embed and an empty files array immediately.
-// For shiny cards: generates the holographic card image and rank icon (may take
-// a few seconds), attaches them as files, and uses attachment:// URLs in the embed.
+// Only call this for shiny cards. It downloads the card image and rank icon,
+// applies the holographic overlay, and returns an embed that uses
+// attachment:// URLs so Discord renders the shimmer inside the embed.
+//
+// Results are cached by shinyImage.js, so after the first call for a given
+// card the buffers are returned instantly from memory.
 //
 // Returns: { embeds: [...], files: [...] }
 // ─────────────────────────────────────────────
-async function buildCardPayload(entry, footerText, user) {
-  if (!entry.isShiny) {
-    return { embeds: [buildCardEmbed(entry, footerText, user)], files: [] };
-  }
-
+async function buildShinyPayload(entry, footerText, user) {
   const { card, mastery: storedMastery } = entry;
   const mastery  = storedMastery ?? 1;
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
   const visual   = rankConfig[rank][`M${mastery}`];
 
-  // Generate both images in parallel for speed
+  // Generate both images in parallel — each is cached after the first call
   const [cardBuf, iconBuf] = await Promise.all([
     generateShinyImage(cardData.image, card.name),
     generateShinyIcon(visual.icon)
@@ -227,6 +226,47 @@ async function buildCardPayload(entry, footerText, user) {
     )],
     files
   };
+}
+
+// ─────────────────────────────────────────────
+// HELPER — render a card via an editFn, then apply the shiny shimmer
+//
+// Step 1 (fast): calls editFn with plain image URLs immediately — no delay.
+// Step 2 (shiny): if the card is shiny, generates the holographic files and
+//   calls editFn a second time with attachment:// URLs.
+//
+// The version counter (getVersion / bumpVersion) prevents a race condition
+// where navigating quickly could apply an old card's shimmer over a new card:
+// each render bumps the counter, and the shimmer edit is discarded if the
+// counter changed while the images were generating.
+//
+// editFn: async (payload) → void — the function that updates the Discord message
+// ─────────────────────────────────────────────
+async function renderCardUpdate({ editFn, entry, footerText, user, components, getVersion, bumpVersion }) {
+  // Bump and snapshot the version before doing any async work
+  bumpVersion();
+  const myVersion = getVersion();
+
+  // Step 1 — send the plain embed right away (no image generation needed)
+  await editFn({
+    embeds:     [buildCardEmbed(entry, footerText, user)],
+    files:      [],
+    components
+  });
+
+  // Step 2 — if shiny, generate and apply the shimmer
+  if (entry.isShiny) {
+    try {
+      const shiny = await buildShinyPayload(entry, footerText, user);
+      // Only apply if we haven't navigated to a different card since this render started
+      if (getVersion() === myVersion) {
+        await editFn({ ...shiny, components });
+      }
+    } catch (err) {
+      // Shimmer failed silently — the plain card is already showing
+      console.error(`[Collection] Shiny shimmer failed:`, err.message);
+    }
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -398,6 +438,15 @@ module.exports = {
 
     let sortedList = sortOwnedCards(ownedList, sortMode, isAscending);
 
+    // renderVersion is bumped every time we start rendering a new card.
+    // The shiny shimmer edit checks this before applying so that rapidly
+    // navigating pages never applies an old card's shimmer over a new one.
+    let renderVersion = 0;
+
+    // Convenience accessors passed into renderCardUpdate
+    const getVersion  = ()  => renderVersion;
+    const bumpVersion = ()  => { renderVersion++; };
+
     // ── STEP 4: Handle 'card' slash option — enter search mode immediately ──
     if (slashCard) {
       const query = slashCard.toLowerCase().trim();
@@ -416,39 +465,56 @@ module.exports = {
       searchEntry  = found;
     }
 
-    // ── STEP 5: Build initial embed payload and components ──
-    // buildCardPayload is async — for shiny cards it generates the holographic images.
-    let cardPayload, components;
+    // ── STEP 5: Determine the first entry and components to display ──
+    const initialEntry      = isSearchMode ? searchEntry : sortedList[currentPage];
+    const initialFooter     = isSearchMode
+      ? searchFooter(initialEntry.card.name)
+      : normalFooter(currentPage, sortedList.length, sortMode);
+    const initialComponents = isSearchMode
+      ? buildSearchComponents()
+      : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
 
-    if (isSearchMode) {
-      cardPayload = await buildCardPayload(searchEntry, searchFooter(searchEntry.card.name), user);
-      components  = buildSearchComponents();
-    } else {
-      cardPayload = await buildCardPayload(
-        sortedList[currentPage],
-        normalFooter(currentPage, sortedList.length, sortMode),
-        user
-      );
-      components = buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
-    }
-
-    // ── STEP 6: Send the initial message ──
+    // ── STEP 6: Send the initial message immediately with plain URLs ──
     // Slash: editReply (already deferred in step 1).
     // Prefix: channel.send (no defer, no time limit).
+    //
+    // For shiny cards we send the plain embed first so it appears instantly,
+    // then renderCardUpdate applies the holographic shimmer in a second edit.
     let response;
-    const sendPayload = { ...cardPayload, components };
+    const fastInitial = {
+      embeds:     [buildCardEmbed(initialEntry, initialFooter, user)],
+      files:      [],
+      components: initialComponents
+    };
 
     if (isSlash) {
-      response = await interactionOrMessage.editReply(sendPayload);
+      response = await interactionOrMessage.editReply(fastInitial);
     } else {
-      response = await interactionOrMessage.channel.send(sendPayload);
+      response = await interactionOrMessage.channel.send(fastInitial);
+    }
+
+    // Apply shiny shimmer to the initial card if needed.
+    // This runs after the message is sent so the card is visible right away.
+    if (initialEntry.isShiny) {
+      bumpVersion();
+      const mv = getVersion();
+      (async () => {
+        try {
+          const shiny = await buildShinyPayload(initialEntry, initialFooter, user);
+          if (getVersion() === mv) {
+            await response.edit({ ...shiny, components: initialComponents });
+          }
+        } catch (err) {
+          console.error(`[Collection] Initial shiny shimmer failed:`, err.message);
+        }
+      })();
     }
 
     // ── STEP 7: Interaction collector ──
     // Every handler except col_boosts and col_search MUST call deferUpdate()
     // as its very first action, before any await that could take time.
     // This acknowledges the interaction within Discord's 3-second window.
-    // We then call editReply() after the slow work is done.
+    // We then call editReply() after the async work is done.
     const collector = response.createMessageComponentCollector({ time: 120000 });
 
     collector.on('collect', async (interaction) => {
@@ -495,16 +561,23 @@ module.exports = {
           );
 
           if (!found) {
-            // Can't reply ephemerally after deferUpdate — edit the message to show the error,
-            // then restore the previous card on the next interaction.
-            await submit.editReply({
-              embeds: [buildCardEmbed(
-                isSearchMode ? searchEntry : sortedList[currentPage],
-                isSearchMode ? searchFooter((isSearchMode ? searchEntry : sortedList[currentPage]).card.name) : normalFooter(currentPage, sortedList.length, sortMode),
-                user
-              )],
-              components: isSearchMode ? buildSearchComponents() : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
-              files: []
+            // Can't reply ephemerally after deferUpdate — restore the previous card.
+            // Use renderCardUpdate so a shiny current card still gets its shimmer.
+            const prevEntry  = isSearchMode ? searchEntry : sortedList[currentPage];
+            const prevFooter = isSearchMode
+              ? searchFooter(prevEntry.card.name)
+              : normalFooter(currentPage, sortedList.length, sortMode);
+            const prevComponents = isSearchMode
+              ? buildSearchComponents()
+              : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
+            await renderCardUpdate({
+              editFn:     p => submit.editReply(p),
+              entry:      prevEntry,
+              footerText: prevFooter,
+              user,
+              components: prevComponents,
+              getVersion,
+              bumpVersion
             });
             return;
           }
@@ -512,8 +585,16 @@ module.exports = {
           isSearchMode = true;
           searchEntry  = found;
 
-          const cp = await buildCardPayload(searchEntry, searchFooter(searchEntry.card.name), user);
-          await submit.editReply({ ...cp, components: buildSearchComponents() });
+          // Show the found card — two-step (plain then shiny if needed)
+          await renderCardUpdate({
+            editFn:     p => submit.editReply(p),
+            entry:      searchEntry,
+            footerText: searchFooter(searchEntry.card.name),
+            user,
+            components: buildSearchComponents(),
+            getVersion,
+            bumpVersion
+          });
 
         } catch {
           // Modal dismissed or timed out — leave the embed unchanged
@@ -529,28 +610,28 @@ module.exports = {
       // ── NEXT ──
       if (interaction.customId === 'col_next') {
         currentPage = Math.min(sortedList.length - 1, currentPage + 1);
-        const cp = await buildCardPayload(
-          sortedList[currentPage],
-          normalFooter(currentPage, sortedList.length, sortMode),
-          user
-        );
-        await interaction.editReply({
-          ...cp,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn:     p => interaction.editReply(p),
+          entry:      sortedList[currentPage],
+          footerText: normalFooter(currentPage, sortedList.length, sortMode),
+          user,
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          getVersion,
+          bumpVersion
         });
       }
 
       // ── PREVIOUS ──
       else if (interaction.customId === 'col_prev') {
         currentPage = Math.max(0, currentPage - 1);
-        const cp = await buildCardPayload(
-          sortedList[currentPage],
-          normalFooter(currentPage, sortedList.length, sortMode),
-          user
-        );
-        await interaction.editReply({
-          ...cp,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn:     p => interaction.editReply(p),
+          entry:      sortedList[currentPage],
+          footerText: normalFooter(currentPage, sortedList.length, sortMode),
+          user,
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          getVersion,
+          bumpVersion
         });
       }
 
@@ -559,14 +640,14 @@ module.exports = {
         isAscending = !isAscending;
         currentPage = 0;
         sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
-        const cp = await buildCardPayload(
-          sortedList[currentPage],
-          normalFooter(currentPage, sortedList.length, sortMode),
-          user
-        );
-        await interaction.editReply({
-          ...cp,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn:     p => interaction.editReply(p),
+          entry:      sortedList[currentPage],
+          footerText: normalFooter(currentPage, sortedList.length, sortMode),
+          user,
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          getVersion,
+          bumpVersion
         });
       }
 
@@ -575,14 +656,14 @@ module.exports = {
         sortMode    = interaction.values[0];
         currentPage = 0;
         sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
-        const cp = await buildCardPayload(
-          sortedList[currentPage],
-          normalFooter(currentPage, sortedList.length, sortMode),
-          user
-        );
-        await interaction.editReply({
-          ...cp,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn:     p => interaction.editReply(p),
+          entry:      sortedList[currentPage],
+          footerText: normalFooter(currentPage, sortedList.length, sortMode),
+          user,
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          getVersion,
+          bumpVersion
         });
       }
 
@@ -591,21 +672,23 @@ module.exports = {
         isSearchMode = false;
         searchEntry  = null;
         currentPage  = 0;
-        const cp = await buildCardPayload(
-          sortedList[currentPage],
-          normalFooter(currentPage, sortedList.length, sortMode),
-          user
-        );
-        await interaction.editReply({
-          ...cp,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn:     p => interaction.editReply(p),
+          entry:      sortedList[currentPage],
+          footerText: normalFooter(currentPage, sortedList.length, sortMode),
+          user,
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          getVersion,
+          bumpVersion
         });
       }
     });
 
     // After 2 minutes of inactivity, remove buttons and mark as expired.
-    // EmbedBuilder.from() picks up the Discord CDN URL that was resolved from the
-    // attachment:// reference, so shiny card images remain visible after expiry.
+    // We fetch the latest message so EmbedBuilder.from() picks up the CDN URLs
+    // that Discord resolved from attachment:// references — no files need to be
+    // re-uploaded. Re-uploading files here was the cause of images detaching from
+    // the embed and appearing as separate attachments below it.
     collector.on('end', async () => {
       try {
         const latestResponse = await response.fetch();
@@ -613,9 +696,9 @@ module.exports = {
           .from(latestResponse.embeds[0])
           .setFooter({ text: 'expired' });
         await latestResponse.edit({
-          embeds: [expiredEmbed],
-          components: [],
-          files: cp.files
+          embeds:     [expiredEmbed],
+          components: []
+          // No files — CDN URLs are already embedded in the fetched message
         });
       } catch {
         // Message may have been deleted — silently ignore

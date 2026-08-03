@@ -137,30 +137,10 @@ module.exports = {
 
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
-    // --- STEP 9: Prepare shiny image files (if the card is shiny) ---
-    // For shiny cards we generate a holographic overlay on both the card image
-    // and the rank icon, attach them as files, and reference them via attachment:// URLs.
-    // For non-shiny cards we just use the plain image URLs as normal.
-    let files      = [];
-    let imageUrl   = cardData.image; // Default: plain card image
-    let iconUrl    = visual.icon;    // Default: plain rank icon
-
-    if (isShiny) {
-      // Generate both images in parallel for speed
-      const [cardBuf, iconBuf] = await Promise.all([
-        generateShinyImage(cardData.image, foundCard.name),
-        generateShinyIcon(visual.icon)
-      ]);
-      files    = [
-        new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
-        new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
-      ];
-      imageUrl = `attachment://shiny_card.png`;
-      iconUrl  = `attachment://shiny_icon.png`;
-    }
-
-    // --- STEP 10: Build the embed ---
-    // Shiny emoji appears before the name if the card is shiny
+    // --- STEP 9: Build the embed with plain image URLs ---
+    // We always send with plain URLs first so the embed appears instantly.
+    // If the card is shiny, the holographic shimmer is applied in a second
+    // background edit after the message is already visible to the user.
     const cardTitle = isShiny ? `${SHINY_EMOJI} ${foundCard.name}` : foundCard.name;
 
     const embed = {
@@ -179,8 +159,8 @@ module.exports = {
         text: `Mastery ${masteryLevel}/3`
       },
       color:     visual.color,
-      thumbnail: { url: iconUrl },
-      image:     { url: imageUrl }
+      thumbnail: { url: visual.icon    }, // plain rank icon — shimmer applied later if shiny
+      image:     { url: cardData.image } // plain card image — shimmer applied later if shiny
     };
 
     // --- STEP 11: Build the boosts button ---
@@ -194,16 +174,50 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // --- STEP 12: Send the message ---
+    // --- STEP 11: Send the message immediately (no shiny delay) ---
     // Slash: use editReply (because we deferred in step 3).
     // Prefix: use channel.send (no defer was needed, no time limit).
     let response;
-    const payload = { embeds: [embed], components: [boostsRow], files };
+    const payload = { embeds: [embed], components: [boostsRow], files: [] };
 
     if (isSlash) {
       response = await interactionOrMessage.editReply(payload);
     } else {
       response = await interactionOrMessage.channel.send(payload);
+    }
+
+    // --- STEP 12: Apply shiny shimmer in the background (shiny cards only) ---
+    // This runs asynchronously so the embed above is visible to the user right away.
+    // generateShinyImage and generateShinyIcon both cache their results in memory,
+    // so after the first view for a given card the second edit is near-instant.
+    if (isShiny) {
+      (async () => {
+        try {
+          // Generate the holographic card image and rank icon in parallel
+          const [cardBuf, iconBuf] = await Promise.all([
+            generateShinyImage(cardData.image, foundCard.name),
+            generateShinyIcon(visual.icon)
+          ]);
+          const shinyFiles = [
+            new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
+            new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
+          ];
+          // Same embed object, but now pointing at the uploaded shiny files
+          const shinyEmbed = {
+            ...embed,
+            thumbnail: { url: `attachment://shiny_icon.png` },
+            image:     { url: `attachment://shiny_card.png` }
+          };
+          await response.edit({
+            embeds:     [shinyEmbed],
+            components: [boostsRow],
+            files:      shinyFiles
+          });
+        } catch (err) {
+          // Shimmer failed silently — the plain card is already showing, no action needed
+          console.error(`[MyCard] Shiny shimmer failed:`, err.message);
+        }
+      })();
     }
 
     // --- STEP 13: Listen for the boosts button ---
@@ -230,7 +244,9 @@ module.exports = {
     });
 
     // After 60 seconds of inactivity, remove the button and mark the footer as expired.
-    // This matches the expiry behaviour of all other button-based card embeds.
+    // We fetch the latest message so EmbedBuilder.from() picks up the CDN URLs that
+    // Discord resolved from the attachment:// references — no files need to be
+    // re-uploaded. Re-uploading here was the cause of images appearing outside the embed.
     collector.on('end', async () => {
       try {
         const latestResponse = await response.fetch();
@@ -238,9 +254,9 @@ module.exports = {
           .from(latestResponse.embeds[0])
           .setFooter({ text: 'expired' });
         await latestResponse.edit({
-          embeds: [expiredEmbed],
-          components: [],
-          files
+          embeds:     [expiredEmbed],
+          components: []
+          // No files — CDN URLs are already embedded in the fetched message
         });
       } catch {
         // Message may have been deleted — silently ignore

@@ -192,6 +192,9 @@ async function generateShinyImage(imageUrl, cardName) {
  * @returns {Promise<Buffer>} PNG buffer ready to attach to a Discord message
  */
 async function generateShinyIcon(iconUrl) {
+  // Return the cached buffer immediately if we've processed this icon before
+  if (_iconCache.has(iconUrl)) return _iconCache.get(iconUrl);
+
   const img = await Jimp.read(iconUrl);
 
   // Stronger rainbow blend for the small icon — 45% so it's visibly holographic
@@ -200,7 +203,10 @@ async function generateShinyIcon(iconUrl) {
   // Slightly stronger brightness boost to make the icon pop at small size
   img.brightness(0.12);
 
-  return img.getBufferAsync(Jimp.MIME_PNG);
+  // Store the result so future calls for the same icon skip all the above work
+  const buffer = await img.getBufferAsync(Jimp.MIME_PNG);
+  _iconCache.set(iconUrl, buffer);
+  return buffer;
 }
 
 module.exports = { generateShinyImage, generateShinyIcon };
