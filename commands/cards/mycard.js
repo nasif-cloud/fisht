@@ -14,7 +14,7 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 // The User model so we can look up which cards the player owns
 const User = require('../../models/user');
 
-// Stat boost calculator — applies copies boost (0.3%/copy) and shiny boost (30%)
+// Stat boost calculator — used only for the separate boost breakdown button
 const { computeBoosts } = require('../../utils/boosts');
 
 // Shiny image generators — produce the holographic card image and rank icon
@@ -124,13 +124,11 @@ module.exports = {
     const baseHealth = resolveStat(rank, 'health', safeStat(cardData.health), foundCard.name, masteryLevel);
     const baseSpeed  = resolveStat(rank, 'speed',  safeStat(cardData.speed),  foundCard.name, masteryLevel);
 
-    // --- STEP 8: Apply copies + shiny boosts ---
-    // computeBoosts returns both the final boosted stats and a per-source breakdown.
-    // The breakdown is saved here so the boosts button can display it.
+    // --- STEP 8: Keep the displayed stats at their base values ---
+    // The numbers above come directly from this card's entry in cards.js.
+    // Boosts are shown separately in the Boosts button instead of being added
+    // to the card's normal stats.
     const {
-      health: finalHealth,
-      power:  finalPower,
-      speed:  finalSpeed,
       copyBoost,
       shinyBoost
     } = computeBoosts(baseHealth, basePower, baseSpeed, ownedCopies, isShiny);
@@ -149,9 +147,9 @@ module.exports = {
         `${cardData.title}`,
         ` `,
         `**Rank:** ${cardData.rank}`,
-        `**Health:** ${finalHealth}`,
-        `**Power:** ${finalPower}`,
-        `**Speed:** ${finalSpeed}`,
+        `**Health:** ${baseHealth}`,
+        `**Power:** ${basePower}`,
+        `**Speed:** ${baseSpeed}`,
         `**Copies:** ${ownedCopies}`
       ].join('\n'),
       footer: {
