@@ -1,0 +1,1 @@
+- [Patch verification](patch-verification.md) — verify exact file contents after applying tiny syntax fixes before restarting workflows

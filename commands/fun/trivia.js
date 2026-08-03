@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────
 // TRIVIA COMMAND
 // ─────────────────────────────────────────────
-// A One Piece trivia mini-game. The bot shows a question and four answer
-// buttons. The player has 10 seconds to press the correct one.
+// A One Piece trivia mini-game. The bot shows a question and short answer
+// buttons. True/false questions use two buttons; all others use four.
 //
 // Correct answer → green embed, 250 Berries
 // Wrong answer   → red embed, 0 Berries
@@ -114,8 +114,9 @@ module.exports = {
       .setFooter({ text: `Answer correctly for ${REWARD} berries, You have 10 seconds.` })
       .setColor(COLOR_NEUTRAL);
 
-    // ── STEP 5: BUILD THE FOUR GREY BUTTONS ──
-    // Each button's label is one of the shuffled answer options.
+    // ── STEP 5: BUILD THE GREY ANSWER BUTTONS ──
+    // Each button's label is one of the shuffled answer options. A true/false
+    // entry has two options, while the other entries have four.
     // The custom ID encodes the slot index (trivia_0 … trivia_3).
     const buttons = shuffledOptions.map((option, i) =>
       new ButtonBuilder()
@@ -124,7 +125,8 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary) // Grey
     );
 
-    // Discord allows up to 5 buttons per row — 4 fits in a single row.
+    // Discord allows up to 5 buttons per row, so both supported option counts
+    // fit in a single row.
     const navRow = new ActionRowBuilder().addComponents(...buttons);
 
     // ── STEP 6: SEND THE MESSAGE ──
@@ -145,7 +147,7 @@ module.exports = {
     collector.on('collect', async (interaction) => {
       // Only the command runner can press buttons
       if (interaction.user.id !== user.id) {
-        return interaction.reply({ content: "This isn't yours.", flags: 64 });
+        return interaction.reply({ content: "This isn't yours", flags: 64 });
       }
 
       if (resolved) return;
