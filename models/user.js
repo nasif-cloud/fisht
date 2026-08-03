@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+// Resources and card copies must never be negative, even if an older command
+// or a malformed database value tries to write a negative number.
+function nonNegativeNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, number) : 0;
+}
+
 // This file defines what a user's profile looks like in the database.
 // Every time someone uses a bot command for the first time, a new User document
 // gets created and they receive their starter rewards.
@@ -13,10 +20,10 @@ const userSchema = new mongoose.Schema({
 
   // In-game Berries (currency). Displayed as "Berries" to the player.
   // The field is called "balance" internally for historical reasons.
-  balance: { type: Number, default: 0 },
+  balance: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
 
   // In-game Meat resource. Spent with the eat command to reset pull count.
-  meat: { type: Number, default: 0 },
+  meat: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
 
   // Whether this user has already received their welcome DM and starter rewards.
   // Set to true the first time they run any command, so rewards are only given once.
@@ -54,7 +61,7 @@ const userSchema = new mongoose.Schema({
   // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, mastery: 1, lastObtained: <date>, shiny: false }
   cardCopies: [{
     cardName:     { type: String,  required: true },
-    amount:       { type: Number,  default: 1 },
+    amount:       { type: Number,  default: 1, min: 0, set: nonNegativeNumber },
     // Mastery level for this card (1, 2, or 3).
     // This is separate from copy count — having many copies doesn't increase mastery.
     // Mastery only goes up when the player explicitly upgrades the card.

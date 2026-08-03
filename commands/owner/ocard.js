@@ -57,7 +57,8 @@ module.exports = {
     const now      = new Date();
     const existing = userData.cardCopies.find(c => c.cardName === foundCard.name);
     if (existing) {
-      existing.amount      += amount;
+      // Repair an old negative value before adding new copies.
+      existing.amount      = Math.max(0, Number(existing.amount) || 0) + amount;
       existing.lastObtained = now;
     } else {
       userData.cardCopies.push({ cardName: foundCard.name, amount, lastObtained: now });

@@ -1,5 +1,7 @@
 // Owner-only prefix command: remove card copies from a user
 // Usage: op nocard @user [cardname] [amount]
+// The amount can also come before the card name, for example:
+// op nocard @user 100000 benn
 
 const User  = require('../../models/user');
 const { cards } = require('../../data/cards');
@@ -14,9 +16,18 @@ module.exports = {
 
     const parts  = message.content.trim().split(/ +/);
     const target = message.mentions.users.first();
-    const args   = parts.slice(2); // everything after "op nocard"
-    const amount = parseInt(args[args.length - 1]);
-    const cardQuery = args.slice(1, -1).join(' ').trim();
+    const args = parts.slice(2); // everything after "op nocard"
+
+    // Find the numeric argument wherever it appears so both
+    // "@user benn 100000" and "@user 100000 benn" work.
+    const amountIndex = args.findIndex(value => /^-?\d+$/.test(value));
+    const rawAmount = amountIndex === -1 ? NaN : Number(args[amountIndex]);
+    // A negative removal amount must never add copies back to the user.
+    const amount = Number.isFinite(rawAmount) ? Math.max(0, rawAmount) : NaN;
+    const cardQuery = args
+      .filter((_, index) => index !== amountIndex && !/^<@!?\d+>$/.test(args[index]))
+      .join(' ')
+      .trim();
 
     if (!target) {
       return message.reply({ content: 'Please mention a user.', allowedMentions: { repliedUser: false } });
@@ -46,13 +57,22 @@ module.exports = {
     }
 
     const existing = userData.cardCopies.find(c => c.cardName === foundCard.name);
-    if (!existing || existing.amount <= 0) {
+    if (!existing) {
       return message.reply({ content: `${target.username} has no copies of **${foundCard.name}**.`, allowedMentions: { repliedUser: false } });
     }
 
-    // Subtract the copies — if it hits 0 or below, remove the entry entirely
-    existing.amount -= amount;
-    if (existing.amount <= 0) {
+    // Normalize old malformed data before doing the subtraction.
+    const currentAmount = Math.max(0, Number(existing.amount) || 0);
+    if (currentAmount === 0) {
+      existing.amount = 0;
+      await userData.save();
+      return message.reply({ content: `${target.username} has no copies of **${foundCard.name}**.`, allowedMentions: { repliedUser: false } });
+    }
+
+    // Clamp at zero so removing more copies than the user owns never creates
+    // a negative amount. Remove an empty entry from the collection afterward.
+    existing.amount = Math.max(0, currentAmount - amount);
+    if (existing.amount === 0) {
       // Mongoose's .pull() removes subdocuments from the array correctly
       userData.cardCopies.pull({ cardName: foundCard.name });
     }

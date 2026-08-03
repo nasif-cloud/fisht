@@ -30,4 +30,5 @@ module.exports = [
     image:  'https://i.postimg.cc/tCDq1YbF/image.png',
     answer: 5
   }
+  
 ];
