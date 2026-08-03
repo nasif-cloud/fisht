@@ -24,7 +24,7 @@ const COOLDOWN_MS = 3000;
 const SHINY_CHANCE = 0.01;
 
 // Emoji that appears before a shiny card's name in the pull embed title
-const SHINY_EMOJI = `<:shiny:1533586974764699868>`;
+const SHINY_EMOJI = `<:holo:1533666993637687466>`;
 
 // Pull odds for each rank — these must add up to exactly 100.
 // Higher weight = more likely to appear. UR at 0.01% means ~1 in 10,000 pulls.

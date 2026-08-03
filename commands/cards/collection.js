@@ -55,7 +55,7 @@ const SORT_LABELS = {
 };
 
 const DESC_EMOJI   = `<:descending:1533566429180330286>`;
-const SHINY_EMOJI  = `<:shiny:1533586974764699868>`;
+const SHINY_EMOJI  = `<:holo:1533666993637687466>`;
 const BOOSTS_EMOJI = `<:boosts:1533587691055349900>`;
 
 // ─────────────────────────────────────────────
@@ -244,9 +244,9 @@ function searchFooter(cardName) {
 // ─────────────────────────────────────────────
 function buildNormalComponents(total, page, sortMode, isSlash, isAscending = false) {
   const navRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('col_search')
-      .setEmoji(`<:magnifyingglass:1532884937294741645>`)
+   new ButtonBuilder()
+      .setCustomId('col_boosts')
+      .setEmoji(BOOSTS_EMOJI)
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
@@ -267,9 +267,9 @@ function buildNormalComponents(total, page, sortMode, isSlash, isAscending = fal
       .setDisabled(page >= total - 1),
 
     new ButtonBuilder()
-      .setCustomId('col_boosts')
-      .setEmoji(BOOSTS_EMOJI)
-      .setStyle(ButtonStyle.Secondary)
+      .setCustomId('col_search')
+      .setEmoji('<:magnifyingglass:1532884937294741645>')
+      .setStyle(ButtonStyle.Secondary),
   );
 
   if (isSlash) return [navRow];
@@ -612,7 +612,11 @@ module.exports = {
         const expiredEmbed = EmbedBuilder
           .from(latestResponse.embeds[0])
           .setFooter({ text: 'expired' });
-        await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+        await latestResponse.edit({
+          embeds: [expiredEmbed],
+          components: [],
+          files: cp.files
+        });
       } catch {
         // Message may have been deleted — silently ignore
       }

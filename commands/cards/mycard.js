@@ -23,7 +23,7 @@ const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImag
 // ─── EMOJI CONSTANTS ───
 // SHINY_EMOJI appears before the card name when the card is shiny.
 // BOOSTS_EMOJI is used as the icon on the active-boosts button.
-const SHINY_EMOJI  = `<:shiny:1533586974764699868>`;
+const SHINY_EMOJI  = `<:holo:1533666993637687466>`;
 const BOOSTS_EMOJI = `<:boosts:1533587691055349900>`;
 
 module.exports = {
@@ -190,6 +190,7 @@ module.exports = {
       new ButtonBuilder()
         .setCustomId('mc_boosts')
         .setEmoji(BOOSTS_EMOJI)
+        .setLabel('Boosts')
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -236,7 +237,11 @@ module.exports = {
         const expiredEmbed = EmbedBuilder
           .from(latestResponse.embeds[0])
           .setFooter({ text: 'expired' });
-        await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+        await latestResponse.edit({
+          embeds: [expiredEmbed],
+          components: [],
+          files
+        });
       } catch {
         // Message may have been deleted — silently ignore
       }

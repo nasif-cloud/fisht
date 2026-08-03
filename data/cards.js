@@ -410,7 +410,7 @@ const cards = [
 
 
     title: 'Thriller Bark Zombie',
-    rank: 'B',
+    rank: 'A',
     health: '-',
     power: '+',
     speed: '=',
@@ -419,7 +419,7 @@ const cards = [
   
     M2: {
       title: 'Legendary Samurai - MONSTERS',
-      rank: 'S', 
+      rank: 'SS', 
       health: '=',
       power: '++',
       speed: '+',
@@ -1547,29 +1547,29 @@ const cards = [
     name: 'Gol D. Roger',
     aliases: ['Gold Roger',],
 
-    title: 'Captain of the Roger Pirates',
-    rank: 'SS',
-    health: '=',
-    power: '+',
-    speed: '=',
-    image: 'https://files.catbox.moe/ykb3vc.png', 
+    title: 'King of the Pirates',
+    rank: 'UR',
+    health: 580,
+    power: 100,
+    speed: 50,
+    image: 'https://files.catbox.moe/9nmlyu.png', 
     
     M2: {
     title: 'Captain of the Roger Pirates',
-    rank: 'SS',
-    health: '+',
-    power: '++',
-    speed: '+',
-    image: 'https://files.catbox.moe/vzm6v6.png', 
+    rank: 'UR',
+    health: 630,
+    power: 114,
+    speed: 52,
+    image: 'https://files.catbox.moe/ykb3vc.png', 
     }, 
   
     M3: {
     title: 'King of the Pirates',
     rank: 'UR',
-    health: '=',
-    power: '+',
-    speed: '=',
-    image: 'https://files.catbox.moe/9nmlyu.png', 
+    health: 680,
+    power: 120,
+    speed: 54,
+    image: 'https://files.catbox.moe/vzm6v6.png', 
     }
   },
   {

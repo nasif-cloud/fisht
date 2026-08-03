@@ -1,6 +1,6 @@
 ---
 name: rules
-description: Throughout the whole conversation, should respect these criterias - Always leave notes on code so a begginer can understand. No bot command should ping the user when replying to them, when prefix and slash commands are ran, it should always reply to the user silently without ping. slash commands are ran, it should reply to the user silently without ping. always favor `` from "" on normal messages that are not embeds, never end the message with a dot.
+description: Throughout the whole conversation, should respect these criterias - Always leave notes on code so a begginer can understand. No bot command should ping the user when replying to them, when prefix and slash commands are ran, it should always reply to the user silently without ping. slash commands are ran, it should reply to the user silently without ping. always favor `` from "" on normal messages that are not embeds, never end the message with a dot. or all embeds using buttons, when those embeds expire, the footer should always update to "expired" clearing the original footer icon and text.
 argument-hint: The inputs this agent expects, e.g., "a task to implement" or "a question to answer".
 # tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo'] # specify the tools this agent can use. If not set, all enabled tools are allowed.
 ---
