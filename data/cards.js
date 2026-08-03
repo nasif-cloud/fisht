@@ -321,19 +321,19 @@ const cards = [
     M2: {
       title: 'Outlaw - Wanted!',
       rank: 'A', 
-      health: '=',
-      power: '+',
-      speed: '=',
+      health: '-',
+      power: '=',
+      speed: '-',
       image: 'https://i.postimg.cc/yxywg76L/4.png'
     },
     
  
     M3: {
-      title: 'Thriller Bark Zombie',
-      rank: 'S',
-      health: '-',
+      title: 'Criminal - Wanted!',
+      rank: 'A',
+      health: '=',
       power: '+',
-      speed: '-',
+      speed: '=',
       image: 'https://i.postimg.cc/GtxZ8b3q/5.png'
     }
   },

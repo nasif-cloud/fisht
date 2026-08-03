@@ -684,22 +684,37 @@ module.exports = {
       }
     });
 
-    // After 2 minutes of inactivity, remove buttons and mark as expired.
-    // We fetch the latest message so EmbedBuilder.from() picks up the CDN URLs
-    // that Discord resolved from attachment:// references — no files need to be
-    // re-uploaded. Re-uploading files here was the cause of images detaching from
-    // the embed and appearing as separate attachments below it.
+    // After 2 minutes of inactivity, remove buttons.
+    //
+    // WHY we split shiny and non-shiny here:
+    // When a shiny embed is edited with a new `embeds` payload (even one built from
+    // EmbedBuilder.from()), Discord sees that the updated embed uses plain CDN URLs
+    // instead of the original `attachment://` references. It then treats the uploaded
+    // files as unreferenced and renders them as standalone attachments below the embed —
+    // exactly the detach bug. The only safe action for shiny cards is to edit ONLY the
+    // `components` field and leave everything else untouched. Discord's PATCH treats
+    // absent fields as "no change", so the embed and its attachments stay intact.
+    //
+    // We detect a shiny embed by checking whether its image URL is a Discord CDN
+    // attachment URL (uploaded files) vs a plain external URL (normal cards).
     collector.on('end', async () => {
       try {
         const latestResponse = await response.fetch();
-        const expiredEmbed = EmbedBuilder
-          .from(latestResponse.embeds[0])
-          .setFooter({ text: 'expired' });
-        await latestResponse.edit({
-          embeds:     [expiredEmbed],
-          components: []
-          // No files — CDN URLs are already embedded in the fetched message
-        });
+        const imageUrl = latestResponse.embeds[0]?.image?.url ?? '';
+
+        // Discord CDN attachment URLs contain `/attachments/` — that's our shiny signal
+        if (imageUrl.includes('cdn.discordapp.com/attachments/')) {
+          // Shiny card — ONLY remove the buttons, leave embed + attachments untouched
+          console.log(`[Collection] Expiry: shiny card detected — removing components only`);
+          await latestResponse.edit({ components: [] });
+        } else {
+          // Non-shiny card — safe to update the embed footer to "expired"
+          console.log(`[Collection] Expiry: non-shiny card — setting expired footer`);
+          const expiredEmbed = EmbedBuilder
+            .from(latestResponse.embeds[0])
+            .setFooter({ text: 'expired' });
+          await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+        }
       } catch {
         // Message may have been deleted — silently ignore
       }

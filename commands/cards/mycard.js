@@ -243,21 +243,35 @@ module.exports = {
       }
     });
 
-    // After 60 seconds of inactivity, remove the button and mark the footer as expired.
-    // We fetch the latest message so EmbedBuilder.from() picks up the CDN URLs that
-    // Discord resolved from the attachment:// references — no files need to be
-    // re-uploaded. Re-uploading here was the cause of images appearing outside the embed.
+    // After 60 seconds of inactivity, remove the button.
+    //
+    // WHY we split shiny and non-shiny here:
+    // When a shiny embed is edited with a new `embeds` payload (even one built from
+    // EmbedBuilder.from()), Discord sees that the updated embed uses plain CDN URLs
+    // instead of the original `attachment://` references. It then treats the uploaded
+    // files as unreferenced and renders them as standalone attachments below the embed —
+    // exactly the detach bug. The only safe action for shiny cards is to edit ONLY the
+    // `components` field and leave everything else untouched. Discord's PATCH treats
+    // absent fields as "no change", so the embed and its attachments stay intact.
+    //
+    // Non-shiny cards use plain external URLs and have no attachments, so updating
+    // the embed to set the expired footer is safe.
     collector.on('end', async () => {
       try {
         const latestResponse = await response.fetch();
-        const expiredEmbed = EmbedBuilder
-          .from(latestResponse.embeds[0])
-          .setFooter({ text: 'expired' });
-        await latestResponse.edit({
-          embeds:     [expiredEmbed],
-          components: []
-          // No files — CDN URLs are already embedded in the fetched message
-        });
+
+        if (isShiny) {
+          // Shiny card — ONLY remove the buttons, leave embed + attachments untouched
+          console.log(`[MyCard] Expiry: shiny card detected — removing components only`);
+          await latestResponse.edit({ components: [] });
+        } else {
+          // Non-shiny card — safe to update the embed footer to "expired"
+          console.log(`[MyCard] Expiry: non-shiny card — setting expired footer`);
+          const expiredEmbed = EmbedBuilder
+            .from(latestResponse.embeds[0])
+            .setFooter({ text: 'expired' });
+          await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+        }
       } catch {
         // Message may have been deleted — silently ignore
       }
