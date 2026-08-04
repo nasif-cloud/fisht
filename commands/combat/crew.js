@@ -305,27 +305,22 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
       ctx.restore();
     }
 
-    // Flat game-UI badge: rank/tier in the corner, copy count as a secondary line.
+    // Flat game-UI badge: every card uses the same 19px inset from its
+    // outer edge, regardless of the card's inner image padding.
     const badgeSize = 29;
+    const badgeInset = 19;
+    const rankColor = getRankColor(entry.rank);
     ctx.save();
-    ctx.fillStyle = '#1A202C';
-    ctx.fillRect(innerX + 7, innerY + 7, badgeSize, badgeSize);
+    ctx.fillStyle = rankColor;
+    ctx.fillRect(x + badgeInset, y + badgeInset, badgeSize, badgeSize);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#FFD166';
-    ctx.strokeRect(innerX + 7.5, innerY + 7.5, badgeSize - 1, badgeSize - 1);
-    ctx.fillStyle = '#E2E8F0';
+    ctx.strokeStyle = rankColor;
+    ctx.strokeRect(x + badgeInset + 0.5, y + badgeInset + 0.5, badgeSize - 1, badgeSize - 1);
+    ctx.fillStyle = '#12131C';
     ctx.font = '700 12px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(safeRank(entry.rank), innerX + 7 + badgeSize / 2, innerY + 7 + badgeSize / 2);
-    ctx.restore();
-
-    ctx.save();
-    ctx.fillStyle = '#FFD166';
-    ctx.font = '700 12px "Trebuchet MS", sans-serif';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'top';
-    ctx.fillText(`CO. ${entry.copies}`, innerX + innerSize - 8, innerY + 9);
+    ctx.fillText(safeRank(entry.rank), x + badgeInset + badgeSize / 2, y + badgeInset + badgeSize / 2);
     ctx.restore();
   } else {
     ctx.save();
