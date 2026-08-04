@@ -8,3 +8,4 @@
 - [Shop inventory](shop-inventory.md) — shop items are data-driven across image slots, slash choices, and atomic purchases
 - [Slash rank filters](rank-filter-behavior.md) — rank filters constrain source lists before search, sorting, and pagination; allcards has no shiny filter
 - [Persistent pity system](pity-system.md) — independent S/SS/UR pity counters persist across daily pull resets and preserve higher-tier progress
+- [Player duel combat](duel-combat.md) — timed PvP sessions use saved teams, hidden card choices, role matchups, and speed tiebreaks
