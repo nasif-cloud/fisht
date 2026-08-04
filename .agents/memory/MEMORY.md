@@ -5,3 +5,4 @@
 - [Team neon treatment](team-neon-treatment.md) — preserve textured charcoal, rank-colored light spill, layered cores, and restrained imperfections
 - [Shiny filter behavior](shiny-filter-behavior.md) — shiny toggles must narrow the source list and pagination to shiny-owned entries only
 - [Daily quests](daily-quests.md) — quests are per-user random daily assignments with shared progress hooks and grouped reset notifications
+- [Shop inventory](shop-inventory.md) — shop items are data-driven across image slots, slash choices, and atomic purchases
