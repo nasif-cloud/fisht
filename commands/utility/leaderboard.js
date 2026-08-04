@@ -114,6 +114,14 @@ async function resolveUserName(client, userId) {
   }
 }
 
+function formatUserMention(userId, fallbackName) {
+  // Discord renders this as a user mention while `allowedMentions.parse: []`
+  // below prevents it from sending a notification.
+  return /^\d+$/.test(String(userId))
+    ? `<@${userId}>`
+    : `@${fallbackName}`;
+}
+
 function formatMetric(entry, mode) {
   if (mode === 'level') return `Level ${entry.metric}`;
   if (mode === 'team_power') return `${entry.metric.toLocaleString('en-US')} power`;
@@ -211,7 +219,7 @@ async function buildView(client, allUsers, viewerId, mode, page) {
   const leaderboardLines = pageEntries.length
     ? pageEntries
       .map((entry, index) =>
-        `${getRankPrefix(start + index + 1)}  **@${names[index]}**  ·  **${formatMetric(entry, mode)}**`
+        `${getRankPrefix(start + index + 1)}  **${formatUserMention(entry.userData.userId, names[index])}**  ·  **${formatMetric(entry, mode)}**`
       )
       .join('\n')
     : 'No players found yet.';
@@ -220,8 +228,8 @@ async function buildView(client, allUsers, viewerId, mode, page) {
   const viewerEntry = viewerIndex >= 0 ? sorted[viewerIndex] : null;
   const viewerName = await resolveUserName(client, viewerId);
   const yourRank = viewerEntry
-    ? `## Your Rank\n**@${viewerName}** is ranked **#${viewerIndex + 1}** with **${formatMetric(viewerEntry, mode)}**.`
-    : `## Your Rank\n**@${viewerName}** is not ranked yet.`;
+    ? `## Your Rank\n**${formatUserMention(viewerId, viewerName)}** is ranked **#${viewerIndex + 1}** with **${formatMetric(viewerEntry, mode)}**.`
+    : `## Your Rank\n**${formatUserMention(viewerId, viewerName)}** is not ranked yet.`;
 
   const components = buildComponents(mode, safePage, totalPages);
   replaceTextComponents(components, leaderboardLines, yourRank);
@@ -229,6 +237,7 @@ async function buildView(client, allUsers, viewerId, mode, page) {
   return {
     flags: MessageFlags.IsComponentsV2,
     components,
+    allowedMentions: { parse: [], repliedUser: false },
     page: safePage,
     totalPages
   };
@@ -266,6 +275,7 @@ module.exports = {
     const payload = {
       flags: MessageFlags.IsComponentsV2,
       components: view.components,
+      allowedMentions: { parse: [], repliedUser: false },
       fetchReply: true
     };
 
@@ -302,14 +312,16 @@ module.exports = {
       view = await buildView(client, latestUsers, user.id, mode, page);
       await componentInteraction.update({
         flags: MessageFlags.IsComponentsV2,
-        components: view.components
+        components: view.components,
+        allowedMentions: { parse: [], repliedUser: false }
       });
     });
 
     collector.on('end', () => {
       response.edit({
         flags: MessageFlags.IsComponentsV2,
-        components: buildExpiredComponents(view.components)
+        components: buildExpiredComponents(view.components),
+        allowedMentions: { parse: [], repliedUser: false }
       }).catch(() => {});
     });
   }

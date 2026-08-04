@@ -308,6 +308,8 @@ async function renderTeamImage(teamEntries, username) {
 
   ctx.save();
   ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
+  ctx.shadowBlur = 8;
   ctx.font = '800 33px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -315,7 +317,9 @@ async function renderTeamImage(teamEntries, username) {
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#ffd44d';
+  ctx.shadowColor = 'rgba(255, 212, 77, 0.7)';
+  ctx.shadowBlur = 18;
   ctx.font = '900 86px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
