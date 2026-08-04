@@ -68,6 +68,15 @@ function sortList(list, mode) {
   return copy; // Unknown mode — return unsorted
 }
 
+// Zero-copy records can remain in storage after an admin clears a card.
+// They are not owned cards and must not appear in any copies view.
+function getOwnedCopies(userData) {
+  return (userData?.cardCopies || []).filter(item => {
+    const amount = Number(item?.amount);
+    return Number.isFinite(amount) && amount > 0;
+  });
+}
+
 // ─────────────────────────────────────────────
 // HELPER — build the embed for a given page
 // ─────────────────────────────────────────────
@@ -223,7 +232,7 @@ module.exports = {
 
     // ── STEP 2: Load the player's card collection from the database ──
     const userData  = await User.findOne({ userId: user.id });
-    const rawCopies = [...(userData?.cardCopies || [])]; // Spread so we don't mutate the DB object
+    const rawCopies = getOwnedCopies(userData);
 
     // ── STEP 3: Set up state variables for this session ──
     // These are tracked in a "closure" — meaning the button collector below
@@ -284,7 +293,7 @@ module.exports = {
       // Re-fetch the user's latest data every time a button is clicked.
       // This ensures that if they pulled a card while browsing, it shows up.
       const freshData  = await User.findOne({ userId: user.id });
-      const freshCopies = [...(freshData?.cardCopies || [])];
+      const freshCopies = getOwnedCopies(freshData);
 
       // ── PREVIOUS PAGE ──
       if (interaction.customId === 'copies_prev') {
@@ -353,7 +362,7 @@ module.exports = {
 
           // Re-fetch the latest copies at search time
           const latestData   = await User.findOne({ userId: user.id });
-          const latestCopies = [...(latestData?.cardCopies || [])];
+          const latestCopies = getOwnedCopies(latestData);
 
           // Filter copies: match by card name or alias (same logic as the info command)
           searchResults = latestCopies.filter(item => {
