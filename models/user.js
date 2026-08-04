@@ -45,6 +45,12 @@ const userSchema = new mongoose.Schema({
   // Used to enforce the 3-second cooldown between pulls.
   lastPullTime: { type: Date, default: null },
 
+  // Persistent pity progress. These counters are separate from pullsUsed,
+  // which resets several times per day and only controls the pull allowance.
+  pityS:  { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  pitySS: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  pityUR: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+
   // The timestamp of the user's most recent team render.
   // Used to enforce a short cooldown on /team and op team.
   lastTeamTime: { type: Date, default: null },

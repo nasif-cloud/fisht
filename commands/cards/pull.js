@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 
 // Card data, visual config, and helper functions from the central card library
-const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
+const { cards, rankConfig, resolveStat, safeRank, safeStat, rankEmojis } = require('../../data/cards');
 
 // The User model so we can read/write each player's save data in MongoDB
 const User = require('../../models/user');
@@ -10,6 +10,7 @@ const {
   sendLevelUpNotifications
 } = require('../../utils/levels');
 const { updateQuestProgress } = require('../../utils/quests');
+const { previewPityPull, applyPityPull } = require('../../utils/pity');
 
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
@@ -222,8 +223,24 @@ module.exports = {
       );
     }
 
-    // ── STEP 4: Roll for a rank, then pick a random card from that rank ──
-    let rank = rollRank(); // e.g. 'B'
+    // ── STEP 4: Roll for a rank, respecting pity guarantees ──
+    // Preview first so a failed pull (for example, an empty card pool) does
+    // not consume pity progress.
+    const pityPreview = previewPityPull(userData);
+    const guaranteedRank = pityPreview.guaranteedRank;
+
+    // A guarantee must never silently fall through to a different rank. The
+    // current catalog has no pullable M1 S cards, so leave the user's pull and
+    // pity untouched until that pool is populated.
+    if (guaranteedRank && !cardsByRank[guaranteedRank]?.length) {
+      console.error(`[Pull] ${guaranteedRank} pity is ready, but that rank has no pullable cards.`);
+      return sendPrivate(
+        interactionOrMessage,
+        `Your ${guaranteedRank} pity is ready, but no ${guaranteedRank}-rank cards are available yet. Please try again later.`
+      );
+    }
+
+    let rank = guaranteedRank || rollRank(); // e.g. 'B'
     let pool = cardsByRank[rank]; // All B-rank cards
 
     // Safety: if the rolled rank has no cards (e.g. nobody added any UR cards yet),
@@ -287,6 +304,7 @@ module.exports = {
     // ── STEP 8: Save everything to the database ──
     userData.pullsUsed   += 1;
     userData.lastPullTime = now;
+    const appliedGuaranteedRank = applyPityPull(userData, pityPreview);
     updateQuestProgress(userData, 'pull', 1);
     const xpResult = addXp(userData, 1);
     await userData.save(); // Writes all the changes above to MongoDB
@@ -349,6 +367,15 @@ module.exports = {
       }
     } else {
       await interactionOrMessage.channel.send({ embeds: [embed], files });
+    }
+
+    if (appliedGuaranteedRank) {
+      const guaranteeMessage = `This was a guaranteed ${rankEmojis[appliedGuaranteedRank] || appliedGuaranteedRank} rank pull\n-# Pity has been reset`;
+      if (interactionOrMessage.isChatInputCommand?.()) {
+        await interactionOrMessage.followUp({ content: guaranteeMessage });
+      } else {
+        await interactionOrMessage.channel.send({ content: guaranteeMessage });
+      }
     }
   },
 };

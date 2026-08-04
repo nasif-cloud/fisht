@@ -22,6 +22,7 @@ module.exports = {
       'op oshinify @user [cardname]       — make all copies of a card shiny',
       'op noshinify @user [cardname]      — remove shiny status from all copies',
       'op oreset @user [command]            — reset a user\'s rolling cooldown (daily, manga)',
+      'op opity @user [S|SS|UR] [pity]       — set a user\'s pity progress',
       'op down                              — toggle normal maintenance (owner still works)',
       'op downall                           — toggle hard lockdown (blocks everyone)',
       'op olist                             — show this list',
