@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 // GLOBAL LEADERBOARD
 // ─────────────────────────────────────────────
-// Displays the top 100 players by total cards, level, or saved team power.
+// Displays the top 100 players by total cards, level, Berries, or saved team power.
 // This uses Components V2 so the controls and leaderboard text share one
 // clean card, matching the supplied leaderboard references.
 
@@ -33,6 +33,10 @@ const MODES = {
   level: {
     label: 'By level',
     description: 'top 100 ranked by **highest to lowest level**.'
+  },
+  richest: {
+    label: 'Richest',
+    description: 'top 100 ranked by **most to least Berries**.'
   },
   team_power: {
     label: 'By team power',
@@ -83,6 +87,7 @@ function getTeamPower(userData) {
 
 function getMetric(userData, mode) {
   if (mode === 'level') return getLevelProgress(userData.xp).level;
+  if (mode === 'richest') return Math.max(0, Number(userData.balance) || 0);
   if (mode === 'team_power') return getTeamPower(userData);
   return getCardCount(userData);
 }
@@ -125,6 +130,7 @@ function formatUserMention(userId, fallbackName) {
 
 function formatMetric(entry, mode) {
   if (mode === 'level') return `Level ${entry.metric}`;
+  if (mode === 'richest') return `${entry.metric.toLocaleString('en-US')} Berries`;
   if (mode === 'team_power') return `${entry.metric.toLocaleString('en-US')} power`;
   return `${entry.metric.toLocaleString('en-US')} cards`;
 }
@@ -256,6 +262,7 @@ module.exports = {
         .addChoices(
           { name: 'By cards', value: 'cards' },
           { name: 'By level', value: 'level' },
+           { name: 'Richest', value: 'richest' },
           { name: 'By team power', value: 'team_power' }
         )
     ),
@@ -348,6 +355,15 @@ function buildExpiredComponents(components) {
 function parsePrefixMode(args) {
   const requested = args.join(' ').toLowerCase().trim();
   if (requested === 'level') return 'level';
+  if (
+    requested === 'richest' ||
+    requested === 'rich' ||
+    requested === 'berries' ||
+    requested === 'balance' ||
+    requested === 'money'
+  ) {
+    return 'richest';
+  }
   if (
     requested === 'team' ||
     requested === 'power' ||
