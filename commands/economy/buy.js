@@ -120,7 +120,7 @@ module.exports = {
       const balance = Number(currentUser?.balance) || 0;
       const content =
         `You need **${formatCost(totalCost)}** <:money:1532532493578928178> Berries, ` +
-        `but you only have **${formatCost(balance)}**.`;
+        `but you only have **${formatCost(balance)}**`;
       return isSlash
         ? interactionOrMessage.reply({ content, flags: 64 })
         : interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
@@ -130,8 +130,7 @@ module.exports = {
       return interactionOrMessage.reply({
         content:
           `You bought **${amount}x ${item.name}** for **${formatCost(totalCost)}** ` +
-          `<:money:1532532493578928178> Berries.\n` +
-          `You now have **${formatCost(updatedUser.balance)}** Berries.`,
+          `<:money:1532532493578928178>`,
         flags: 64
       });
     }
