@@ -116,16 +116,18 @@ function fitFontSize(ctx, text, maxWidth, maxPx) {
 }
 
 function roundedRectPath(ctx, x, y, width, height, radius) {
-  const cut = Math.min(radius, width / 2, height / 2);
   ctx.beginPath();
-  ctx.moveTo(x + cut, y);
-  ctx.lineTo(x + width - cut, y);
-  ctx.lineTo(x + width, y + cut);
-  ctx.lineTo(x + width, y + height - cut);
-  ctx.lineTo(x + width - cut, y + height);
-  ctx.lineTo(x + cut, y + height);
-  ctx.lineTo(x, y + height - cut);
-  ctx.lineTo(x, y + cut);
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x, y, width, height, radius);
+    return;
+  }
+
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
   ctx.closePath();
 }
 
@@ -134,102 +136,26 @@ function getRankColor(rank) {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
-function hexToRgb(hex) {
-  const value = Number.parseInt(hex.replace('#', ''), 16);
-  return {
-    r: (value >> 16) & 0xff,
-    g: (value >> 8) & 0xff,
-    b: value & 0xff
-  };
-}
-
-function rgba(hex, alpha) {
-  const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 function drawSurface(ctx) {
-  const background = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-  background.addColorStop(0, '#14161b');
-  background.addColorStop(0.5, '#1b1e24');
-  background.addColorStop(1, '#121419');
-  ctx.fillStyle = background;
+  ctx.fillStyle = '#12131C';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-  // Broad, quiet bands suggest a charcoal wall without a particle field.
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.018)';
-  ctx.fillRect(0, 158, CANVAS_WIDTH, 2);
-  ctx.fillRect(0, 474, CANVAS_WIDTH, 1);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-  ctx.fillRect(0, 170, CANVAS_WIDTH, 30);
-  ctx.fillRect(0, 445, CANVAS_WIDTH, 18);
-}
-
-function drawLightSpill(ctx, layout, color, direction) {
-  const { x, y, size } = layout;
-  const spill = ctx.createLinearGradient(
-    direction === 'left' ? x + size : x,
-    y,
-    direction === 'left' ? x : x + size,
-    y + size
-  );
-  spill.addColorStop(0, rgba(color, 0));
-  spill.addColorStop(0.48, rgba(color, 0.06));
-  spill.addColorStop(1, rgba(color, 0));
-
-  ctx.save();
-  ctx.fillStyle = spill;
-  ctx.beginPath();
-  ctx.moveTo(x - 40, y + 16);
-  ctx.lineTo(x + size + 40, y - 12);
-  ctx.lineTo(x + size + 28, y + size + 28);
-  ctx.lineTo(x - 32, y + size - 5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawNeonBorder(ctx, entry, layout) {
-  const color = entry ? getRankColor(entry.rank) : '#8f9bb7';
-  const { x, y, size } = layout;
-  const path = () => roundedRectPath(ctx, x + 7, y + 7, size - 14, size - 14, 13);
-
-  // Keep the tube physical: a translucent body, saturated center, and a
-  // narrow hot core. No stacked blur filters.
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = rgba(color, 0.28);
-  ctx.lineWidth = 14;
-  path();
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = rgba(color, 0.8);
-  ctx.lineWidth = 7;
-  path();
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = rgba('#fff7ef', 0.72);
-  ctx.lineWidth = 1.7;
-  path();
-  ctx.stroke();
-  ctx.restore();
-
-  // Uneven highlight fragments break the perfect vector-tube appearance.
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.setLineDash([24, 92, 8, 71]);
-  ctx.lineDashOffset = -(size * 0.31);
-  ctx.strokeStyle = rgba('#ffffff', 0.3);
-  ctx.lineWidth = 1.15;
-  path();
-  ctx.stroke();
-  ctx.restore();
+  // One-pixel grid, spaced at 20px, gives the surface a quiet developer UI
+  // structure without stars, particles, or decorative light effects.
+  ctx.strokeStyle = 'rgba(226, 232, 240, 0.055)';
+  ctx.lineWidth = 1;
+  for (let x = 0.5; x <= CANVAS_WIDTH; x += 20) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, CANVAS_HEIGHT);
+    ctx.stroke();
+  }
+  for (let y = 0.5; y <= CANVAS_HEIGHT; y += 20) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(CANVAS_WIDTH, y);
+    ctx.stroke();
+  }
 }
 
 async function fetchImageBuffer(url) {
@@ -315,35 +241,51 @@ async function loadShinyEmojiImage() {
 // renderCardSlot now accepts an already-loaded sourceImage (or null for empty slots)
 // so all network work can be done in parallel before any drawing starts.
 function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
-  const { x, y, size, innerPadding, captionY } = layout;
-  const cardName = entry?.card?.name || '';
+  const { x, y, size, innerPadding, featured } = layout;
+  const cardName = entry?.card?.name?.toUpperCase() || '';
   const innerX = x + innerPadding;
   const innerY = y + innerPadding;
   const innerSize = size - innerPadding * 2;
+  const borderColor = featured ? '#FFD166' : '#4A5568';
+  const borderWidth = featured ? 3 : 2;
 
   ctx.save();
-  ctx.fillStyle = '#252831';
-  roundedRectPath(ctx, x, y, size, size, 16);
+  ctx.fillStyle = '#0D111A';
+  roundedRectPath(ctx, x, y, size, size, 6);
   ctx.fill();
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = '#0b0c10';
-  roundedRectPath(ctx, x + 9, y + 9, size - 18, size - 18, 12);
-  ctx.fill();
+  ctx.lineWidth = borderWidth;
+  ctx.strokeStyle = borderColor;
+  roundedRectPath(ctx, x + borderWidth / 2, y + borderWidth / 2, size - borderWidth, size - borderWidth, 6);
+  ctx.stroke();
   ctx.restore();
 
-  drawNeonBorder(ctx, entry, layout);
+  ctx.save();
+  ctx.fillStyle = '#0B0F17';
+  roundedRectPath(ctx, innerX, innerY, innerSize, innerSize, 3);
+  ctx.fill();
+  ctx.restore();
 
   if (entry && sourceImage) {
     const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
-    // Keep the card art as a simple printed panel instead of pairing a
-    // rounded clip with a matching rounded border.
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(sourceImage, crop.x, crop.y, crop.size, crop.size, innerX, innerY, innerSize, innerSize);
 
-    // Put only the plain shiny emoji icon in the card's top-right corner.
+    // Attached full-width name bar inside the bottom edge.
+    const nameBarHeight = 30;
+    ctx.save();
+    ctx.fillStyle = '#1A202C';
+    ctx.fillRect(innerX, innerY + innerSize - nameBarHeight, innerSize, nameBarHeight);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `700 ${fitFontSize(ctx, cardName, innerSize - 18, 14)}px "Trebuchet MS", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(cardName, innerX + innerSize / 2, innerY + innerSize - nameBarHeight / 2);
+    ctx.restore();
+
     if (entry.isShiny) {
       const badgeSize = Math.min(34, size * 0.16);
       const badgeX = x + size - badgeSize - 14;
@@ -363,23 +305,32 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
       ctx.restore();
     }
 
-    // Put the label on the wall below the card instead of on a dark pill over
-    // the art. The copy count stays visible without obscuring the image.
-    const nameFontSize = fitFontSize(ctx, cardName, size - 18, 16);
+    // Flat game-UI badge: rank/tier in the corner, copy count as a secondary line.
+    const badgeSize = 29;
     ctx.save();
+    ctx.fillStyle = '#1A202C';
+    ctx.fillRect(innerX + 7, innerY + 7, badgeSize, badgeSize);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#FFD166';
+    ctx.strokeRect(innerX + 7.5, innerY + 7.5, badgeSize - 1, badgeSize - 1);
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = '700 12px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = getRankColor(entry.rank);
-    ctx.font = '700 12px sans-serif';
-    ctx.fillText(`Co. ${entry.copies}`, x + size / 2, captionY - 10);
-    ctx.fillStyle = '#f1f2f3';
-    ctx.font = `700 ${nameFontSize}px sans-serif`;
-    ctx.fillText(cardName, x + size / 2, captionY + 8);
+    ctx.fillText(safeRank(entry.rank), innerX + 7 + badgeSize / 2, innerY + 7 + badgeSize / 2);
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = '#FFD166';
+    ctx.font = '700 12px "Trebuchet MS", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`CO. ${entry.copies}`, innerX + innerSize - 8, innerY + 9);
     ctx.restore();
   } else {
     ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.045)';
-    roundedRectPath(ctx, innerX, innerY, innerSize, innerSize, 10);
+    ctx.fillStyle = '#151B26';
+    roundedRectPath(ctx, innerX, innerY, innerSize, innerSize, 3);
     ctx.fill();
     ctx.restore();
   }
@@ -394,37 +345,31 @@ async function renderTeamImage(teamEntries, username) {
   drawSurface(ctx);
 
   ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '800 33px sans-serif';
+  ctx.fillStyle = '#E2E8F0';
+  ctx.font = '800 31px "Trebuchet MS", sans-serif';
+  ctx.letterSpacing = '4px';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('TOTAL POWER', CANVAS_WIDTH / 2, 46);
+  ctx.fillText('TOTAL POWER', CANVAS_WIDTH / 2, 42);
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = '#ffd44d';
-  ctx.font = '900 86px sans-serif';
+  ctx.fillStyle = '#FFD166';
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 2;
+  ctx.font = '900 86px "Trebuchet MS", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(totalPower), CANVAS_WIDTH / 2, 118);
+  ctx.strokeText(String(totalPower), CANVAS_WIDTH / 2, 114);
+  ctx.fillText(String(totalPower), CANVAS_WIDTH / 2, 114);
   ctx.restore();
 
-  // Layout is centered on the 860px canvas.
-  // Side cards: size=200, middle card: size=250, gap=20
-  // Total width: 200 + 20 + 250 + 20 + 200 = 690 → start at (860-690)/2 = 85
-  // Middle card center: 85 + 200 + 20 + 125 = 430 = canvas center ✓
-  // Cards start well below the number text (which bottoms out ~y=161) with breathing room.
+  // Layout keeps the featured center card about 10% larger than the sides.
   const layout = {
-    // Captions sit in the open wall space above each frame, never over the
-    // artwork. The center caption stays below the power number.
-    left:   { x: 39,  y: 225, size: 215, radius: 34, innerPadding: 13, captionY: 214 },
-    middle: { x: 292, y: 190, size: 270, radius: 40, innerPadding: 15, captionY: 178 },
-    right:  { x: 599,  y: 225, size: 215, radius: 34, innerPadding: 13, captionY: 214 }
+    left:   { x: 39,  y: 225, size: 215, innerPadding: 10, featured: false },
+    middle: { x: 292, y: 190, size: 270, innerPadding: 12, featured: true },
+    right:  { x: 599, y: 225, size: 215, innerPadding: 10, featured: false }
   };
-
-  drawLightSpill(ctx, layout.left, slots[0] ? getRankColor(slots[0].rank) : '#8f9bb7', 'left');
-  drawLightSpill(ctx, layout.middle, slots[1] ? getRankColor(slots[1].rank) : '#8f9bb7', 'right');
-  drawLightSpill(ctx, layout.right, slots[2] ? getRankColor(slots[2].rank) : '#8f9bb7', 'right');
 
   // Fetch all card images in parallel — one round-trip instead of three sequential ones.
   const [imgLeft, imgMiddle, imgRight, shinyEmojiImage] = await Promise.all([
@@ -434,7 +379,6 @@ async function renderTeamImage(teamEntries, username) {
     loadShinyEmojiImage()
   ]);
 
-  // Drawing is synchronous (no more awaits needed inside renderCardSlot)
   renderCardSlot(ctx, slots[0], imgLeft,   shinyEmojiImage, layout.left);
   renderCardSlot(ctx, slots[1], imgMiddle, shinyEmojiImage, layout.middle);
   renderCardSlot(ctx, slots[2], imgRight,  shinyEmojiImage, layout.right);
