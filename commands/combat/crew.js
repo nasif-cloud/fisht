@@ -12,9 +12,14 @@ const SUCCESS_REACTION = '<:Success:1533154745731256531>';
 const TEAM_COOLDOWN_MS = 5000;
 const IMAGE_FETCH_TIMEOUT_MS = 2500;
 const SHINY_EMOJI_URL = 'https://cdn.discordapp.com/emojis/1533666993637687466.png?size=32&quality=lossless';
+const FIRE_BORDER_PATH = require('path').join(
+  __dirname,
+  '../../attached_assets/broder_fire_1785805921374.png'
+);
 
 const imageBufferCache = new Map();
 let shinyEmojiImagePromise = null;
+let fireBorderImagePromise = null;
 
 function buildOwnedCardPool(userData) {
   const ownedCards = [];
@@ -211,6 +216,118 @@ async function loadShinyEmojiImage() {
   return shinyEmojiImagePromise;
 }
 
+async function loadFireBorderImage() {
+  if (!fireBorderImagePromise) {
+    fireBorderImagePromise = loadImage(FIRE_BORDER_PATH).catch(error => {
+      console.warn(`[Crew] Failed to load fire border: ${error.message}`);
+      return null;
+    });
+  }
+
+  return fireBorderImagePromise;
+}
+
+function circlePath(ctx, centerX, centerY, radius) {
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.closePath();
+}
+
+function drawCircularTeamCard(ctx, entry, sourceImage, fireBorderImage, layout) {
+  const { centerX, centerY, size } = layout;
+  const outerRadius = size / 2;
+  const imageRadius = outerRadius * 0.56;
+  const imageSize = imageRadius * 2;
+  const imageX = centerX - imageRadius;
+  const imageY = centerY - imageRadius;
+
+  // A dark plate keeps the transparent center of the fire ring from exposing
+  // the background through the card art.
+  ctx.save();
+  ctx.fillStyle = '#17100f';
+  ctx.shadowColor = 'rgba(255, 91, 31, 0.42)';
+  ctx.shadowBlur = 18;
+  circlePath(ctx, centerX, centerY, imageRadius + 5);
+  ctx.fill();
+  ctx.restore();
+
+  if (entry && sourceImage) {
+    const crop = getSmartCrop(sourceImage);
+
+    ctx.save();
+    circlePath(ctx, centerX, centerY, imageRadius);
+    ctx.clip();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(
+      sourceImage,
+      crop.x,
+      crop.y,
+      crop.size,
+      crop.size,
+      imageX,
+      imageY,
+      imageSize,
+      imageSize
+    );
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+    circlePath(ctx, centerX, centerY, imageRadius);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  if (fireBorderImage) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(
+      fireBorderImage,
+      centerX - outerRadius,
+      centerY - outerRadius,
+      size,
+      size
+    );
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#ff7a30';
+    circlePath(ctx, centerX, centerY, imageRadius + 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (entry?.isShiny) {
+    ctx.save();
+    ctx.fillStyle = '#ffd44d';
+    ctx.shadowColor = 'rgba(255, 212, 77, 0.8)';
+    ctx.shadowBlur = 8;
+    ctx.font = '900 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✦', centerX + imageRadius * 0.68, centerY - imageRadius * 0.68);
+    ctx.restore();
+  }
+
+  if (entry) {
+    const caption = `Co. ${entry.copies} ${entry.card.name}`;
+    const maxWidth = size + 26;
+    const fontSize = fitFontSize(ctx, caption, maxWidth, layout.captionSize || 18);
+
+    ctx.save();
+    ctx.fillStyle = '#fff2e8';
+    ctx.shadowColor = 'rgba(255, 102, 42, 0.55)';
+    ctx.shadowBlur = 5;
+    ctx.font = `700 ${fontSize}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(caption, centerX, layout.captionY);
+    ctx.restore();
+  }
+}
+
 // renderCardSlot now accepts an already-loaded sourceImage (or null for empty slots)
 // so all network work can be done in parallel before any drawing starts.
 function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
@@ -302,53 +419,79 @@ async function renderTeamImage(teamEntries, username) {
   const totalPower = getTeamTotalPower(teamEntries);
   const slots = getDisplaySlots(teamEntries);
 
-  // Keep the team card in the same black visual family as the profile card.
-  ctx.fillStyle = '#000000';
+  // Warm charcoal keeps the fire ring visible without turning the image into
+  // a flat black rectangle.
+  const background = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+  background.addColorStop(0, '#170f12');
+  background.addColorStop(0.55, '#0e1118');
+  background.addColorStop(1, '#21100d');
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  const ambientGlow = ctx.createRadialGradient(
+    CANVAS_WIDTH / 2,
+    220,
+    20,
+    CANVAS_WIDTH / 2,
+    220,
+    410
+  );
+  ambientGlow.addColorStop(0, 'rgba(255, 79, 25, 0.12)');
+  ambientGlow.addColorStop(1, 'rgba(14, 17, 24, 0)');
+  ctx.fillStyle = ambientGlow;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   ctx.save();
   ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
-  ctx.shadowBlur = 8;
-  ctx.font = '800 33px sans-serif';
+  ctx.shadowColor = 'rgba(255, 120, 48, 0.42)';
+  ctx.shadowBlur = 7;
+  ctx.font = '800 29px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('TOTAL POWER', CANVAS_WIDTH / 2, 46);
+  ctx.fillText('TOTAL POWER', CANVAS_WIDTH / 2, 36);
   ctx.restore();
 
   ctx.save();
   ctx.fillStyle = '#ffd44d';
   ctx.shadowColor = 'rgba(255, 212, 77, 0.7)';
   ctx.shadowBlur = 18;
-  ctx.font = '900 86px sans-serif';
+  ctx.font = '900 70px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(totalPower), CANVAS_WIDTH / 2, 118);
+  ctx.fillText(String(totalPower), CANVAS_WIDTH / 2, 91);
   ctx.restore();
 
-  // Layout is centered on the 860px canvas.
-  // Side cards: size=200, middle card: size=250, gap=20
-  // Total width: 200 + 20 + 250 + 20 + 200 = 690 → start at (860-690)/2 = 85
-  // Middle card center: 85 + 200 + 20 + 125 = 430 = canvas center ✓
-  // Cards start well below the number text (which bottoms out ~y=161) with breathing room.
-  const layout = {
-    left:   { x: 39,  y: 225, size: 215, radius: 34, innerPadding: 13 },
-    middle: { x: 292, y: 190, size: 270, radius: 40, innerPadding: 15 },
-    right:  { x: 599, y: 225, size: 215, radius: 34, innerPadding: 13 }
-  };
-
   // Fetch all card images in parallel — one round-trip instead of three sequential ones.
-  const [imgLeft, imgMiddle, imgRight, shinyEmojiImage] = await Promise.all([
+  const [imgLeft, imgMiddle, imgRight, fireBorderImage] = await Promise.all([
     loadCardImage(slots[0]),
     loadCardImage(slots[1]),
     loadCardImage(slots[2]),
-    loadShinyEmojiImage()
+    loadFireBorderImage()
   ]);
 
-  // Drawing is synchronous (no more awaits needed inside renderCardSlot)
-  renderCardSlot(ctx, slots[0], imgLeft,   shinyEmojiImage, layout.left);
-  renderCardSlot(ctx, slots[1], imgMiddle, shinyEmojiImage, layout.middle);
-  renderCardSlot(ctx, slots[2], imgRight,  shinyEmojiImage, layout.right);
+  // The center card sits lower and is slightly larger, matching the supplied
+  // reference while keeping all three captions readable.
+  drawCircularTeamCard(ctx, slots[0], imgLeft, fireBorderImage, {
+    centerX: 175,
+    centerY: 247,
+    size: 205,
+    captionY: 382,
+    captionSize: 16
+  });
+  drawCircularTeamCard(ctx, slots[1], imgMiddle, fireBorderImage, {
+    centerX: 430,
+    centerY: 278,
+    size: 255,
+    captionY: 456,
+    captionSize: 18
+  });
+  drawCircularTeamCard(ctx, slots[2], imgRight, fireBorderImage, {
+    centerX: 685,
+    centerY: 247,
+    size: 205,
+    captionY: 382,
+    captionSize: 16
+  });
 
   return canvas.toBuffer('image/png');
 }

@@ -2,3 +2,4 @@
 - [Manga cover palette](manga-cover-palette.md) — use node-vibrant on downloaded cover buffers so JPEG and PNG covers share one dominant-color pipeline
 - [Profile progression](profile-progression.md) — XP is shared across pull, manga, trivia, and daily rewards with level-up rewards handled centrally
 - [Leaderboard metrics](leaderboard-metrics.md) — team-power rankings reuse the effective boosted card power used by the team renderer
+- [Team visual language](team-visual-language.md) — team cards use the supplied fire ring as a circular frame on a warm charcoal background
