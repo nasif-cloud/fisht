@@ -225,7 +225,7 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = '#10172d';
+  ctx.fillStyle = '#0b0b0b';
   roundedRectPath(ctx, x + 9, y + 9, size - 18, size - 18, radius - 4);
   ctx.fill();
   ctx.restore();
@@ -302,16 +302,8 @@ async function renderTeamImage(teamEntries, username) {
   const totalPower = getTeamTotalPower(teamEntries);
   const slots = getDisplaySlots(teamEntries);
 
-  const background = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-  background.addColorStop(0, '#07122d');
-  background.addColorStop(1, '#161337');
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-  const glow = ctx.createRadialGradient(CANVAS_WIDTH / 2, 110, 40, CANVAS_WIDTH / 2, 110, 320);
-  glow.addColorStop(0, 'rgba(108, 77, 255, 0.28)');
-  glow.addColorStop(1, 'rgba(7, 18, 45, 0)');
-  ctx.fillStyle = glow;
+  // Keep the team card in the same black visual family as the profile card.
+  ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   ctx.save();
@@ -323,7 +315,7 @@ async function renderTeamImage(teamEntries, username) {
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = '#ffd44d';
+  ctx.fillStyle = '#ffffff';
   ctx.font = '900 86px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
