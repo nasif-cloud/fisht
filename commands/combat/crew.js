@@ -23,8 +23,10 @@ function buildOwnedCardPool(userData) {
     const card = cards.find(c => c.name === entry.cardName);
     if (!card) continue;
 
+    const copies = Number(entry.amount);
+    if (!Number.isFinite(copies) || copies <= 0) continue;
+
     const rank = safeRank(card.rank);
-    const copies = entry.amount || 1;
     const isShiny = entry.shiny ?? false;
     const baseHealth = resolveStat(rank, 'health', safeStat(card.health), card.name, 1);
     const basePower = resolveStat(rank, 'power', safeStat(card.power), card.name, 1);

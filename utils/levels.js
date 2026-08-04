@@ -75,8 +75,8 @@ async function sendLevelUpNotifications(discordUser, userData, xpResult) {
     try {
       await discordUser.send(
         `**You leveled up to ${level} and received:**\n` +
-        `**${LEVEL_UP_BELI.toLocaleString('en-US')}** Beli\n` +
-        `**${LEVEL_UP_RESET_TOKENS}** reset tokens`
+        `**${LEVEL_UP_BELI.toLocaleString('en-US')}**<:money:1532532493578928178>\n` +
+        `**${LEVEL_UP_RESET_TOKENS}**<:meatrbg:1532524176701657248>`
       );
     } catch {
       // DMs may be closed; the saved rewards should not be rolled back.
