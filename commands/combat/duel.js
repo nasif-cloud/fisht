@@ -22,6 +22,14 @@ const ACCEPT_TIMEOUT_MS = 60000;
 const ROUND_TIMEOUT_MS = 30000;
 const activeUsers = new Set();
 
+// Button emojis use Discord's structured emoji field so custom stat emojis
+// render correctly instead of appearing as raw text in the button label
+const ROLE_BUTTON_EMOJIS = {
+  HP: { id: '1534326743459037244', name: 'Health' },
+  ATK: { id: '1534326742678769684', name: 'Power' },
+  SPD: { id: '1534326741693104168', name: 'Speed' }
+};
+
 function getUser(interactionOrMessage) {
   return interactionOrMessage.user || interactionOrMessage.author;
 }
@@ -41,12 +49,8 @@ function privateReply(interaction, content) {
   }
   return interaction.reply({
     content,
-    allowedMentions: { repliedUser: false }
+    allowedMentions: { parse: [], repliedUser: false }
   });
-}
-
-function mention(userId) {
-  return `<@${userId}>`;
 }
 
 function getAvatarUrl(user) {
@@ -65,8 +69,9 @@ function buildRequestPayload(challenger, target) {
       new EmbedBuilder()
         .setTitle('Duel request')
         .setDescription(
-          `Hey ${mention(target.id)}, **${challenger.username}** wants to duel you.`
+          `Hey **${target.username}**, **${challenger.username}** wants to duel you`
         )
+        .setFooter({ text: 'waiting for response' })
     ],
     components: [
       {
@@ -87,7 +92,7 @@ function buildRequestPayload(challenger, target) {
         ]
       }
     ],
-    allowedMentions: { users: [target.id], repliedUser: false },
+    allowedMentions: { parse: [], repliedUser: false },
     fetchReply: true
   };
 }
@@ -106,6 +111,9 @@ function buildButtonRow(duelId, playerId, team, selected) {
       type: 2,
       custom_id: `duel_pick_${duelId}_${playerId}_${index}`,
       style: 2,
+      // The role emoji makes the card's HP, PWR, or SPD role visible
+      // before the player chooses a card
+      emoji: ROLE_BUTTON_EMOJIS[card.role],
       label: card.name.slice(0, 80),
       disabled: selected !== undefined || isKnockedOut(card)
     }))
@@ -115,10 +123,13 @@ function buildButtonRow(duelId, playerId, team, selected) {
 function buildPlayerComponents(duelId, player, selected) {
   const components = [];
 
+  // A type-9 section is used only when the avatar accessory exists.
+  // This keeps the username and avatar together without putting images
+  // beside the individual cards
   if (player.avatarUrl) {
     components.push({
       type: 9,
-      components: [{ type: 10, content: `## **${player.username}**` }],
+      components: [{ type: 10, content: `## **${player.username}**\n` }],
       accessory: {
         type: 11,
         media: { url: player.avatarUrl },
@@ -128,25 +139,48 @@ function buildPlayerComponents(duelId, player, selected) {
   } else {
     components.push({
       type: 10,
-      content: `## **${player.username}**`
+      content: `## **${player.username}**\n`
     });
   }
 
   for (const card of player.team) {
     components.push(buildCardSection(card));
   }
+
+  // This blank text component creates the requested line break between the
+  // card details and the card buttons
+  components.push({ type: 10, content: '\n' });
   components.push(buildButtonRow(duelId, player.id, player.team, selected));
   return components;
 }
 
-function buildBattlePayload(state) {
-  const components = [
+function getDisplayableTextLength(component) {
+  if (!component || typeof component !== 'object') return 0;
+
+  let length = 0;
+  if (component.type === 10) length += component.content?.length || 0;
+  if (component.type === 2) length += component.label?.length || 0;
+  if (component.type === 11) length += component.description?.length || 0;
+
+  for (const child of component.components || []) {
+    length += getDisplayableTextLength(child);
+  }
+  if (component.accessory) {
+    length += getDisplayableTextLength(component.accessory);
+  }
+  return length;
+}
+
+function buildBattleComponents(state, logText) {
+  return [
     {
       type: 17,
       components: [
         {
           type: 10,
-          content: `# **${state.challenger.username}** VS **${state.target.username}**`
+          // The battle order is: users, separator, player one, cards,
+          // buttons, separator, player two, cards, buttons, separator, logs
+          content: `**${state.challenger.username}** VS **${state.target.username}**`
         },
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
@@ -161,16 +195,26 @@ function buildBattlePayload(state) {
           state.selections[state.target.id]
         ),
         { type: 14, divider: true, spacing: 1 },
-        {
-          type: 10,
-          content:
-            state.logs.length > 0
-              ? state.logs.slice(-5).join('\n')
-              : 'Pick the card you want to attack with.'
-        }
+        // Keep a blank line between the separator and the battle logs
+        { type: 10, content: `\n${logText || 'Pick the card you want to attack with'}` }
       ]
     }
   ];
+}
+
+function buildBattlePayload(state) {
+  // Discord limits all displayable text in a Components V2 message to
+  // 4,000 characters. Trim the oldest logs first so current card state and
+  // the latest combat events remain visible
+  const visibleLogs = state.logs.slice(-12);
+  let components = buildBattleComponents(state, visibleLogs.join('\n'));
+  while (
+    visibleLogs.length > 0 &&
+    getDisplayableTextLength(components) > 3900
+  ) {
+    visibleLogs.shift();
+    components = buildBattleComponents(state, visibleLogs.join('\n'));
+  }
 
   return {
     flags: MessageFlags.IsComponentsV2,
@@ -240,7 +284,7 @@ function resolveRound(state) {
     fallbackDefender.health -= damage;
     addRoundLog(
       state,
-      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals **${damage}<:punch:1534337550137954376>** to **${fallbackDefender.name}**.`
+      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals **${damage}<:punch:1534337550137954376>** to **${fallbackDefender.name}**`
     );
 
     if (isTeamDefeated(state.challenger.team) && isTeamDefeated(state.target.team)) {
@@ -265,11 +309,11 @@ function resolveRound(state) {
 
   addRoundLog(
     state,
-    `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals **${challengerDamage}<:punch:1534337550137954376>** to **${defender.name}**.`
+    `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals **${challengerDamage}<:punch:1534337550137954376>** to **${defender.name}**`
   );
   addRoundLog(
     state,
-    `${rankEmojis[defender.rank] || ''} **${defender.name}** deals **${targetDamage}<:punch:1534337550137954376>** to **${attacker.name}**.`
+    `${rankEmojis[defender.rank] || ''} **${defender.name}** deals **${targetDamage}<:punch:1534337550137954376>** to **${attacker.name}**`
   );
 
   // If both cards would be knocked out by the final exchange, the faster card
@@ -332,30 +376,30 @@ module.exports = {
       : getTarget(interactionOrMessage, args);
 
     if (!target) {
-      return privateReply(interactionOrMessage, 'Please mention a player to duel.');
+      return privateReply(interactionOrMessage, 'Please mention a player to duel');
     }
     if (target.id === challenger.id) {
-      return privateReply(interactionOrMessage, 'You cannot duel yourself.');
+      return privateReply(interactionOrMessage, 'You cannot duel yourself');
     }
     if (target.bot) {
-      return privateReply(interactionOrMessage, 'You cannot duel a bot.');
+      return privateReply(interactionOrMessage, 'You cannot duel a bot');
     }
     if (activeUsers.has(challenger.id) || activeUsers.has(target.id)) {
-      return privateReply(interactionOrMessage, 'One of these players is already in a duel.');
+      return privateReply(interactionOrMessage, 'One of these players is already in a duel');
     }
 
     const challengerData = await User.findOne({ userId: challenger.id });
     if (buildDuelTeam(challengerData).length !== 3) {
       return privateReply(
         interactionOrMessage,
-        'You need a full 3-card team before starting a duel.'
+        'You need a full 3-card team before starting a duel'
       );
     }
     const targetData = await User.findOne({ userId: target.id });
     if (buildDuelTeam(targetData).length !== 3) {
       return privateReply(
         interactionOrMessage,
-        `${target.username} needs a full 3-card team before they can duel.`
+        `${target.username} needs a full 3-card team before they can duel`
       );
     }
 
@@ -387,14 +431,14 @@ module.exports = {
     requestCollector.on('collect', async componentInteraction => {
       if (componentInteraction.user.id !== target.id) {
         return componentInteraction.reply({
-          content: 'Only the challenged player can respond to this duel.',
+          content: 'Only the challenged player can respond to this duel',
           flags: MessageFlags.Ephemeral
         });
       }
 
       if (componentInteraction.customId === 'duel_decline') {
         await componentInteraction.update({
-          content: `**${target.username}** declined the duel.`,
+          content: `**${target.username}** declined the duel`,
           embeds: [],
           components: []
         });
@@ -416,7 +460,7 @@ module.exports = {
 
       if (challengerTeam.length !== 3 || targetTeam.length !== 3) {
         await response.edit({
-          content: 'The duel could not start because both players need a full 3-card team.',
+          content: 'The duel could not start because both players need a full 3-card team',
           embeds: [],
           components: []
         });
@@ -457,13 +501,13 @@ module.exports = {
           if (!pick || pick.duelId !== state.id) return;
           if (![state.challenger.id, state.target.id].includes(pick.playerId)) {
             return pickInteraction.reply({
-              content: 'This is not your duel.',
+              content: 'This is not your duel',
               flags: MessageFlags.Ephemeral
             });
           }
           if (pickInteraction.user.id !== pick.playerId) {
             return pickInteraction.reply({
-              content: 'You can only choose your own card.',
+              content: 'You can only choose your own card',
               flags: MessageFlags.Ephemeral
             });
           }
@@ -474,7 +518,7 @@ module.exports = {
             : state.target;
           if (!player.team[pick.cardIndex] || isKnockedOut(player.team[pick.cardIndex])) {
             return pickInteraction.reply({
-              content: 'That card is knocked out.',
+              content: 'That card is knocked out',
               flags: MessageFlags.Ephemeral
             });
           }
@@ -496,9 +540,9 @@ module.exports = {
           const result = resolveRound(state);
           if (result.ended) {
             const content = result.reason === 'no-actions'
-              ? 'Duel ended with no winners.'
+              ? 'Duel ended with no winners'
               : result.reason === 'draw'
-                ? 'The duel ended in a draw.'
+                ? 'The duel ended in a draw'
                 : `**${result.winner.username} wins**`;
             await response.edit(buildEndPayload(content, state));
             releaseUsers();
@@ -507,7 +551,7 @@ module.exports = {
 
           await response.edit(buildBattlePayload(state));
           if (reason !== 'both-selected') {
-            addRoundLog(state, '◇ The timer expired. The duel continues.');
+            addRoundLog(state, '◇ The timer expired — the duel continues');
           }
           await startRound();
         });
@@ -518,9 +562,18 @@ module.exports = {
 
     requestCollector.on('end', async (_collected, reason) => {
       if (accepted || finished || reason === 'declined') return;
+      // README.md requires expired button embeds to keep the embed and
+      // replace its original footer with exactly "expired"
       await response.edit({
-        content: 'Duel request expired.',
-        embeds: [],
+        content: null,
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('Duel request')
+            .setDescription(
+              `Hey **${target.username}**, **${challenger.username}** wants to duel you`
+            )
+            .setFooter({ text: 'expired' })
+        ],
         components: []
       }).catch(() => {});
       releaseUsers();
