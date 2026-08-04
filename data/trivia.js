@@ -249,11 +249,6 @@ module.exports = [
     answer:   'Bell-mère'
   },
   {
-    question: 'Which Straw Hat had no known impostor, and why?',
-    options:  ['Brook; joined recently', 'Franky; wore a mask', 'Robin; changed her name', 'Jinbe; joined later'],
-    answer:   'Brook; joined recently'
-  },
-  {
     question: 'Who did Yasopp defeat in a duel before that person beat Usopp?',
     options:  ['Daddy "The Father"', 'Van Augur', 'Lucky Roux', 'Duval'],
     answer:   'Daddy "The Father"'

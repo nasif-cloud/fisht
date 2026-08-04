@@ -15,7 +15,10 @@ const {
   buildProgressBar,
   getNextDailyReset
 } = require('../../utils/quests');
-const { addXp } = require('../../utils/levels');
+const {
+  addXp,
+  sendLevelUpNotifications
+} = require('../../utils/levels');
 
 const SESSION_TIME_MS = 300000;
 
@@ -156,6 +159,7 @@ module.exports = {
         userData.balance = (Number(userData.balance) || 0) + QUEST_REWARD_BELI;
         const xpResult = addXp(userData, QUEST_REWARD_XP);
         await userData.save();
+        await sendLevelUpNotifications(user, userData, xpResult);
 
         const rewardLines = [
           `You claimed **${result.quest.label}**!`,
