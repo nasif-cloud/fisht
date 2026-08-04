@@ -10,7 +10,7 @@ const { rankEmojis } = require('../data/cards');
 
 const PITY_THRESHOLDS = Object.freeze({
   S: 250,
-  SS: 1000,
+  SS: 800,
   UR: 2500
 });
 
@@ -81,7 +81,7 @@ function applyPityPull(userData, preview = previewPityPull(userData)) {
 function formatPityLine(rank, userData) {
   const progress = Math.min(getPityValue(userData, rank), PITY_THRESHOLDS[rank]);
   const emoji = rankEmojis[rank] || '';
-  return `${emoji} **${rank} rank** \`${progress}/${PITY_THRESHOLDS[rank]}\` ${buildProgressBar(progress, PITY_THRESHOLDS[rank])}`;
+  return `${emoji} **${rank} rank** \`${progress}/${PITY_THRESHOLDS[rank]}\` ${buildProgressBar(progress, PITY_THRESHOLDS[rank], 9)}`;
 }
 
 module.exports = {

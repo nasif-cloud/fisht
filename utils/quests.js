@@ -172,18 +172,18 @@ function claimQuest(userData, questIndex) {
   return { ok: true, quest, allClaimed };
 }
 
-function buildProgressBar(progress, target) {
+function buildProgressBar(progress, target, segmentCount = 10) {
   const safeTarget = Math.max(1, Number(target) || 1);
   const safeProgress = Math.min(safeTarget, Math.max(0, Number(progress) || 0));
   const filled = safeProgress >= safeTarget
-    ? 10
-    : Math.floor((safeProgress / safeTarget) * 10);
+    ? segmentCount
+    : Math.floor((safeProgress / safeTarget) * segmentCount);
 
   const segments = [];
-  for (let index = 0; index < 10; index += 1) {
+  for (let index = 0; index < segmentCount; index += 1) {
     const isGreen = index < filled;
     const isFirst = index === 0;
-    const isLast = index === 9;
+    const isLast = index === segmentCount - 1;
     if (isGreen) {
       segments.push(
         isFirst ? PROGRESS_EMOJIS.greenLeft :
