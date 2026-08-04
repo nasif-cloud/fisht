@@ -14,9 +14,9 @@ const ROLE_STATS = {
 };
 
 const ROLE_EMOJIS = {
-  HP: '❤️',
-  ATK: '💥',
-  SPD: '⚡'
+  HP: '<:Health:1534326743459037244>',
+  ATK: '<:Power:1534326742678769684>',
+  SPD: '<:Speed:1534326741693104168>'
 };
 
 const DAMAGE_MULTIPLIERS = {
@@ -170,7 +170,7 @@ function formatCardLine(card) {
   return [
     `${formatRole(card)} **${card.name}** · Lv. ${card.mastery} M${card.mastery}`,
     `${buildProgressBar(health, card.maxHealth)} \`${health}/${card.maxHealth}\``,
-    `❤️ ${health}/${card.maxHealth}  |  💥 ${card.power}  |  ⚡ ${card.speed}`
+    `<:Health:1534326743459037244> ${health}/${card.maxHealth}  |  <:Power:1534326742678769684> ${card.power}  |  <:Speed:1534326741693104168> ${card.speed}`
   ].join('\n');
 }
 

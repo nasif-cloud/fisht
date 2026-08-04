@@ -49,6 +49,16 @@ function mention(userId) {
   return `<@${userId}>`;
 }
 
+function getAvatarUrl(user) {
+  if (typeof user?.displayAvatarURL === 'function') {
+    return user.displayAvatarURL({ extension: 'png', size: 64 });
+  }
+  if (typeof user?.avatarURL === 'function') {
+    return user.avatarURL({ extension: 'png', size: 64 });
+  }
+  return null;
+}
+
 function buildRequestPayload(challenger, target) {
   return {
     embeds: [
@@ -85,14 +95,7 @@ function buildRequestPayload(challenger, target) {
 function buildCardSection(card) {
   return {
     type: 9,
-    components: [{ type: 10, content: formatCardLine(card) }],
-    accessory: card.image
-      ? {
-          type: 11,
-          media: { url: card.image },
-          description: card.name
-        }
-      : undefined
+    components: [{ type: 10, content: formatCardLine(card) }]
   };
 }
 
@@ -112,8 +115,15 @@ function buildButtonRow(duelId, playerId, team, selected) {
 function buildPlayerComponents(duelId, player, selected) {
   const components = [
     {
-      type: 10,
-      content: `## ${mention(player.id)}\n`
+      type: 9,
+      components: [{ type: 10, content: `## **${player.username}**` }],
+      accessory: player.avatarUrl
+        ? {
+            type: 11,
+            media: { url: player.avatarUrl },
+            description: `${player.username}'s avatar`
+          }
+        : undefined
     }
   ];
 
@@ -131,7 +141,7 @@ function buildBattlePayload(state) {
       components: [
         {
           type: 10,
-          content: `# ${mention(state.challenger.id)} VS ${mention(state.target.id)}`
+          content: `# **${state.challenger.username}** VS **${state.target.username}**`
         },
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
@@ -162,7 +172,7 @@ function buildBattlePayload(state) {
     embeds: [],
     components,
     allowedMentions: {
-      users: [state.challenger.id, state.target.id],
+      parse: [],
       repliedUser: false
     }
   };
@@ -179,7 +189,7 @@ function buildEndPayload(content, state) {
       }
     ],
     allowedMentions: {
-      users: [state.challenger.id, state.target.id],
+      parse: [],
       repliedUser: false
     }
   };
@@ -190,6 +200,10 @@ function getSelectedCard(player, selections) {
   if (!Number.isInteger(index)) return null;
   const card = player.team[index];
   return card && !isKnockedOut(card) ? card : null;
+}
+
+function getFirstLivingCard(player) {
+  return player.team.find(card => !isKnockedOut(card)) || null;
 }
 
 function addRoundLog(state, text) {
@@ -207,7 +221,32 @@ function resolveRound(state) {
 
   if (!attacker || !defender) {
     const idlePlayer = attacker ? state.target : state.challenger;
-    addRoundLog(state, `◇ ${mention(idlePlayer.id)} did nothing this round.`);
+    const activeCard = attacker || defender;
+    const defendingPlayer = attacker ? state.target : state.challenger;
+    const fallbackDefender = getFirstLivingCard(defendingPlayer);
+
+    addRoundLog(state, `◇ **${idlePlayer.username}** did nothing this round.`);
+
+    if (!activeCard || !fallbackDefender) {
+      return { ended: false };
+    }
+
+    const damage = calculateDamage(activeCard, fallbackDefender);
+    fallbackDefender.health -= damage;
+    addRoundLog(
+      state,
+      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals **${damage}<:punch:1534337550137954376>** to **${fallbackDefender.name}**.`
+    );
+
+    if (isTeamDefeated(state.challenger.team) && isTeamDefeated(state.target.team)) {
+      return { ended: true, reason: 'draw' };
+    }
+    if (isTeamDefeated(state.target.team)) {
+      return { ended: true, winner: state.challenger };
+    }
+    if (isTeamDefeated(state.challenger.team)) {
+      return { ended: true, winner: state.target };
+    }
     return { ended: false };
   }
 
@@ -221,11 +260,11 @@ function resolveRound(state) {
 
   addRoundLog(
     state,
-    `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals **+${challengerDamage}** to **${defender.name}**.`
+    `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals **${challengerDamage}<:punch:1534337550137954376>** to **${defender.name}**.`
   );
   addRoundLog(
     state,
-    `${rankEmojis[defender.rank] || ''} **${defender.name}** deals **-${targetDamage}** to **${attacker.name}**.`
+    `${rankEmojis[defender.rank] || ''} **${defender.name}** deals **${targetDamage}<:punch:1534337550137954376>** to **${attacker.name}**.`
   );
 
   // If both cards would be knocked out by the final exchange, the faster card
@@ -382,8 +421,18 @@ module.exports = {
 
       const state = {
         id: response.id,
-        challenger: { id: challenger.id, username: challenger.username, team: challengerTeam },
-        target: { id: target.id, username: target.username, team: targetTeam },
+        challenger: {
+          id: challenger.id,
+          username: challenger.username,
+          avatarUrl: getAvatarUrl(challenger),
+          team: challengerTeam
+        },
+        target: {
+          id: target.id,
+          username: target.username,
+          avatarUrl: getAvatarUrl(target),
+          team: targetTeam
+        },
         selections: {},
         logs: []
       };
@@ -445,7 +494,7 @@ module.exports = {
               ? 'Duel ended with no winners.'
               : result.reason === 'draw'
                 ? 'The duel ended in a draw.'
-                : `**${mention(result.winner.id)} wins**`;
+                : `**${result.winner.username} wins**`;
             await response.edit(buildEndPayload(content, state));
             releaseUsers();
             return;
