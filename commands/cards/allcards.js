@@ -6,12 +6,13 @@
 //
 // Prefix aliases: ac, cards
 // Prefix controls:
-//   Row 1 — 🔍 (search by name), ↕ (flip direction), Previous, Next
+//   Row 1 — 🔍 (search by name), ✨ (shiny filter), ↕ (flip direction), Previous, Next
 //   Row 2 — Sort dropdown (health / power / speed / rank)
 //   Row 3 — Mastery dropdown (M1's / M2's / M3's)
 //
 // Slash controls: sort, mastery, and card are options at invocation.
 //   /allcards               → default (power, M1)
+//   /allcards shiny:true     → show only cards the user owns as shiny
 //   /allcards sort:rank mastery:M2  → sorted and filtered, still interactive
 //   /allcards card:luffy    → search mode for Luffy (no direction button in this mode)
 //
@@ -33,7 +34,7 @@ const {
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
-// Note: User is not needed here — allcards shows every card, no personal data involved
+const User = require('../../models/user');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -52,6 +53,7 @@ const SORT_LABELS = {
 
 // The emoji used on the direction-flip button (both ascending and descending states)
 const DESC_EMOJI = '<:descending:1533566429180330286>';
+const SHINY_EMOJI = '<:holo:1533666993637687466>';
 
 // ─────────────────────────────────────────────
 // HELPER — get the stat block for a card at a given mastery level
@@ -141,6 +143,13 @@ function buildCardEmbed(card, mastery, footerText, user) {
   };
 }
 
+async function renderCardUpdate({ editFn, card, mastery, footerText, user, components }) {
+  return editFn({
+    embeds: [buildCardEmbed(card, mastery, footerText, user)],
+    components
+  });
+}
+
 // ─────────────────────────────────────────────
 // HELPER — normal mode footer text
 // Example: `Card 3/34 - By power [M1's]`
@@ -166,13 +175,18 @@ function searchFooter(mastery) {
 // PREFIX: 3 rows — nav buttons (including direction), sort dropdown, mastery dropdown
 // SLASH:  1 row  — nav buttons only (sort/mastery are set via slash options at invocation)
 // ─────────────────────────────────────────────
-function buildNormalComponents(total, page, sortMode, mastery, isSlash, isAscending = false) {
+function buildNormalComponents(total, page, sortMode, mastery, isSlash, isAscending = false, isShiny = false) {
   const navRow = new ActionRowBuilder().addComponents(
     // 🔍 Search button — opens a modal to search by card name
     new ButtonBuilder()
       .setCustomId('ac_search')
       .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('ac_shiny')
+      .setEmoji(SHINY_EMOJI)
+      .setStyle(isShiny ? ButtonStyle.Success : ButtonStyle.Secondary),
 
     // ↕ Direction button — flips the sort between highest-first and lowest-first.
     // Always grey (Secondary). Same emoji for both directions.
@@ -292,6 +306,12 @@ module.exports = {
         .setDescription('Search for a specific card directly')
         .setRequired(false)
          .setAutocomplete(true)
+     )
+    .addBooleanOption(option =>
+      option
+        .setName('shiny')
+        .setDescription('Show only your shiny cards')
+        .setRequired(false)
     ),
 
   // Prefix command definition (op allcards / op ac / op cards)
@@ -312,11 +332,13 @@ module.exports = {
     let slashSort    = null;
     let slashMastery = null;
     let slashCard    = null;
+    let slashShiny   = false;
 
     if (isSlash) {
       slashSort    = interactionOrMessage.options.getString('sort');
       slashMastery = interactionOrMessage.options.getString('mastery');
       slashCard    = interactionOrMessage.options.getString('card');
+      slashShiny   = interactionOrMessage.options.getBoolean('shiny') ?? false;
 
       // 'card' conflicts with sort/mastery — they serve different purposes
       if (slashCard && (slashSort || slashMastery)) {
@@ -325,6 +347,9 @@ module.exports = {
           flags: 64 // Ephemeral — only visible to the user
         });
       }
+
+      // Shiny filtering loads the user's owned-card state from MongoDB.
+      await interactionOrMessage.deferReply();
     }
 
     // ── STEP 2: Set up state ──
@@ -332,22 +357,48 @@ module.exports = {
     // Every button/dropdown interaction reads and/or updates these values.
     let sortMode      = slashSort    || 'power';       // Default sort: by power
     let mastery       = parseInt(slashMastery) || 1;   // Default mastery: M1
+    let isShiny       = slashShiny;
     let isAscending   = false;                         // false = highest first, true = lowest first
     let currentPage   = 0;
     let isSearchMode  = false;
     let searchCard    = null; // The card object being shown in search mode
     let searchMastery = 1;   // Which mastery (1/2/3) is showing in search mode
 
+    let shinyCardNames = new Set();
+
+    const loadShinyCardNames = async () => {
+      const userData = await User.findOne({ userId: user.id });
+      shinyCardNames = new Set(
+        (userData?.cardCopies || [])
+          .filter(entry => entry.amount > 0 && entry.shiny)
+          .map(entry => entry.cardName)
+      );
+    };
+
+    if (isShiny) {
+      await loadShinyCardNames();
+    }
+
+    const filterCards = () => {
+      const catalog = cards.filter(card => card.name);
+      return isShiny ? catalog.filter(card => shinyCardNames.has(card.name)) : catalog;
+    };
+
     // ── STEP 3: Handle the 'card' slash option — enter search mode immediately ──
     if (slashCard) {
       const query = slashCard.toLowerCase().trim();
-      const found = cards.find(c =>
+      const found = filterCards().find(c =>
         c.name.toLowerCase().includes(query) ||
         c.aliases.some(a => a && a.toLowerCase().includes(query))
       );
 
       if (!found) {
-        return interactionOrMessage.reply({
+        return isSlash
+          ? interactionOrMessage.editReply({
+              content: `**${slashCard}** is not a valid card`,
+              allowedMentions: { repliedUser: false }
+            })
+          : interactionOrMessage.reply({
           content: `**${slashCard}** is not a valid card`,
           allowedMentions: { repliedUser: false },
           flags: 64
@@ -361,7 +412,17 @@ module.exports = {
 
     // ── STEP 4: Build the initial sorted card list ──
     // Filter out any blank/unnamed entries that might exist in the card data
-    let sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
+    let sortedCards = sortCards(filterCards(), sortMode, mastery, isAscending);
+
+    if (sortedCards.length === 0) {
+      const empty = {
+        content: `You don't own any shiny cards yet.`,
+        allowedMentions: { repliedUser: false }
+      };
+      return isSlash
+        ? interactionOrMessage.editReply(empty)
+        : interactionOrMessage.reply(empty);
+    }
 
     // ── STEP 5: Build the initial embed and components ──
     let embed, components;
@@ -373,7 +434,7 @@ module.exports = {
     } else {
       // Normal browse mode: full nav with direction button
       embed      = buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user);
-      components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending);
+      components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny);
     }
 
     // ── STEP 6: Send the message ──
@@ -382,7 +443,7 @@ module.exports = {
     let response;
 
     if (isSlash) {
-      response = await interactionOrMessage.reply(payload);
+      response = await interactionOrMessage.editReply(payload);
     } else {
       response = await interactionOrMessage.channel.send(payload);
     }
@@ -402,37 +463,94 @@ module.exports = {
       // Without this, the buttons would disappear 2 minutes after the FIRST interaction.
       collector.resetTimer();
 
+      // ── SHINY TOGGLE ──
+      if (interaction.customId === 'ac_shiny') {
+        await interaction.deferUpdate();
+        isShiny = !isShiny;
+        if (isShiny) {
+          await loadShinyCardNames();
+        }
+        currentPage = 0;
+        sortedCards = sortCards(filterCards(), sortMode, mastery, isAscending);
+        if (sortedCards.length === 0) {
+          return interaction.editReply({
+            content: `You don't own any shiny cards yet.`,
+            embeds: [],
+            components: buildNormalComponents(0, 0, sortMode, mastery, isSlash, isAscending, isShiny)
+          });
+        }
+        await renderCardUpdate({
+          editFn: p => interaction.editReply(p),
+          card: sortedCards[currentPage],
+          mastery,
+          footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+          user,
+          isShiny,
+          components: buildNormalComponents(
+            sortedCards.length,
+            currentPage,
+            sortMode,
+            mastery,
+            isSlash,
+            isAscending,
+            isShiny
+          )
+        });
+      }
+
       // ── NEXT ──
-      if (interaction.customId === 'ac_next') {
+      else if (interaction.customId === 'ac_next') {
+        await interaction.deferUpdate();
         if (isSearchMode) {
           // In search mode: move to the next mastery (M1 → M2 → M3)
           searchMastery = Math.min(3, searchMastery + 1);
-          await interaction.update({
-            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user)],
+          await renderCardUpdate({
+            editFn: p => interaction.editReply(p),
+            card: searchCard,
+            mastery: searchMastery,
+            footerText: searchFooter(searchMastery),
+            user,
+            isShiny,
             components: buildSearchComponents(searchMastery)
           });
         } else {
           currentPage = Math.min(sortedCards.length - 1, currentPage + 1);
-          await interaction.update({
-            embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
+          await renderCardUpdate({
+            editFn: p => interaction.editReply(p),
+            card: sortedCards[currentPage],
+            mastery,
+            footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+            user,
+            isShiny,
+            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny)
           });
         }
       }
 
       // ── PREVIOUS ──
       else if (interaction.customId === 'ac_prev') {
+        await interaction.deferUpdate();
         if (isSearchMode) {
           searchMastery = Math.max(1, searchMastery - 1);
-          await interaction.update({
-            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user)],
+          await renderCardUpdate({
+            editFn: p => interaction.editReply(p),
+            card: searchCard,
+            mastery: searchMastery,
+            footerText: searchFooter(searchMastery),
+            user,
+            isShiny,
             components: buildSearchComponents(searchMastery)
           });
         } else {
           currentPage = Math.max(0, currentPage - 1);
-          await interaction.update({
-            embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
+          await renderCardUpdate({
+            editFn: p => interaction.editReply(p),
+            card: sortedCards[currentPage],
+            mastery,
+            footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+            user,
+            isShiny,
+            components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny)
           });
         }
       }
@@ -443,37 +561,55 @@ module.exports = {
       //   isAscending = false → 100 power, 95 power, 80 power ... (highest first)
       //   isAscending = true  →  1 power,   5 power, 12 power ... (lowest first)
       else if (interaction.customId === 'ac_desc') {
+        await interaction.deferUpdate();
         isAscending = !isAscending;    // Flip the direction
         currentPage = 0;               // Go back to page 1 so nothing feels broken
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
-        await interaction.update({
-          embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
+        sortedCards = sortCards(filterCards(), sortMode, mastery, isAscending);
+        await renderCardUpdate({
+          editFn: p => interaction.editReply(p),
+          card: sortedCards[currentPage],
+          mastery,
+          footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+          user,
+          isShiny,
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny)
         });
       }
 
       // ── SORT DROPDOWN (prefix only) ──
       else if (interaction.customId === 'ac_sort') {
+        await interaction.deferUpdate();
         sortMode    = interaction.values[0]; // The value the player selected
         currentPage = 0;                     // Reset to first card when sort changes
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
-        await interaction.update({
-          embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
+        sortedCards = sortCards(filterCards(), sortMode, mastery, isAscending);
+        await renderCardUpdate({
+          editFn: p => interaction.editReply(p),
+          card: sortedCards[currentPage],
+          mastery,
+          footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+          user,
+          isShiny,
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny)
         });
       }
 
       // ── MASTERY DROPDOWN (prefix only) ──
       else if (interaction.customId === 'ac_mastery') {
+        await interaction.deferUpdate();
         mastery     = parseInt(interaction.values[0]); // '1', '2', or '3' → 1, 2, 3
         currentPage = 0; // Reset to first card when mastery changes
 
         // Re-sort because stat values change between masteries (e.g. M2 has different power than M1)
-        sortedCards = sortCards(cards.filter(c => c.name), sortMode, mastery, isAscending);
+        sortedCards = sortCards(filterCards(), sortMode, mastery, isAscending);
 
-        await interaction.update({
-          embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn: p => interaction.editReply(p),
+          card: sortedCards[currentPage],
+          mastery,
+          footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+          user,
+          isShiny,
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny)
         });
       }
 
@@ -504,7 +640,7 @@ module.exports = {
           const query = submit.fields.getTextInputValue('ac_search_query').toLowerCase().trim();
 
           // Search across all cards in the game
-          const found = cards.find(c =>
+          const found = filterCards().find(c =>
             c.name.toLowerCase().includes(query) ||
             c.aliases.some(a => a && a.toLowerCase().includes(query))
           );
@@ -520,8 +656,14 @@ module.exports = {
           searchCard    = found;
           searchMastery = 1;
 
-          await submit.update({
-            embeds:     [buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user)],
+          await submit.deferUpdate();
+          await renderCardUpdate({
+            editFn: p => submit.editReply(p),
+            card: searchCard,
+            mastery: searchMastery,
+            footerText: searchFooter(searchMastery),
+            user,
+            isShiny,
             components: buildSearchComponents(searchMastery)
           });
 
@@ -532,14 +674,20 @@ module.exports = {
 
       // ── BACK BUTTON — exit search mode and return to the sorted list ──
       else if (interaction.customId === 'ac_back') {
+        await interaction.deferUpdate();
         isSearchMode  = false;
         searchCard    = null;
         searchMastery = 1;
         currentPage   = 0;
 
-        await interaction.update({
-          embeds:     [buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user)],
-          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending)
+        await renderCardUpdate({
+          editFn: p => interaction.editReply(p),
+          card: sortedCards[currentPage],
+          mastery,
+          footerText: normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+          user,
+          isShiny,
+          components: buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending, isShiny)
         });
       }
     });

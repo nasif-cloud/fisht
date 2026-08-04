@@ -287,7 +287,7 @@ function searchFooter(cardName) {
 // ─────────────────────────────────────────────
 // HELPER — components for normal (browsing) mode
 // ─────────────────────────────────────────────
-function buildNormalComponents(total, page, sortMode, isSlash, isAscending = false) {
+function buildNormalComponents(total, page, sortMode, isSlash, isAscending = false, isShinyFilter = false) {
   const navRow = new ActionRowBuilder().addComponents(
    new ButtonBuilder()
       .setCustomId('col_boosts')
@@ -315,6 +315,7 @@ function buildNormalComponents(total, page, sortMode, isSlash, isAscending = fal
       .setCustomId('col_search')
       .setEmoji('<:magnifyingglass:1532884937294741645>')
       .setStyle(ButtonStyle.Secondary),
+
   );
 
   if (isSlash) return [navRow];
@@ -324,12 +325,12 @@ function buildNormalComponents(total, page, sortMode, isSlash, isAscending = fal
       .setCustomId('col_sort')
       .setPlaceholder('Sort by...')
       .addOptions([
-        { label: 'By shinies', value: 'shinies', default: sortMode === 'shinies' },
-        { label: 'By copies', value: 'copies', default: sortMode === 'copies' },
-        { label: 'By health', value: 'health', default: sortMode === 'health' },
-        { label: 'By power',  value: 'power',  default: sortMode === 'power'  },
-        { label: 'By speed',  value: 'speed',  default: sortMode === 'speed'  },
-        { label: 'By rank',   value: 'rank',   default: sortMode === 'rank'   }
+        { label: 'Only shinies', value: 'shinies', default: isShinyFilter },
+        { label: 'By copies', value: 'copies', default: !isShinyFilter && sortMode === 'copies' },
+        { label: 'By health', value: 'health', default: !isShinyFilter && sortMode === 'health' },
+        { label: 'By power',  value: 'power',  default: !isShinyFilter && sortMode === 'power'  },
+        { label: 'By speed',  value: 'speed',  default: !isShinyFilter && sortMode === 'speed'  },
+        { label: 'By rank',   value: 'rank',   default: !isShinyFilter && sortMode === 'rank'   }
       ])
   );
 
@@ -368,7 +369,7 @@ module.exports = {
         .setDescription('Sort by a specific filter')
         .setRequired(false)
         .addChoices(
-          { name: 'By shinies', value: 'shinies' },
+          { name: 'Only shinies', value: 'shinies' },
           { name: 'By copies', value: 'copies' },
           { name: 'By health', value: 'health' },
           { name: 'By power',  value: 'power'  },
@@ -382,6 +383,12 @@ module.exports = {
         .setDescription('Search for a specific card you own')
         .setRequired(false)
          .setAutocomplete(true)
+     )
+    .addBooleanOption(option =>
+      option
+        .setName('shiny')
+        .setDescription('Show only shiny cards')
+        .setRequired(false)
     ),
 
   name: 'collection',
@@ -400,10 +407,12 @@ module.exports = {
     // ── STEP 1: Read slash options ──
     let slashSort = null;
     let slashCard = null;
+    let slashShiny = false;
 
     if (isSlash) {
       slashSort = interactionOrMessage.options.getString('sort');
       slashCard = interactionOrMessage.options.getString('card');
+      slashShiny = interactionOrMessage.options.getBoolean('shiny') ?? false;
 
       if (slashCard && slashSort) {
         return interactionOrMessage.reply({
@@ -444,13 +453,29 @@ module.exports = {
     }
 
     // ── STEP 3: Initial state ──
-    let sortMode     = slashSort || 'power';
+    let isShinyFilter = slashShiny || slashSort === 'shinies';
+    let sortMode     = slashSort === 'shinies' ? 'power' : (slashSort || 'power');
     let isAscending  = false;
     let currentPage  = 0;
     let isSearchMode = false;
     let searchEntry  = null;
 
-    let sortedList = sortOwnedCards(ownedList, sortMode, isAscending);
+    const getFilteredList = () =>
+      isShinyFilter
+        ? ownedList.filter(entry => entry.isShiny)
+        : ownedList;
+
+    let sortedList = sortOwnedCards(getFilteredList(), sortMode, isAscending);
+
+    if (sortedList.length === 0) {
+      const empty = {
+        content: `You don't own any shiny cards yet.`,
+        allowedMentions: { repliedUser: false }
+      };
+      return isSlash
+        ? interactionOrMessage.editReply(empty)
+        : interactionOrMessage.reply(empty);
+    }
 
     // renderVersion is bumped every time we start rendering a new card.
     // The shiny shimmer edit checks this before applying so that rapidly
@@ -464,7 +489,7 @@ module.exports = {
     // ── STEP 4: Handle 'card' slash option — enter search mode immediately ──
     if (slashCard) {
       const query = slashCard.toLowerCase().trim();
-      const found = ownedList.find(e =>
+      const found = getFilteredList().find(e =>
         e.card.name.toLowerCase().includes(query) ||
         e.card.aliases.some(a => a && a.toLowerCase().includes(query))
       );
@@ -486,7 +511,7 @@ module.exports = {
       : normalFooter(currentPage, sortedList.length, sortMode);
     const initialComponents = isSearchMode
       ? buildSearchComponents()
-      : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
+      : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter);
 
     // ── STEP 6: Send the initial message immediately with plain URLs ──
     // Slash: editReply (already deferred in step 1).
@@ -569,7 +594,7 @@ module.exports = {
           await submit.deferUpdate();
 
           const query = submit.fields.getTextInputValue('col_search_query').toLowerCase().trim();
-          const found = ownedList.find(e =>
+          const found = getFilteredList().find(e =>
             e.card.name.toLowerCase().includes(query) ||
             e.card.aliases.some(a => a && a.toLowerCase().includes(query))
           );
@@ -583,7 +608,7 @@ module.exports = {
               : normalFooter(currentPage, sortedList.length, sortMode);
             const prevComponents = isSearchMode
               ? buildSearchComponents()
-              : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending);
+              : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter);
             await renderCardUpdate({
               editFn:     p => submit.editReply(p),
               entry:      prevEntry,
@@ -629,7 +654,7 @@ module.exports = {
           entry:      sortedList[currentPage],
           footerText: normalFooter(currentPage, sortedList.length, sortMode),
           user,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter),
           getVersion,
           bumpVersion
         });
@@ -643,7 +668,7 @@ module.exports = {
           entry:      sortedList[currentPage],
           footerText: normalFooter(currentPage, sortedList.length, sortMode),
           user,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter),
           getVersion,
           bumpVersion
         });
@@ -653,13 +678,13 @@ module.exports = {
       else if (interaction.customId === 'col_desc') {
         isAscending = !isAscending;
         currentPage = 0;
-        sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
+        sortedList  = sortOwnedCards(getFilteredList(), sortMode, isAscending);
         await renderCardUpdate({
           editFn:     p => interaction.editReply(p),
           entry:      sortedList[currentPage],
           footerText: normalFooter(currentPage, sortedList.length, sortMode),
           user,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter),
           getVersion,
           bumpVersion
         });
@@ -667,15 +692,30 @@ module.exports = {
 
       // ── SORT DROPDOWN (prefix only) ──
       else if (interaction.customId === 'col_sort') {
-        sortMode    = interaction.values[0];
+        const selectedSort = interaction.values[0];
+        if (selectedSort === 'shinies') {
+          isShinyFilter = true;
+          sortMode = 'power';
+        } else {
+          isShinyFilter = false;
+          sortMode = selectedSort;
+        }
         currentPage = 0;
-        sortedList  = sortOwnedCards(ownedList, sortMode, isAscending);
+        sortedList  = sortOwnedCards(getFilteredList(), sortMode, isAscending);
+        if (sortedList.length === 0) {
+          await interaction.editReply({
+            content: `You don't own any shiny cards yet.`,
+            embeds: [],
+            components: buildNormalComponents(0, 0, sortMode, isSlash, isAscending, isShinyFilter)
+          });
+          return;
+        }
         await renderCardUpdate({
           editFn:     p => interaction.editReply(p),
           entry:      sortedList[currentPage],
           footerText: normalFooter(currentPage, sortedList.length, sortMode),
           user,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter),
           getVersion,
           bumpVersion
         });
@@ -691,7 +731,7 @@ module.exports = {
           entry:      sortedList[currentPage],
           footerText: normalFooter(currentPage, sortedList.length, sortMode),
           user,
-          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending),
+          components: buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter),
           getVersion,
           bumpVersion
         });

@@ -7,10 +7,10 @@
 // Rewards based on how close the guess is:
 //   Spot on (0 off)  → 300 Berries
 //   1–5 volumes off  → 150 Berries
-//   6–20 volumes off →  50 Berries
-//   >20 volumes off  →   0 Berries (wrong)
+//   6–10 volumes off →  50 Berries
+//   >10 volumes off  →   0 Berries (wrong)
 //
-// Cooldown: 20 minutes per player (rolling timer, not a global reset).
+// Cooldown: 10 minutes per player (rolling timer, not a global reset).
 //
 // Prefix: op manga  |  Aliases: mg
 // Slash:  /manga
@@ -42,11 +42,10 @@ const {
 // ─────────────────────────────────────────────
 const COOLDOWN_MS  = 20 * 60 * 1000; // 20 minutes in milliseconds
 const GAME_TIME_MS = 10000;           // 10 seconds to press the Guess button
-
 // Beli rewards
 const REWARD_EXACT = 300; // Spot on
 const REWARD_CLOSE = 150; // 1–5 volumes off
-const REWARD_FAR   = 50;  // 6–20 volumes off
+const REWARD_FAR   = 50;  // 6–10 volumes off
 const MASKED_COVER_FILENAME = 'manga-cover.png';
 
 // Keep each cover's palette and generated images in memory. This avoids
@@ -294,13 +293,13 @@ module.exports = {
           reward     = REWARD_CLOSE;
           resultDesc =
             `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
-        } else if (diff <= 20) {
-          // 6–20 volumes off
+        } else if (diff <= 10) {
+          // 6–10 volumes off
           reward     = REWARD_FAR;
           resultDesc =
             `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
         } else {
-          // More than 20 off — no reward
+          // More than 10 off — no reward
           resultDesc = 'Better luck next time.';
         }
 
