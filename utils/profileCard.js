@@ -65,11 +65,12 @@ async function renderProfileCard({
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, PROFILE_WIDTH, PROFILE_HEIGHT);
 
-  // The avatar sits in the visual center, with the thin white circular
-  // outline shown in the reference image.
-  const avatarCenterX = 512;
-  const avatarCenterY = 126;
-  const avatarRadius = 62;
+  // This layout intentionally uses a different composition from the
+  // reference: the avatar anchors the left side while the information and
+  // progress section fill the right side.
+  const avatarCenterX = 135;
+  const avatarCenterY = 180;
+  const avatarRadius = 82;
   ctx.save();
   ctx.beginPath();
   ctx.arc(avatarCenterX, avatarCenterY, avatarRadius, 0, Math.PI * 2);
@@ -104,35 +105,38 @@ async function renderProfileCard({
   ctx.arc(avatarCenterX, avatarCenterY, avatarRadius + 3, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Rank and level are placed above the avatar, matching the reference.
+  // Put the identity and level together in a right-side header.
   ctx.fillStyle = '#ffffff';
-  ctx.font = `400 31px "${PROFILE_FONT}"`;
+  ctx.font = `400 39px "${PROFILE_FONT}"`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
-  ctx.fillText(`RANK #${globalRank}`, 110, 68);
+  ctx.fillText(username || 'Unknown user', 270, 76);
 
+  ctx.font = `400 28px "${PROFILE_FONT}"`;
   ctx.textAlign = 'right';
-  ctx.fillText(`LEVEL ${level}`, 910, 68);
+  ctx.fillText(`LEVEL ${level}`, 900, 76);
 
-  // The username sits under the avatar on the left.
+  // Rank becomes a compact secondary label beneath the header.
   ctx.textAlign = 'left';
-  ctx.font = `400 43px "${PROFILE_FONT}"`;
-  ctx.fillText(username || 'Unknown user', 110, 244);
+  ctx.font = `400 24px "${PROFILE_FONT}"`;
+  ctx.fillText(`GLOBAL RANK  #${globalRank}`, 270, 125);
 
-  // Keep the XP text above the right end of the bar, as in the reference.
+  // XP values sit above the progress section, with the remaining amount
+  // separated visually so it is easy to scan.
   const xpText = `${formatCompactNumber(currentXp)} / ${formatCompactNumber(xpNeeded)} XP`;
   const xpRemaining = Math.max(0, xpNeeded - currentXp);
-  ctx.textAlign = 'right';
-  ctx.font = `400 25px "${PROFILE_FONT}"`;
-  ctx.fillText(xpText, 885, 244);
-  ctx.font = `400 14px "${PROFILE_FONT}"`;
-  ctx.fillText(`${formatCompactNumber(xpRemaining)} XP TO NEXT LEVEL`, 885, 260);
+  ctx.textAlign = 'left';
+  ctx.font = `400 28px "${PROFILE_FONT}"`;
+  ctx.fillText(xpText, 270, 198);
+  ctx.font = `400 17px "${PROFILE_FONT}"`;
+  ctx.fillText(`${formatCompactNumber(xpRemaining)} XP TO NEXT LEVEL`, 270, 222);
 
-  // XP bar: a light progress fill over a dark rounded track.
-  const barX = 113;
-  const barY = 275;
-  const barWidth = 773;
-  const barHeight = 25;
+  // XP bar: a light progress fill over a dark rounded track, spanning the
+  // right side instead of the full width of the reference.
+  const barX = 270;
+  const barY = 250;
+  const barWidth = 635;
+  const barHeight = 27;
   const progress = xpNeeded > 0 ? Math.min(1, currentXp / xpNeeded) : 0;
   ctx.fillStyle = '#202020';
   roundedRectPath(ctx, barX, barY, barWidth, barHeight, 13);

@@ -287,10 +287,6 @@ module.exports = {
         if (diff === 0) {
           // Spot on!
           reward     = REWARD_EXACT;
-          userData = await User.findOne({ userId: user.id });
-          if (userData) {
-            xpResult = addXp(userData, 10);
-          }
           resultDesc =
             `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
         } else if (diff <= 5) {
@@ -311,8 +307,13 @@ module.exports = {
         // Add the Berries reward to the player's balance if they earned any.
         // These DB operations happen AFTER deferUpdate, so the 3-second
         // deadline is no longer a concern.
-        if (reward > 0 && userData) {
-          userData.balance += reward;
+        if (reward > 0) {
+          // Any successful Beli tier also earns the manga XP reward.
+          userData = await User.findOne({ userId: user.id });
+          if (userData) {
+            userData.balance += reward;
+            xpResult = addXp(userData, 10);
+          }
         }
         if (userData && xpResult) {
           resultDesc += `\n${formatXpReward(xpResult)}`;
