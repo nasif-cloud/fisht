@@ -1,19 +1,17 @@
 // ─────────────────────────────────────────────
 // LEVEL AND XP HELPERS
 // ─────────────────────────────────────────────
-// XP requirements start at 100 XP for level 1 → level 2, then grow
-// progressively. Level 20 needs about 1,000 XP for the next level.
+// XP requirements start at 150 XP for level 1 → level 2, then increase
+// by 5 XP for each subsequent level.
 
-const XP_PER_LEVEL_BASE = 100;
-const XP_PER_LEVEL_CURVE = 2.5;
+const XP_PER_LEVEL_BASE = 150;
+const XP_PER_LEVEL_INCREMENT = 5;
 const LEVEL_UP_BELI = 10_000;
 const LEVEL_UP_RESET_TOKENS = 3;
 
 function getXpForNextLevel(level) {
   const safeLevel = Math.max(1, Math.floor(Number(level) || 1));
-  return Math.round(
-    XP_PER_LEVEL_BASE + XP_PER_LEVEL_CURVE * ((safeLevel - 1) ** 2)
-  );
+  return XP_PER_LEVEL_BASE + XP_PER_LEVEL_INCREMENT * (safeLevel - 1);
 }
 
 function getLevelProgress(totalXp = 0) {
