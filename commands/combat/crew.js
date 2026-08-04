@@ -131,6 +131,180 @@ function getRankColor(rank) {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
+function hexToRgb(hex) {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return {
+    r: (value >> 16) & 0xff,
+    g: (value >> 8) & 0xff,
+    b: value & 0xff
+  };
+}
+
+function rgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function createSeededRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function getCardSeed(entry, layout) {
+  const name = entry?.card?.name || 'empty';
+  let seed = layout.x * 97 + layout.y * 53 + layout.size * 11;
+  for (let index = 0; index < name.length; index++) {
+    seed = (seed * 31 + name.charCodeAt(index)) >>> 0;
+  }
+  return seed >>> 0;
+}
+
+function drawBackgroundTexture(ctx) {
+  const texture = createSeededRandom(0x71eaf17);
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+
+  // Barely-visible flecks keep the charcoal surface from looking like a flat
+  // gradient while remaining quiet behind the card art.
+  for (let index = 0; index < 230; index++) {
+    const x = texture() * CANVAS_WIDTH;
+    const y = texture() * CANVAS_HEIGHT;
+    const radius = 0.25 + texture() * 0.9;
+    const opacity = 0.025 + texture() * 0.055;
+    ctx.fillStyle = `rgba(185, 195, 207, ${opacity})`;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.018)';
+  ctx.lineWidth = 1;
+  for (let index = 0; index < 22; index++) {
+    const y = 155 + texture() * 325;
+    const length = 18 + texture() * 74;
+    const x = texture() * (CANVAS_WIDTH - length);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + length, y + (texture() - 0.5) * 1.5);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawNeonSpill(ctx, layout, color, seed) {
+  const random = createSeededRandom(seed);
+  const centerX = layout.x + layout.size / 2;
+  const centerY = layout.y + layout.size / 2;
+  const radius = layout.size * 0.82;
+
+  ctx.save();
+  const spill = ctx.createRadialGradient(centerX, centerY, layout.size * 0.18, centerX, centerY, radius);
+  spill.addColorStop(0, rgba(color, 0.16));
+  spill.addColorStop(0.48, rgba(color, 0.07));
+  spill.addColorStop(1, rgba(color, 0));
+  ctx.fillStyle = spill;
+  ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+
+  // A few dust motes become visible only in the colored spill.
+  ctx.globalCompositeOperation = 'lighter';
+  for (let index = 0; index < 15; index++) {
+    const angle = random() * Math.PI * 2;
+    const distance = layout.size * (0.48 + random() * 0.5);
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+    const radius = 0.35 + random() * 1.05;
+    ctx.fillStyle = rgba(color, 0.07 + random() * 0.1);
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawNeonBorder(ctx, entry, layout) {
+  const color = entry ? getRankColor(entry.rank) : '#8f9bb7';
+  const { x, y, size, radius } = layout;
+  const path = () => roundedRectPath(ctx, x + 7, y + 7, size - 14, size - 14, radius - 5);
+  const seed = getCardSeed(entry, layout);
+  const random = createSeededRandom(seed);
+
+  // Wide, soft spill; the darker middle layer gives the tube a physical body.
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.shadowColor = rgba(color, 0.9);
+  ctx.shadowBlur = 28;
+  ctx.strokeStyle = rgba(color, 0.28);
+  ctx.lineWidth = 18;
+  path();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.shadowColor = rgba(color, 0.75);
+  ctx.shadowBlur = 13;
+  ctx.strokeStyle = rgba(color, 0.8);
+  ctx.lineWidth = 11;
+  path();
+  ctx.stroke();
+  ctx.restore();
+
+  // Dark saturated body and bright core keep this from reading as a flat
+  // white outline with a blur behind it.
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 7;
+  path();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.shadowColor = rgba('#ffffff', 0.8);
+  ctx.shadowBlur = 5;
+  ctx.strokeStyle = rgba('#ffffff', 0.72);
+  ctx.lineWidth = 2.3;
+  path();
+  ctx.stroke();
+
+  // Uneven highlight fragments break the perfect vector-tube appearance.
+  ctx.setLineDash([
+    9 + random() * 18,
+    48 + random() * 70,
+    4 + random() * 8,
+    80 + random() * 95
+  ]);
+  ctx.lineDashOffset = random() * 90;
+  ctx.strokeStyle = rgba('#ffffff', 0.3);
+  ctx.lineWidth = 1.15;
+  path();
+  ctx.stroke();
+  ctx.restore();
+
+  // Tiny glass/tube flaws: short warm marks sit on the core instead of
+  // adding another generic outer glow.
+  ctx.save();
+  ctx.strokeStyle = rgba('#fff4e8', 0.34);
+  ctx.lineWidth = 0.8;
+  ctx.lineCap = 'round';
+  const flawCount = 5;
+  for (let index = 0; index < flawCount; index++) {
+    const startX = x + 22 + random() * Math.max(10, size - 44);
+    const startY = y + 9 + random() * 5;
+    const length = 3 + random() * 10;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(startX + length, startY + (random() - 0.5) * 1.5);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 async function fetchImageBuffer(url) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), IMAGE_FETCH_TIMEOUT_MS);
@@ -215,27 +389,24 @@ async function loadShinyEmojiImage() {
 // so all network work can be done in parallel before any drawing starts.
 function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
   const { x, y, size, radius, innerPadding } = layout;
-  const borderColor = entry ? getRankColor(entry.rank) : '#8f9bb7';
   const cardName = entry?.card?.name || '';
 
   ctx.save();
-  ctx.fillStyle = '#f7f9ff';
+  ctx.fillStyle = '#252831';
+  ctx.shadowColor = entry ? rgba(getRankColor(entry.rank), 0.35) : 'rgba(0, 0, 0, 0.6)';
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 7;
   roundedRectPath(ctx, x, y, size, size, radius);
   ctx.fill();
   ctx.restore();
 
   ctx.save();
-  ctx.fillStyle = '#0b0b0b';
+  ctx.fillStyle = '#0b0c10';
   roundedRectPath(ctx, x + 9, y + 9, size - 18, size - 18, radius - 4);
   ctx.fill();
   ctx.restore();
 
-  ctx.save();
-  ctx.lineWidth = 8;
-  ctx.strokeStyle = borderColor;
-  roundedRectPath(ctx, x + 7, y + 7, size - 14, size - 14, radius - 5);
-  ctx.stroke();
-  ctx.restore();
+  drawNeonBorder(ctx, entry, layout);
 
   if (entry && sourceImage) {
     const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
@@ -258,7 +429,9 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
     const nameMaxWidth = innerSize - 12; // 6px padding each side
     const nameFontSize = fitFontSize(ctx, cardName, nameMaxWidth, 15);
     const labelHeight = nameFontSize + 14; // padding above and below text
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
+    ctx.fillStyle = 'rgba(3, 5, 9, 0.68)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+    ctx.shadowBlur = 5;
     roundedRectPath(ctx, innerX, innerY + innerSize - labelHeight, innerSize, labelHeight, 10);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
@@ -289,7 +462,7 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
     }
   } else {
     ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.045)';
     roundedRectPath(ctx, x + innerPadding, y + innerPadding, size - innerPadding * 2, size - innerPadding * 2, Math.max(10, radius - 12));
     ctx.fill();
     ctx.restore();
@@ -302,9 +475,14 @@ async function renderTeamImage(teamEntries, username) {
   const totalPower = getTeamTotalPower(teamEntries);
   const slots = getDisplaySlots(teamEntries);
 
-  // Keep the team card in the same black visual family as the profile card.
-  ctx.fillStyle = '#000000';
+  // Textured charcoal gives the neon something to illuminate.
+  const background = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+  background.addColorStop(0, '#111319');
+  background.addColorStop(0.52, '#191c22');
+  background.addColorStop(1, '#0f1116');
+  ctx.fillStyle = background;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBackgroundTexture(ctx);
 
   ctx.save();
   ctx.fillStyle = '#ffffff';
@@ -336,6 +514,20 @@ async function renderTeamImage(teamEntries, username) {
     middle: { x: 292, y: 190, size: 270, radius: 40, innerPadding: 15 },
     right:  { x: 599, y: 225, size: 215, radius: 34, innerPadding: 13 }
   };
+
+  for (const entryLayout of [layout.left, layout.middle, layout.right]) {
+    const entry = entryLayout === layout.left
+      ? slots[0]
+      : entryLayout === layout.middle
+        ? slots[1]
+        : slots[2];
+    drawNeonSpill(
+      ctx,
+      entryLayout,
+      entry ? getRankColor(entry.rank) : '#8f9bb7',
+      getCardSeed(entry, entryLayout)
+    );
+  }
 
   // Fetch all card images in parallel — one round-trip instead of three sequential ones.
   const [imgLeft, imgMiddle, imgRight, shinyEmojiImage] = await Promise.all([
