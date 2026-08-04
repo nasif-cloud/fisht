@@ -3,8 +3,8 @@ name: Team neon treatment
 description: Material rules for the team image borders and background
 ---
 
-Team visuals should keep the existing rectangular layout while using a textured charcoal surface, subtle rank-colored spill behind each card, layered neon border/core strokes, and small deterministic imperfections in the light.
+Team visuals should keep the existing rectangular layout while using a quiet charcoal surface, directional rank-colored spill behind each card, flat layered neon tube/core strokes, chamfered frames, and labels placed outside the artwork.
 
-**Why:** The user wants physical neon integrated into a dark room, not a generic outer-glow effect or an AI-looking redesign.
+**Why:** The user specifically rejected common AI-rendering patterns: stacked `shadowBlur`, particle/starfield backgrounds, rounded clip-plus-stroke cards, and pill labels over images.
 
-**How to apply:** Keep the light spill and surface texture restrained; preserve the bright inner core, darker tube body, soft halo, and minor highlight variation when adjusting borders or card presentation.
+**How to apply:** Keep the surface quiet, avoid particle fields and generic glow filters, retain the bright narrow core over a darker tube body, and keep copy/name captions in open wall space rather than on the card art.
