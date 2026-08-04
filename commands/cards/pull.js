@@ -7,8 +7,7 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 const User = require('../../models/user');
 const {
   addXp,
-  sendLevelUpNotifications,
-  formatXpReward
+  sendLevelUpNotifications
 } = require('../../utils/levels');
 
 // Shiny image generators — create the holographic card image and rank icon
@@ -331,9 +330,7 @@ module.exports = {
         ``,
         `**Health:** ${displayHealth}`,
         `**Power:** ${displayPower}`,
-        `**Speed:** ${displaySpeed}`,
-        ``,
-        formatXpReward(xpResult)
+        `**Speed:** ${displaySpeed}`
       ].join('\n'),
       thumbnail: { url: iconUrl },
       color: visualSettings.color,

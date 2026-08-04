@@ -177,17 +177,13 @@ module.exports = {
     const embedColor = coverAssets.dominantColor;
     const maskedCoverAttachment = buildCoverAttachment(coverAssets.maskedCover);
     const cleanCoverAttachment = buildCoverAttachment(coverAssets.cleanCover);
-    const xpResult = addXp(userData, 10);
-    await userData.save();
-    await sendLevelUpNotifications(user, userData, xpResult);
 
     // ── STEP 4: BUILD THE INITIAL EMBED ──
     const activeEmbed = new EmbedBuilder()
       .setTitle('Manga Challenge')
       .setDescription(
         "Guess the volume number. Press **Guess** when you're ready. " +
-        'Be quick, you only have `10 seconds`.\n\n' +
-        formatXpReward(xpResult)
+        'Be quick, you only have `10 seconds`.'
       )
       .setImage(`attachment://${MASKED_COVER_FILENAME}`)
       .setColor(embedColor);
@@ -270,7 +266,7 @@ module.exports = {
         if (isNaN(userAnswer)) {
           const wrongEmbed = new EmbedBuilder()
             .setTitle(`The answer was **${entry.answer}**, you answered **${rawAnswer}**.`)
-            .setDescription(`Better luck next time.\n\n${formatXpReward(xpResult)}`)
+            .setDescription('Better luck next time.')
             .setImage(`attachment://${MASKED_COVER_FILENAME}`)
             .setColor(embedColor);
           return submit.editReply({
@@ -286,10 +282,15 @@ module.exports = {
         // Decide the reward tier
         let reward = 0;
         let resultDesc;
+        let xpResult = null;
 
         if (diff === 0) {
           // Spot on!
           reward     = REWARD_EXACT;
+          userData = await User.findOne({ userId: user.id });
+          if (userData) {
+            xpResult = addXp(userData, 10);
+          }
           resultDesc =
             `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
         } else if (diff <= 5) {
@@ -311,17 +312,20 @@ module.exports = {
         // These DB operations happen AFTER deferUpdate, so the 3-second
         // deadline is no longer a concern.
         if (reward > 0 && userData) {
-          userData = await User.findOne({ userId: user.id }); // Re-fetch for fresh balance
-          if (userData) {
-            userData.balance += reward;
-            await userData.save();
-          }
+          userData.balance += reward;
+        }
+        if (userData && xpResult) {
+          resultDesc += `\n${formatXpReward(xpResult)}`;
+          await userData.save();
+          await sendLevelUpNotifications(user, userData, xpResult);
+        } else if (userData && reward > 0) {
+          await userData.save();
         }
 
         // Show the result embed — editReply is used because we already deferred
         const resultEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered **${userAnswer}**.`)
-          .setDescription(`${resultDesc}\n\n${formatXpReward(xpResult)}`)
+          .setDescription(resultDesc)
           .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setColor(embedColor);
 
@@ -336,7 +340,7 @@ module.exports = {
         // Show the same result format as a wrong answer (no reward).
         const timedEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
-          .setDescription(`Better luck next time.\n\n${formatXpReward(xpResult)}`)
+          .setDescription('Better luck next time.')
           .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setFooter({ text: `expired` })
           .setColor(embedColor);
@@ -356,7 +360,7 @@ module.exports = {
       // the player pressing Guess — treat as a wrong answer (same format, no reward).
       const timedEmbed = new EmbedBuilder()
         .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
-        .setDescription(`Better luck next time.\n\n${formatXpReward(xpResult)}`)
+        .setDescription('Better luck next time.')
         .setImage(`attachment://${MASKED_COVER_FILENAME}`)
         .setFooter({ text: `expired` })
         .setColor(embedColor);

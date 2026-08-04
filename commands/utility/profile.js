@@ -6,13 +6,12 @@
 
 const {
   SlashCommandBuilder,
-  AttachmentBuilder,
-  EmbedBuilder
+  AttachmentBuilder
 } = require('discord.js');
 
 const User = require('../../models/user');
 const { getLevelProgress } = require('../../utils/levels');
-const { renderProfileCard, getProfileColor } = require('../../utils/profileCard');
+const { renderProfileCard } = require('../../utils/profileCard');
 
 async function getGlobalRank(userData) {
   const xp = Math.max(0, Number(userData?.xp) || 0);
@@ -58,13 +57,7 @@ module.exports = {
       globalRank
     });
 
-    const profileEmbed = new EmbedBuilder()
-      .setColor(getProfileColor(progress.level))
-      .setTitle(`${target.username}'s Profile`)
-      .setImage('attachment://profile.png');
-
     const payload = {
-      embeds: [profileEmbed],
       files: [new AttachmentBuilder(image, { name: 'profile.png' })]
     };
 

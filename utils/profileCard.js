@@ -4,11 +4,22 @@
 // This draws the profile card as one image so the layout stays the same in
 // both prefix and slash command replies.
 
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const path = require('node:path');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
-const PROFILE_WIDTH = 1000;
-const PROFILE_HEIGHT = 420;
-const PROFILE_FONT = 'DejaVu Sans';
+const PROFILE_WIDTH = 1024;
+const PROFILE_HEIGHT = 360;
+const PROFILE_FONT = 'Luckiest Guy';
+const PROFILE_FONT_PATH = path.join(
+  __dirname,
+  '..',
+  'attached_assets',
+  'LuckiestGuy-Regular.ttf'
+);
+
+// Register the rounded display font used by the supplied profile reference.
+// Registration is safe to repeat when the command module is reloaded.
+GlobalFonts.registerFromPath(PROFILE_FONT_PATH, PROFILE_FONT);
 
 function roundedRectPath(ctx, x, y, width, height, radius) {
   const r = Math.min(radius, width / 2, height / 2);
@@ -22,11 +33,7 @@ function roundedRectPath(ctx, x, y, width, height, radius) {
 }
 
 function getProfileColor(level) {
-  if (level >= 20) return '#f2c14e';
-  if (level >= 15) return '#c084fc';
-  if (level >= 10) return '#60a5fa';
-  if (level >= 5) return '#4ade80';
-  return '#aeb8cc';
+  return '#ffffff';
 }
 
 async function fetchAvatar(avatarUrl) {
@@ -54,18 +61,15 @@ async function renderProfileCard({
   const accent = getProfileColor(level);
   const avatar = await fetchAvatar(avatarUrl);
 
-  // Dark background with a simple accent border inspired by the card layout.
-  ctx.fillStyle = '#08152f';
+  // The reference is a clean, borderless black profile card.
+  ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, PROFILE_WIDTH, PROFILE_HEIGHT);
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 6;
-  roundedRectPath(ctx, 5, 5, PROFILE_WIDTH - 10, PROFILE_HEIGHT - 10, 28);
-  ctx.stroke();
 
-  // Profile picture position: a large circular portrait on the left.
-  const avatarCenterX = 150;
-  const avatarCenterY = 190;
-  const avatarRadius = 96;
+  // The avatar sits in the visual center, with the thin white circular
+  // outline shown in the reference image.
+  const avatarCenterX = 512;
+  const avatarCenterY = 126;
+  const avatarRadius = 62;
   ctx.save();
   ctx.beginPath();
   ctx.arc(avatarCenterX, avatarCenterY, avatarRadius, 0, Math.PI * 2);
@@ -79,7 +83,7 @@ async function renderProfileCard({
       avatarRadius * 2
     );
   } else {
-    ctx.fillStyle = '#253454';
+    ctx.fillStyle = '#262626';
     ctx.fillRect(
       avatarCenterX - avatarRadius,
       avatarCenterY - avatarRadius,
@@ -87,62 +91,67 @@ async function renderProfileCard({
       avatarRadius * 2
     );
     ctx.fillStyle = '#ffffff';
-    ctx.font = `700 64px "${PROFILE_FONT}"`;
+    ctx.font = `400 54px "${PROFILE_FONT}"`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText((username || '?').slice(0, 1).toUpperCase(), avatarCenterX, avatarCenterY);
   }
   ctx.restore();
 
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 8;
+  ctx.strokeStyle = '#f0f0f0';
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.arc(avatarCenterX, avatarCenterY, avatarRadius + 5, 0, Math.PI * 2);
+  ctx.arc(avatarCenterX, avatarCenterY, avatarRadius + 3, 0, Math.PI * 2);
   ctx.stroke();
 
-  const contentX = 300;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
+  // Rank and level are placed above the avatar, matching the reference.
   ctx.fillStyle = '#ffffff';
-  ctx.font = `700 42px "${PROFILE_FONT}"`;
-  ctx.fillText(username || 'Unknown user', contentX, 100);
+  ctx.font = `400 31px "${PROFILE_FONT}"`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  ctx.fillText(`RANK #${globalRank}`, 110, 68);
 
-  ctx.fillStyle = accent;
-  ctx.font = `700 34px "${PROFILE_FONT}"`;
-  ctx.fillText(`LEVEL ${level}`, contentX, 154);
+  ctx.textAlign = 'right';
+  ctx.fillText(`LEVEL ${level}`, 910, 68);
 
-  ctx.fillStyle = '#b7c3d9';
+  // The username sits under the avatar on the left.
+  ctx.textAlign = 'left';
+  ctx.font = `400 43px "${PROFILE_FONT}"`;
+  ctx.fillText(username || 'Unknown user', 110, 244);
+
+  // Keep the XP text above the right end of the bar, as in the reference.
+  const xpText = `${formatCompactNumber(currentXp)} / ${formatCompactNumber(xpNeeded)} XP`;
+  const xpRemaining = Math.max(0, xpNeeded - currentXp);
+  ctx.textAlign = 'right';
   ctx.font = `400 25px "${PROFILE_FONT}"`;
-  ctx.fillText(`Global rank  #${globalRank}`, contentX, 198);
+  ctx.fillText(xpText, 885, 244);
+  ctx.font = `400 14px "${PROFILE_FONT}"`;
+  ctx.fillText(`${formatCompactNumber(xpRemaining)} XP TO NEXT LEVEL`, 885, 260);
 
-  // XP bar: progress is based on the XP needed for the current level.
-  const barX = contentX;
-  const barY = 245;
-  const barWidth = 635;
-  const barHeight = 30;
+  // XP bar: a light progress fill over a dark rounded track.
+  const barX = 113;
+  const barY = 275;
+  const barWidth = 773;
+  const barHeight = 25;
   const progress = xpNeeded > 0 ? Math.min(1, currentXp / xpNeeded) : 0;
-  ctx.fillStyle = '#1c2b4a';
-  roundedRectPath(ctx, barX, barY, barWidth, barHeight, 15);
+  ctx.fillStyle = '#202020';
+  roundedRectPath(ctx, barX, barY, barWidth, barHeight, 13);
   ctx.fill();
   if (progress > 0) {
-    ctx.fillStyle = accent;
+    ctx.fillStyle = '#eeeeee';
     roundedRectPath(ctx, barX, barY, Math.max(barHeight, barWidth * progress), barHeight, 15);
     ctx.fill();
   }
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `700 24px "${PROFILE_FONT}"`;
-  ctx.fillText(`${currentXp.toLocaleString('en-US')} / ${xpNeeded.toLocaleString('en-US')} XP`, barX, 315);
-
-  ctx.fillStyle = '#b7c3d9';
-  ctx.font = `400 23px "${PROFILE_FONT}"`;
-  ctx.fillText(
-    `${(xpNeeded - currentXp).toLocaleString('en-US')} XP to next level`,
-    barX,
-    355
-  );
-
   return canvas.toBuffer('image/png');
+}
+
+function formatCompactNumber(value) {
+  const number = Math.max(0, Number(value) || 0);
+  if (number >= 1000) {
+    return `${(number / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+  }
+  return number.toLocaleString('en-US');
 }
 
 module.exports = {
