@@ -18,7 +18,7 @@ const {
   isTeamDefeated
 } = require('../../utils/duel');
 
-const ACCEPT_TIMEOUT_MS = 30000;
+const ACCEPT_TIMEOUT_MS = 60000;
 const ROUND_TIMEOUT_MS = 30000;
 const activeUsers = new Set();
 
@@ -94,8 +94,8 @@ function buildRequestPayload(challenger, target) {
 
 function buildCardSection(card) {
   return {
-    type: 9,
-    components: [{ type: 10, content: formatCardLine(card) }]
+    type: 10,
+    content: formatCardLine(card)
   };
 }
 
@@ -113,19 +113,24 @@ function buildButtonRow(duelId, playerId, team, selected) {
 }
 
 function buildPlayerComponents(duelId, player, selected) {
-  const components = [
-    {
+  const components = [];
+
+  if (player.avatarUrl) {
+    components.push({
       type: 9,
       components: [{ type: 10, content: `## **${player.username}**` }],
-      accessory: player.avatarUrl
-        ? {
-            type: 11,
-            media: { url: player.avatarUrl },
-            description: `${player.username}'s avatar`
-          }
-        : undefined
-    }
-  ];
+      accessory: {
+        type: 11,
+        media: { url: player.avatarUrl },
+        description: `${player.username}'s avatar`
+      }
+    });
+  } else {
+    components.push({
+      type: 10,
+      content: `## **${player.username}**`
+    });
+  }
 
   for (const card of player.team) {
     components.push(buildCardSection(card));
