@@ -18,20 +18,100 @@ const SHOP_BACKGROUND_PATH = path.join(
   'Joy_journey_Shop_20260804_020137_0000_1785823860066.png'
 );
 
-const EMOJI_SIZE = 180;
+// The uploaded 512px meat asset has transparent margins; this larger draw box
+// makes the visible drumstick match the scale of the reference chest artwork.
+const ICON_SIZE = 360;
 const EMOJI_URL = item =>
   `https://cdn.discordapp.com/emojis/${item.emojiId}.png?size=256&quality=lossless`;
 
 // The four positions follow the supplied 2x2 layout: top-left, top-right,
 // bottom-left, then bottom-right.
 const SLOT_POSITIONS = [
-  { centerX: 480, centerY: 315, titleX: 480, titleY: 610, priceX: 820, priceY: 126 },
-  { centerX: 1485, centerY: 315, titleX: 1485, titleY: 610, priceX: 1820, priceY: 126 },
-  { centerX: 480, centerY: 1015, titleX: 480, titleY: 1310, priceX: 820, priceY: 826 },
-  { centerX: 1485, centerY: 1015, titleX: 1485, titleY: 1310, priceX: 1820, priceY: 826 }
+  {
+    iconX: 480, iconY: 320,
+    titleX: 480, titleY: 610, titleAngle: -0.12,
+    priceX: 860, priceY: 112
+  },
+  {
+    iconX: 1485, iconY: 320,
+    titleX: 1485, titleY: 610, titleAngle: -0.12,
+    priceX: 1865, priceY: 112
+  },
+  {
+    iconX: 480, iconY: 1020,
+    titleX: 480, titleY: 1310, titleAngle: -0.12,
+    priceX: 860, priceY: 812
+  },
+  {
+    iconX: 1485, iconY: 1020,
+    titleX: 1485, titleY: 1310, titleAngle: -0.12,
+    priceX: 1865, priceY: 812
+  }
 ];
 
 GlobalFonts.registerFromPath(SHOP_FONT_PATH, SHOP_FONT);
+
+function removeOuterWhite(image) {
+  const canvas = createCanvas(image.width, image.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, image.width, image.height);
+  const pixels = imageData.data;
+  const width = image.width;
+  const height = image.height;
+  const visited = new Uint8Array(width * height);
+  const queue = [];
+
+  const isBackground = index =>
+    pixels[index] > 235 &&
+    pixels[index + 1] > 235 &&
+    pixels[index + 2] > 235 &&
+    pixels[index + 3] > 0;
+
+  const enqueue = (x, y) => {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    const point = y * width + x;
+    if (visited[point]) return;
+    visited[point] = 1;
+    const index = point * 4;
+    if (!isBackground(index)) return;
+    queue.push(point);
+  };
+
+  for (let x = 0; x < width; x++) {
+    enqueue(x, 0);
+    enqueue(x, height - 1);
+  }
+  for (let y = 1; y < height - 1; y++) {
+    enqueue(0, y);
+    enqueue(width - 1, y);
+  }
+
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    const point = queue[cursor];
+    const x = point % width;
+    const y = Math.floor(point / width);
+    pixels[point * 4 + 3] = 0;
+    enqueue(x - 1, y);
+    enqueue(x + 1, y);
+    enqueue(x, y - 1);
+    enqueue(x, y + 1);
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return loadImage(canvas.toBuffer('image/png'));
+}
+
+async function loadLocalIcon(item) {
+  if (!item?.iconPath) return null;
+
+  try {
+    return removeOuterWhite(await loadImage(path.join(__dirname, '..', item.iconPath)));
+  } catch {
+    return null;
+  }
+}
 
 async function loadItemEmoji(item) {
   if (!item?.emojiId) return null;
@@ -43,6 +123,10 @@ async function loadItemEmoji(item) {
   } catch {
     return null;
   }
+}
+
+async function loadItemIcon(item) {
+  return (await loadLocalIcon(item)) || loadItemEmoji(item);
 }
 
 function fitText(ctx, text, maxWidth, maxSize) {
@@ -65,14 +149,14 @@ async function renderShopImage() {
     const position = SLOT_POSITIONS[index];
     if (!position) break;
 
-    const emoji = await loadItemEmoji(item);
-    if (emoji) {
+    const icon = await loadItemIcon(item);
+    if (icon) {
       ctx.drawImage(
-        emoji,
-        position.centerX - EMOJI_SIZE / 2,
-        position.centerY - EMOJI_SIZE / 2,
-        EMOJI_SIZE,
-        EMOJI_SIZE
+        icon,
+        position.iconX - ICON_SIZE / 2,
+        position.iconY - ICON_SIZE / 2,
+        ICON_SIZE,
+        ICON_SIZE
       );
     }
 
@@ -81,7 +165,11 @@ async function renderShopImage() {
     ctx.fillStyle = '#0b0b0b';
     const titleSize = fitText(ctx, item.name, 650, 74);
     ctx.font = `400 ${titleSize}px "${SHOP_FONT}"`;
-    ctx.fillText(item.name, position.titleX, position.titleY);
+    ctx.save();
+    ctx.translate(position.titleX, position.titleY);
+    ctx.rotate(position.titleAngle || 0);
+    ctx.fillText(item.name, 0, 0);
+    ctx.restore();
 
     const priceText = `${(item.price / 1000).toFixed(item.price % 1000 === 0 ? 0 : 1)}k`;
     const priceSize = fitText(ctx, priceText, 260, 58);

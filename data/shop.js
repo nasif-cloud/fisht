@@ -8,6 +8,7 @@ module.exports = [
     price: 2500,
     inventoryField: 'resetTokens',
     amountPerPurchase: 1,
+    iconPath: 'attached_assets/1000055308_21a76babc7b4a794951f2c9b8935764b_-_Edited_20260804__1785824606170.png',
     emojiName: 'meatrbg',
     emojiId: '1532524176701657248'
   }
