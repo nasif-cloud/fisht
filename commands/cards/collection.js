@@ -385,6 +385,21 @@ module.exports = {
         .setRequired(false)
          .setAutocomplete(true)
      )
+    .addStringOption(option =>
+      option
+        .setName('rank')
+        .setDescription('Show only cards of a specific rank')
+        .setRequired(false)
+        .addChoices(
+          { name: 'UR', value: 'UR' },
+          { name: 'SS', value: 'SS' },
+          { name: 'S', value: 'S' },
+          { name: 'A', value: 'A' },
+          { name: 'B', value: 'B' },
+          { name: 'C', value: 'C' },
+          { name: 'D', value: 'D' }
+        )
+    )
     .addBooleanOption(option =>
       option
         .setName('shiny')
@@ -408,16 +423,18 @@ module.exports = {
     // ── STEP 1: Read slash options ──
     let slashSort = null;
     let slashCard = null;
+    let slashRank = null;
     let slashShiny = false;
 
     if (isSlash) {
       slashSort = interactionOrMessage.options.getString('sort');
       slashCard = interactionOrMessage.options.getString('card');
+      slashRank = interactionOrMessage.options.getString('rank');
       slashShiny = interactionOrMessage.options.getBoolean('shiny') ?? false;
 
-      if (slashCard && slashSort) {
+      if (slashCard && (slashSort || slashRank)) {
         return interactionOrMessage.reply({
-          content: 'You cannot use **card** together with **sort**. Pick one.',
+          content: 'You cannot use **card** together with **sort** or **rank**. Pick one.',
           flags: 64
         });
       }
@@ -466,10 +483,15 @@ module.exports = {
     let isSearchMode = false;
     let searchEntry  = null;
 
-    const getFilteredList = () =>
-      isShinyFilter
-        ? ownedList.filter(entry => entry.isShiny)
-        : ownedList;
+    const getFilteredList = () => ownedList.filter(entry => {
+      if (isShinyFilter && !entry.isShiny) return false;
+      if (slashRank) {
+        const cardData = getCardData(entry.card, entry.mastery ?? 1);
+        const rank = safeRank(cardData.rank || entry.card.rank);
+        if (rank !== slashRank) return false;
+      }
+      return true;
+    });
 
     let sortedList = sortOwnedCards(getFilteredList(), sortMode, isAscending);
 
