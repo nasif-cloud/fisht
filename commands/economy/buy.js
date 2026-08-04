@@ -102,9 +102,11 @@ module.exports = {
         : interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
     }
 
-    // The balance predicate and increment happen in one MongoDB operation,
-    // preventing concurrent purchases from spending the same Berries twice.
-    const updatedUser = await User.findOneAndUpdate(
+    // Use the native collection for this mutation. The User schema's
+    // non-negative setter is correct for normal document saves, but applying
+    // it to a negative $inc would turn the Berry deduction into zero while
+    // still allowing the item increment through.
+    const purchaseResult = await User.collection.updateOne(
       { userId: user.id, balance: { $gte: totalCost } },
       {
         $inc: {
@@ -112,10 +114,9 @@ module.exports = {
           [item.inventoryField]: item.amountPerPurchase * amount
         }
       },
-      { new: true }
     );
 
-    if (!updatedUser) {
+    if (purchaseResult.matchedCount !== 1) {
       const currentUser = await User.findOne({ userId: user.id });
       const balance = Number(currentUser?.balance) || 0;
       const content =
@@ -125,6 +126,8 @@ module.exports = {
         ? interactionOrMessage.reply({ content, flags: 64 })
         : interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
     }
+
+    const updatedUser = await User.findOne({ userId: user.id });
 
     if (isSlash) {
       return interactionOrMessage.reply({
