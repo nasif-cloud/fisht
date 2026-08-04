@@ -3,7 +3,7 @@ name: Shop inventory
 description: Rules for adding and purchasing shop items
 ---
 
-Shop entries are defined in one data file and the same entries generate the slash purchase choices. The shop display is a finished still image attached directly by the shop command. Purchases deduct Berries atomically while granting the configured inventory field.
+Shop entries are defined in one data file and the same entries generate the slash purchase choices. The shop display is a finished still image attached directly by the shop command. The current Meat purchase grants the user's `meat` resource, not `resetTokens`; purchases deduct Berries atomically while granting the configured inventory field.
 
 **Why:** New shop items should not require separate renderer, command-choice, or purchase-logic edits, and concurrent purchases must not allow a player to overspend.
 

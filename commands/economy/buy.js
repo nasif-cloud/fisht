@@ -130,7 +130,9 @@ module.exports = {
       return interactionOrMessage.reply({
         content:
           `You bought **${amount}x ${item.name}** for **${formatCost(totalCost)}** ` +
-          `<:money:1532532493578928178>`,
+          `<:money:1532532493578928178> Berries.\n` +
+          `You now have **${formatCost(updatedUser.balance)}** Berries and ` +
+          `**${updatedUser[item.inventoryField].toLocaleString('en-US')}** ${item.name}.`,
         flags: 64
       });
     }

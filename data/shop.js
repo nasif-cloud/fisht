@@ -6,7 +6,7 @@ module.exports = [
     name: 'Meat',
     aliases: ['meat', 'reset token', 'reset_token', 'token'],
     price: 2500,
-    inventoryField: 'resetTokens',
+    inventoryField: 'meat',
     amountPerPurchase: 1
   }
 ];
