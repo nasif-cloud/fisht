@@ -36,6 +36,7 @@ const {
   sendLevelUpNotifications,
   formatXpReward
 } = require('../../utils/levels');
+const { updateQuestProgress } = require('../../utils/quests');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -163,6 +164,7 @@ module.exports = {
     // first save completes can't bypass the cooldown.
     if (userData) {
       userData.lastMangaClaim = new Date();
+      updateQuestProgress(userData, 'manga_play', 1);
       await userData.save();
     }
 
@@ -311,6 +313,9 @@ module.exports = {
           userData = await User.findOne({ userId: user.id });
           if (userData) {
             userData.balance += reward;
+            if (diff === 0) {
+              updateQuestProgress(userData, 'manga_correct', 1);
+            }
             xpResult = addXp(userData, 10);
           }
         }

@@ -9,6 +9,7 @@ const {
   addXp,
   sendLevelUpNotifications
 } = require('../../utils/levels');
+const { updateQuestProgress } = require('../../utils/quests');
 
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
@@ -286,6 +287,7 @@ module.exports = {
     // ── STEP 8: Save everything to the database ──
     userData.pullsUsed   += 1;
     userData.lastPullTime = now;
+    updateQuestProgress(userData, 'pull', 1);
     const xpResult = addXp(userData, 1);
     await userData.save(); // Writes all the changes above to MongoDB
     await sendLevelUpNotifications(user, userData, xpResult);

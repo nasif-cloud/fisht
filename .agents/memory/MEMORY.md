@@ -4,3 +4,4 @@
 - [Leaderboard metrics](leaderboard-metrics.md) — team-power rankings reuse the effective boosted card power used by the team renderer
 - [Team neon treatment](team-neon-treatment.md) — preserve textured charcoal, rank-colored light spill, layered cores, and restrained imperfections
 - [Shiny filter behavior](shiny-filter-behavior.md) — shiny toggles must narrow the source list and pagination to shiny-owned entries only
+- [Daily quests](daily-quests.md) — quests are per-user random daily assignments with shared progress hooks and grouped reset notifications

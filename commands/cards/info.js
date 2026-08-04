@@ -4,6 +4,8 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 // Card data and helper functions from the central card library
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
+const User = require('../../models/user');
+const { updateQuestProgress } = require('../../utils/quests');
 
 
 module.exports = {
@@ -67,6 +69,12 @@ module.exports = {
 
     if (!foundCard) {
       return interactionOrMessage.reply({ content: `**${query}** is not a valid card`, allowedMentions: { repliedUser: false } });
+    }
+
+    const userData = await User.findOne({ userId: user.id });
+    if (userData) {
+      updateQuestProgress(userData, 'info', 1);
+      await userData.save();
     }
 
     // --- STEP 3: Set up the mastery tracker ---

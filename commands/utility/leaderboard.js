@@ -19,6 +19,7 @@ const {
 } = require('../../data/cards');
 const { computeBoosts } = require('../../utils/boosts');
 const { getLevelProgress } = require('../../utils/levels');
+const { updateQuestProgress } = require('../../utils/quests');
 
 const PAGE_SIZE = 10;
 const MAX_ENTRIES = 100;
@@ -268,6 +269,12 @@ module.exports = {
     const client = interactionOrMessage.client;
     let mode = isSlash ? interactionOrMessage.options.getString('by') || 'cards' : parsePrefixMode(args);
     let page = 0;
+
+    const viewerData = await User.findOne({ userId: user.id });
+    if (viewerData) {
+      updateQuestProgress(viewerData, 'leaderboard', 1);
+      await viewerData.save();
+    }
 
     const allUsers = await User.find({}).lean();
     let view = await buildView(client, allUsers, user.id, mode, page);

@@ -34,6 +34,7 @@ const {
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
+const { updateQuestProgress } = require('../../utils/quests');
 
 // Stat boost calculator — applies copies boost (0.3%/copy) and shiny boost (30%)
 const { computeBoosts } = require('../../utils/boosts');
@@ -440,6 +441,11 @@ module.exports = {
         mastery: entry.mastery ?? 1,
         isShiny: entry.shiny ?? false
       });
+    }
+
+    if (userData) {
+      updateQuestProgress(userData, 'collection', 1);
+      await userData.save();
     }
 
     if (ownedList.length === 0) {

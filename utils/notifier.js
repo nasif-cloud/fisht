@@ -10,6 +10,7 @@
 // get spammed when the bot restarts.
 
 const User = require('../models/user');
+const { ensureDailyQuests } = require('./quests');
 
 // ─────────────────────────────────────────────
 // EASTERN TIME DATE HELPERS
@@ -106,6 +107,11 @@ async function tryDM(client, userId, content) {
   }
 }
 
+async function tryGroupedDM(client, userId, messages) {
+  if (!messages.length) return;
+  await tryDM(client, userId, messages.join('\n\n'));
+}
+
 // ─────────────────────────────────────────────
 // CORE CHECK — runs every 60 seconds
 // ─────────────────────────────────────────────
@@ -117,53 +123,67 @@ async function checkAndNotify(client) {
   const now = new Date();
 
   try {
-    // ── PULL RESET CHECK ──
+    // ── RESET CHECKS ──
     // Find any pull reset times that happened between the last check and now
     const newPullResets = getResetCandidates(now, PULL_RESET_TIMES).filter(t =>
       t > lastCheckedAt && t <= now && !notifiedPullResets.has(t.toISOString())
     );
-
-    for (const resetTime of newPullResets) {
-      // Mark this reset as handled FIRST so a slow DB query can't cause double-sends
-      notifiedPullResets.add(resetTime.toISOString());
-
-      // Find every player who opted in AND has actually pulled before.
-      // Players who have never pulled don't need a "pulls are ready" DM.
-      const users = await User.find({
-        dmPullsReady:  true,
-        lastPullTime:  { $ne: null }  // $ne means "not equal to" — i.e. has pulled at least once
-      }).lean(); // .lean() returns plain JS objects instead of Mongoose documents — faster for reads
-
-      console.log(`[Notifier] Pull reset at ${resetTime.toISOString()} — DMing ${users.length} users`);
-
-      for (const user of users) {
-        await tryDM(client, user.userId, 'Your pulls have been refreshed. Start pulling with `pull`');
-
-        // Small pause between DMs to stay well under Discord's rate limits.
-        // Without this, sending hundreds of DMs at once could cause errors.
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
 
     // ── DAILY RESET CHECK ──
     const newDailyResets = getResetCandidates(now, DAILY_RESET_TIMES).filter(t =>
       t > lastCheckedAt && t <= now && !notifiedDailyResets.has(t.toISOString())
     );
 
+    // Pull and daily reset at 10:30 PM ET are one event for notifications.
+    // Handle that pull reset in the grouped daily notification below.
+    const dailyResetKeys = new Set(newDailyResets.map(reset => reset.toISOString()));
+    for (const resetTime of newPullResets) {
+      if (dailyResetKeys.has(resetTime.toISOString())) continue;
+
+      notifiedPullResets.add(resetTime.toISOString());
+      const users = await User.find({
+        dmPullsReady: true,
+        lastPullTime: { $ne: null }
+      }).lean();
+
+      console.log(`[Notifier] Pull reset at ${resetTime.toISOString()} — DMing ${users.length} users`);
+      for (const user of users) {
+        await tryGroupedDM(client, user.userId, [
+          'Your pulls have been refreshed. Start pulling with `pull`'
+        ]);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
     for (const resetTime of newDailyResets) {
       notifiedDailyResets.add(resetTime.toISOString());
+      const resetKey = resetTime.toISOString();
+      if (newPullResets.some(pullReset => pullReset.toISOString() === resetKey)) {
+        notifiedPullResets.add(resetKey);
+      }
 
-      // Find every player who opted in AND has claimed their daily at least once.
-      // Brand-new players who have never claimed don't need a "daily is ready" DM.
-      const users = await User.find({
-        dmDailyReady:   true,
-        lastDailyClaim: { $ne: null }
-      }).lean();
+      // Assign the same reset window's random quests before sending the
+      // notification. This also makes the quest page ready after a restart.
+      const users = await User.find({});
 
       console.log(`[Notifier] Daily reset at ${resetTime.toISOString()} — DMing ${users.length} users`);
 
       for (const user of users) {
-        await tryDM(client, user.userId, 'Your daily is ready. Claim it with `daily`');
+        ensureDailyQuests(user, now);
+        await user.save();
+
+        const messages = [];
+        if (user.dmDailyReady && user.lastDailyClaim) {
+          messages.push('Your daily is ready. Claim it with `daily`');
+        }
+        if (user.dmPullsReady && user.lastPullTime) {
+          messages.push('Your pulls have been refreshed. Start pulling with `pull`');
+        }
+        if (user.dmQuestsReady !== false) {
+          messages.push('Your daily quests are ready. View them with `quests`');
+        }
+
+        await tryGroupedDM(client, user.userId, messages);
         await new Promise(r => setTimeout(r, 100));
       }
     }

@@ -97,7 +97,21 @@ const userSchema = new mongoose.Schema({
   dmPullsReady: { type: Boolean, default: true },
 
   // If true, the bot will DM this user whenever they reach a new level.
-  dmLevelUp: { type: Boolean, default: true }
+  dmLevelUp: { type: Boolean, default: true },
+
+  // If true, the bot will DM this user when their daily quests refresh.
+  dmQuestsReady: { type: Boolean, default: true },
+
+  // The three randomly assigned quests for the current daily reset window.
+  dailyQuests: [{
+    id: { type: String, required: true },
+    label: { type: String, required: true },
+    progressType: { type: String, required: true },
+    target: { type: Number, required: true, min: 1 },
+    progress: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+    claimed: { type: Boolean, default: false }
+  }],
+  dailyQuestsResetAt: { type: Date, default: null }
 
 });
 

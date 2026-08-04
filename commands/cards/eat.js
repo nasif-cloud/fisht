@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 
 // User model to read/update meat count and pull tracking
 const User = require('../../models/user');
+const { updateQuestProgress } = require('../../utils/quests');
 
 // ─────────────────────────────────────────────
 // CONFIGURATION
@@ -122,6 +123,7 @@ module.exports = {
     // ── STEP 4: Consume the Meat and reset pulls ──
     userData.meat      -= EAT_COST;  // Deduct 1 meat
     userData.pullsUsed  = 0;         // Reset pulls back to 0 (player gets a fresh window)
+    updateQuestProgress(userData, 'eat', 1);
     await userData.save();
 
     // ── STEP 5: Confirm success ──

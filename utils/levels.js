@@ -8,6 +8,7 @@ const XP_PER_LEVEL_BASE = 150;
 const XP_PER_LEVEL_INCREMENT = 5;
 const LEVEL_UP_BELI = 10_000;
 const LEVEL_UP_RESET_TOKENS = 3;
+const { updateQuestProgress } = require('./quests');
 
 function getXpForNextLevel(level) {
   const safeLevel = Math.max(1, Math.floor(Number(level) || 1));
@@ -44,6 +45,7 @@ function addXp(userData, amount) {
   const safeAmount = Math.max(0, Math.floor(Number(amount) || 0));
 
   userData.xp = Math.max(0, Number(userData.xp) || 0) + safeAmount;
+  updateQuestProgress(userData, 'xp', safeAmount);
 
   const after = getLevelProgress(userData.xp);
   const levelsGained = Math.max(0, after.level - before.level);

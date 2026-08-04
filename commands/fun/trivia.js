@@ -27,6 +27,7 @@ const {
   sendLevelUpNotifications,
   formatXpReward
 } = require('../../utils/levels');
+const { updateQuestProgress } = require('../../utils/quests');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -103,6 +104,7 @@ module.exports = {
     // Stamp the cooldown before anything else so rapid re-runs can't slip through.
     if (userData) {
       userData.lastTriviaClaim = new Date();
+      updateQuestProgress(userData, 'trivia_play', 1);
       await userData.save();
     }
 
@@ -175,6 +177,7 @@ module.exports = {
         userData = await User.findOne({ userId: user.id }); // Re-fetch for fresh balance
         if (userData) {
           userData.balance += REWARD;
+          updateQuestProgress(userData, 'trivia_correct', 1);
           xpResult = addXp(userData, 10);
           await userData.save();
           await sendLevelUpNotifications(user, userData, xpResult);
