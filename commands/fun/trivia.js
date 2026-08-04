@@ -22,6 +22,11 @@ const {
 
 const triviaPool = require('../../data/trivia');
 const User       = require('../../models/user');
+const {
+  addXp,
+  sendLevelUpNotifications,
+  formatXpReward
+} = require('../../utils/levels');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -79,6 +84,9 @@ module.exports = {
 
     // ── STEP 1: COOLDOWN CHECK ──
     let userData = await User.findOne({ userId: user.id });
+    if (!userData) {
+      userData = new User({ userId: user.id });
+    }
 
     if (userData?.lastTriviaClaim) {
       const elapsed   = Date.now() - userData.lastTriviaClaim.getTime();
@@ -100,6 +108,9 @@ module.exports = {
 
     // ── STEP 3: PICK A RANDOM QUESTION ──
     const entry = triviaPool[Math.floor(Math.random() * triviaPool.length)];
+    const xpResult = addXp(userData, 10);
+    await userData.save();
+    await sendLevelUpNotifications(user, userData, xpResult);
 
     // Shuffle the options so the correct answer isn't always in the same slot.
     // We track the correct answer by its text, not its position.
@@ -111,7 +122,7 @@ module.exports = {
       .setTitle('Vegapunk\'s Trivia Challenge')
       .setDescription(entry.question)
       .setThumbnail(THUMBNAIL_URL)
-      .setFooter({ text: `Answer correctly for ${REWARD} berries, You have 10 seconds.` })
+      .setFooter({ text: `Answer correctly for ${REWARD} berries and 10 XP, You have 10 seconds.` })
       .setColor(COLOR_NEUTRAL);
 
     // ── STEP 5: BUILD THE GREY ANSWER BUTTONS ──
@@ -173,8 +184,10 @@ module.exports = {
       // Build the result embed
       const resultDesc = isCorrect
         ? `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\n` +
-          `<:whitearrow:1532531439445344547> You received **${REWARD}** <:money:1532532493578928178>`
-        : `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\nBetter luck next time.`;
+          `<:whitearrow:1532531439445344547> You received **${REWARD}** <:money:1532532493578928178>\n` +
+          formatXpReward(xpResult)
+        : `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\n` +
+          `Better luck next time.\n${formatXpReward(xpResult)}`;
 
       const resultEmbed = new EmbedBuilder()
         .setTitle('Vegapunk\'s Trivia Challenge')
@@ -191,7 +204,8 @@ module.exports = {
 
       // Time ran out — treat as a wrong answer (no reward)
       const timeoutDesc =
-        `The answer was **${correctAnswer}**, you answered nothing.\n\nBetter luck next time.`;
+        `The answer was **${correctAnswer}**, you answered nothing.\n\n` +
+        `Better luck next time.\n${formatXpReward(xpResult)}`;
 
       const timeoutEmbed = new EmbedBuilder()
         .setTitle('Vegapunk\'s Trivia Challenge')

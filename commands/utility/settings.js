@@ -9,6 +9,7 @@
 // Current settings:
 //   • DM When Daily Ready   — bot DMs you at 10:30 PM ET every day
 //   • DM When Pulls Ready   — bot DMs you at each pull window reset
+//   • DM When Level Up      — bot DMs you when you reach a new level
 //
 // Prefix aliases: setting, config
 
@@ -27,7 +28,7 @@ const User = require('../../models/user');
 //
 // disabled = true locks all buttons (used when the session expires).
 // Expired settings keep the same text; only their buttons are disabled.
-function buildComponents(dmDailyReady, dmPullsReady, disabled = false) {
+function buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, disabled = false) {
   return [
     {
       // A Container makes the entire settings page appear as one card,
@@ -89,6 +90,28 @@ function buildComponents(dmDailyReady, dmPullsReady, disabled = false) {
             emoji:      dmPullsReady ? { name: '✅', id: null } : null,
             disabled
           }
+        },
+
+        // ── DIVIDER ──
+        { type: 14, divider: true, spacing: 1 },
+
+        // ── SETTING 3: DM When Level Up ──
+        {
+          type: 9,
+          components: [
+            {
+              type: 10,
+              content: '# DM When Level Up\nReceive a DM with your level-up rewards.'
+            }
+          ],
+          accessory: {
+            type: 2,
+            custom_id: 'settings_level_up_dm',
+            style:      dmLevelUp && !disabled ? 3 : 2,
+            label:      dmLevelUp ? 'Enabled' : 'Disabled',
+            emoji:      dmLevelUp ? { name: '✅', id: null } : null,
+            disabled
+          }
         }
       ]
     }
@@ -124,6 +147,7 @@ module.exports = {
     // Read the current toggle values — both default to true for new players
     let dmDailyReady = userData.dmDailyReady ?? true;
     let dmPullsReady = userData.dmPullsReady ?? true;
+    let dmLevelUp = userData.dmLevelUp ?? true;
 
     // ── STEP 2: Build and send the Components V2 message ──
     // MessageFlags.IsComponentsV2 (= 32768) tells Discord to render
@@ -131,7 +155,7 @@ module.exports = {
     // instead of the classic button row format.
     const payload = {
       flags:      MessageFlags.IsComponentsV2,
-      components: buildComponents(dmDailyReady, dmPullsReady),
+      components: buildComponents(dmDailyReady, dmPullsReady, dmLevelUp),
       fetchReply: true  // fetchReply gives us back the message object to attach a collector
     };
 
@@ -169,13 +193,18 @@ module.exports = {
         // Flip the pulls DM toggle and save immediately
         dmPullsReady = !dmPullsReady;
         await User.updateOne({ userId: user.id }, { dmPullsReady });
+
+      } else if (interaction.customId === 'settings_level_up_dm') {
+        // Flip the level-up DM toggle and save immediately
+        dmLevelUp = !dmLevelUp;
+        await User.updateOne({ userId: user.id }, { dmLevelUp });
       }
 
       // ── REBUILD AND UPDATE THE MESSAGE ──
       // We include the flag again so Discord knows to keep rendering in V2 mode
       await interaction.update({
         flags:      MessageFlags.IsComponentsV2,
-        components: buildComponents(dmDailyReady, dmPullsReady)
+        components: buildComponents(dmDailyReady, dmPullsReady, dmLevelUp)
       });
     });
 
@@ -186,7 +215,7 @@ module.exports = {
     collector.on('end', () => {
       response.edit({
         flags:      MessageFlags.IsComponentsV2,
-        components: buildComponents(dmDailyReady, dmPullsReady, true) // true = disabled
+        components: buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, true) // true = disabled
       }).catch(() => {});
       // .catch() silently handles the case where the message was deleted
     });

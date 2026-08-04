@@ -2,6 +2,11 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 // The User model lets us read and update the player's balance and claim timestamp
 const User = require('../../models/user');
+const {
+  addXp,
+  sendLevelUpNotifications,
+  formatXpReward
+} = require('../../utils/levels');
 
 // How many Berries the player earns per daily claim
 const DAILY_REWARD = 1000;
@@ -120,7 +125,9 @@ module.exports = {
     // Award the daily Berries and record the claim time
     userData.balance        += DAILY_REWARD;
     userData.lastDailyClaim  = now;
+    const xpResult = addXp(userData, 30);
     await userData.save();
+    await sendLevelUpNotifications(user, userData, xpResult);
 
     // Format the new balance with commas for display (e.g. 2500 → "2,500")
     const newBalance = userData.balance.toLocaleString('en-US');
@@ -130,6 +137,7 @@ module.exports = {
       .setTitle('Daily Claimed!')
       .setDescription(
         `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:money:1532532493578928178> Berries!\n` +
+        `${formatXpReward(xpResult)}\n` +
         `Next claim resets at **10:30 PM ET**`
       );
 

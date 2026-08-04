@@ -1,2 +1,3 @@
 - [Patch verification](patch-verification.md) — verify exact file contents after applying tiny syntax fixes before restarting workflows
 - [Manga cover palette](manga-cover-palette.md) — use node-vibrant on downloaded cover buffers so JPEG and PNG covers share one dominant-color pipeline
+- [Profile progression](profile-progression.md) — XP is shared across pull, manga, trivia, and daily rewards with level-up rewards handled centrally

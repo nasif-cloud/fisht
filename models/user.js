@@ -57,6 +57,13 @@ const userSchema = new mongoose.Schema({
   // Used to enforce the 20-minute rolling cooldown on the trivia command.
   lastTriviaClaim: { type: Date, default: null },
 
+  // Total experience earned from pulls, manga, trivia, and daily rewards.
+  // The profile command calculates the current level from this total.
+  xp: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+
+  // Reset tokens are awarded when a player reaches a new level.
+  resetTokens: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+
   // A list of every card the user has collected, with how many copies they own.
   // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, mastery: 1, lastObtained: <date>, shiny: false }
   cardCopies: [{
@@ -87,7 +94,10 @@ const userSchema = new mongoose.Schema({
 
   // If true, the bot will DM this user when a pull window resets
   // (6:30 AM, 2:30 PM, and 10:30 PM ET).
-  dmPullsReady: { type: Boolean, default: true }
+  dmPullsReady: { type: Boolean, default: true },
+
+  // If true, the bot will DM this user whenever they reach a new level.
+  dmLevelUp: { type: Boolean, default: true }
 
 });
 

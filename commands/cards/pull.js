@@ -5,6 +5,11 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 
 // The User model so we can read/write each player's save data in MongoDB
 const User = require('../../models/user');
+const {
+  addXp,
+  sendLevelUpNotifications,
+  formatXpReward
+} = require('../../utils/levels');
 
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
@@ -282,7 +287,9 @@ module.exports = {
     // ── STEP 8: Save everything to the database ──
     userData.pullsUsed   += 1;
     userData.lastPullTime = now;
+    const xpResult = addXp(userData, 1);
     await userData.save(); // Writes all the changes above to MongoDB
+    await sendLevelUpNotifications(user, userData, xpResult);
 
     // ── STEP 9: Build the shiny image files (if this pull is shiny) ──
     // Generates a holographic rainbow overlay on both the card image and the rank icon.
@@ -324,7 +331,9 @@ module.exports = {
         ``,
         `**Health:** ${displayHealth}`,
         `**Power:** ${displayPower}`,
-        `**Speed:** ${displaySpeed}`
+        `**Speed:** ${displaySpeed}`,
+        ``,
+        formatXpReward(xpResult)
       ].join('\n'),
       thumbnail: { url: iconUrl },
       color: visualSettings.color,

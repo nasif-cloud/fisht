@@ -31,6 +31,11 @@ const { Vibrant } = require('node-vibrant/node');
 
 const mangaPool = require('../../data/manga');
 const User      = require('../../models/user');
+const {
+  addXp,
+  sendLevelUpNotifications,
+  formatXpReward
+} = require('../../utils/levels');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -137,6 +142,9 @@ module.exports = {
     // ── STEP 1: COOLDOWN CHECK ──
     // Load the player's save data to check when they last played
     let userData = await User.findOne({ userId: user.id });
+    if (!userData) {
+      userData = new User({ userId: user.id });
+    }
 
     if (userData?.lastMangaClaim) {
       const elapsed   = Date.now() - userData.lastMangaClaim.getTime();
@@ -169,13 +177,17 @@ module.exports = {
     const embedColor = coverAssets.dominantColor;
     const maskedCoverAttachment = buildCoverAttachment(coverAssets.maskedCover);
     const cleanCoverAttachment = buildCoverAttachment(coverAssets.cleanCover);
+    const xpResult = addXp(userData, 10);
+    await userData.save();
+    await sendLevelUpNotifications(user, userData, xpResult);
 
     // ── STEP 4: BUILD THE INITIAL EMBED ──
     const activeEmbed = new EmbedBuilder()
       .setTitle('Manga Challenge')
       .setDescription(
         "Guess the volume number. Press **Guess** when you're ready. " +
-        'Be quick, you only have `10 seconds`.'
+        'Be quick, you only have `10 seconds`.\n\n' +
+        formatXpReward(xpResult)
       )
       .setImage(`attachment://${MASKED_COVER_FILENAME}`)
       .setColor(embedColor);
@@ -258,7 +270,7 @@ module.exports = {
         if (isNaN(userAnswer)) {
           const wrongEmbed = new EmbedBuilder()
             .setTitle(`The answer was **${entry.answer}**, you answered **${rawAnswer}**.`)
-            .setDescription('Better luck next time.')
+            .setDescription(`Better luck next time.\n\n${formatXpReward(xpResult)}`)
             .setImage(`attachment://${MASKED_COVER_FILENAME}`)
             .setColor(embedColor);
           return submit.editReply({
@@ -309,7 +321,7 @@ module.exports = {
         // Show the result embed — editReply is used because we already deferred
         const resultEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered **${userAnswer}**.`)
-          .setDescription(resultDesc)
+          .setDescription(`${resultDesc}\n\n${formatXpReward(xpResult)}`)
           .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setColor(embedColor);
 
@@ -324,7 +336,7 @@ module.exports = {
         // Show the same result format as a wrong answer (no reward).
         const timedEmbed = new EmbedBuilder()
           .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
-          .setDescription('Better luck next time.')
+          .setDescription(`Better luck next time.\n\n${formatXpReward(xpResult)}`)
           .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setFooter({ text: `expired` })
           .setColor(embedColor);
@@ -344,7 +356,7 @@ module.exports = {
       // the player pressing Guess — treat as a wrong answer (same format, no reward).
       const timedEmbed = new EmbedBuilder()
         .setTitle(`The answer was **${entry.answer}**, you answered nothing.`)
-        .setDescription('Better luck next time.')
+        .setDescription(`Better luck next time.\n\n${formatXpReward(xpResult)}`)
         .setImage(`attachment://${MASKED_COVER_FILENAME}`)
         .setFooter({ text: `expired` })
         .setColor(embedColor);
