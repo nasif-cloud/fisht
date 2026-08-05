@@ -18,10 +18,14 @@ const {
   isKnockedOut,
   isTeamDefeated
 } = require('../../utils/duel');
-const { updateQuestProgress } = require('../../utils/quests');
+const { getLastDailyReset, updateQuestProgress } = require('../../utils/quests');
+const { addXp, getLevelProgress } = require('../../utils/levels');
 
 const ACCEPT_TIMEOUT_MS = 60000;
 const ROUND_TIMEOUT_MS = 30000;
+const DUEL_REWARD_XP = 30;
+const DUEL_REWARD_BELI = 1000;
+const MAX_MONTHLY_OPPONENT_DUELS = 3;
 const activeUsers = new Set();
 
 // Button emojis use Discord's structured emoji field so custom stat emojis
@@ -94,6 +98,109 @@ async function recordDuelParticipation(state) {
 
 async function recordDuelWin(userId) {
   await updateDuelQuest(userId, 'duel_win');
+}
+
+function getMonthKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit'
+  }).formatToParts(date);
+  const year = parts.find(part => part.type === 'year')?.value;
+  const month = parts.find(part => part.type === 'month')?.value;
+  return `${year}-${month}`;
+}
+
+function getDuelLevel(userData) {
+  return getLevelProgress(userData?.xp).level;
+}
+
+function isOpponentInRewardRange(winnerLevel, opponentLevel) {
+  return opponentLevel >= winnerLevel - 5 && opponentLevel <= winnerLevel + 30;
+}
+
+function getOpponentDuelCount(userData, opponentId, monthKey) {
+  return (userData?.duelMonthlyOpponentCounts || [])
+    .find(entry => entry.opponentId === opponentId && entry.monthKey === monthKey)
+    ?.count || 0;
+}
+
+function incrementOpponentDuelCount(userData, opponentId, monthKey) {
+  userData.duelMonthlyOpponentCounts = (userData.duelMonthlyOpponentCounts || [])
+    .filter(entry => entry.monthKey === monthKey);
+  let entry = userData.duelMonthlyOpponentCounts.find(item => item.opponentId === opponentId);
+  if (!entry) {
+    entry = { opponentId, monthKey, count: 0 };
+    userData.duelMonthlyOpponentCounts.push(entry);
+  }
+  entry.count = Math.max(0, Number(entry.count) || 0) + 1;
+  return entry.count;
+}
+
+async function recordAcceptedDuel(challengerData, targetData, challengerId, targetId) {
+  try {
+    const monthKey = getMonthKey();
+    incrementOpponentDuelCount(challengerData, targetId, monthKey);
+    incrementOpponentDuelCount(targetData, challengerId, monthKey);
+    await Promise.all([challengerData.save(), targetData.save()]);
+    return true;
+  } catch (error) {
+    // The duel itself remains available even if reward tracking has a
+    // temporary database problem. The reward simply will not be eligible
+    // until the monthly match count can be recorded successfully.
+    console.error('[Duel] Failed to record monthly opponent count:', error.message);
+    return false;
+  }
+}
+
+async function awardDuelReward(state, winner) {
+  try {
+    if (!state.monthlyCountRecorded) {
+      return { awarded: false, reason: 'monthly-count-unavailable' };
+    }
+
+    const winnerData = await User.findOne({ userId: winner.id });
+    const opponentId = winner.id === state.challenger.id
+      ? state.target.id
+      : state.challenger.id;
+    const opponentData = await User.findOne({ userId: opponentId });
+    if (!winnerData || !opponentData) return { awarded: false, reason: 'missing-data' };
+
+    const now = new Date();
+    const lastDailyReset = getLastDailyReset(now);
+    if (winnerData.lastDuelRewardAt && winnerData.lastDuelRewardAt >= lastDailyReset) {
+      return { awarded: false, reason: 'daily-used' };
+    }
+
+    const monthKey = getMonthKey(now);
+    const opponentDuelCount = getOpponentDuelCount(winnerData, opponentId, monthKey);
+    if (opponentDuelCount > MAX_MONTHLY_OPPONENT_DUELS) {
+      return { awarded: false, reason: 'monthly-limit' };
+    }
+
+    const winnerLevel = getDuelLevel(winnerData);
+    const opponentLevel = getDuelLevel(opponentData);
+    if (!isOpponentInRewardRange(winnerLevel, opponentLevel)) {
+      return { awarded: false, reason: 'level-range' };
+    }
+
+    const xpResult = addXp(winnerData, DUEL_REWARD_XP);
+    winnerData.balance = (Number(winnerData.balance) || 0) + DUEL_REWARD_BELI;
+    winnerData.lastDuelRewardAt = now;
+    await winnerData.save();
+
+    if (winnerData.dmDuelReward !== false && typeof winner.send === 'function') {
+      await winner.send(
+        `You won a duel and received **${DUEL_REWARD_XP} XP** and ` +
+        `**${DUEL_REWARD_BELI.toLocaleString('en-US')}** <:money:1532532493578928178> Beli`
+      ).catch(() => {});
+    }
+
+    return { awarded: true, xpResult };
+  } catch (error) {
+    console.error('[Duel] Reward failed:', error.message);
+    return { awarded: false, reason: 'error' };
+  }
 }
 
 function buildRequestPayload(challenger, target) {
@@ -521,6 +628,13 @@ module.exports = {
         return;
       }
 
+      const monthlyCountRecorded = await recordAcceptedDuel(
+        freshChallenger,
+        freshTarget,
+        challenger.id,
+        target.id
+      );
+
       const state = {
         id: response.id,
         challenger: {
@@ -538,7 +652,8 @@ module.exports = {
         selections: {},
         latestLog: '',
         roundLogs: [],
-        participationRecorded: false
+        participationRecorded: false,
+        monthlyCountRecorded
       };
 
       await recordDuelParticipation(state);
@@ -623,14 +738,19 @@ module.exports = {
           // Replace the previous round's display with this round's newest log.
           state.latestLog = state.roundLogs.join('\n');
           if (result.ended) {
+              let rewardResult = null;
               if (result.winner) {
                 await recordDuelWin(result.winner.id);
+                rewardResult = await awardDuelReward(state, result.winner);
               }
-            const content = result.reason === 'no-actions'
-              ? 'Duel ended with no winners'
-              : result.reason === 'draw'
-                ? 'The duel ended in a draw'
-                : `**${result.winner.username} wins**`;
+              const content = result.reason === 'no-actions'
+                ? 'Duel ended with no winners'
+                : result.reason === 'draw'
+                  ? 'The duel ended in a draw'
+                  : `**${result.winner.username} wins**`;
+              if (rewardResult?.awarded) {
+                content += `\nReward: **${DUEL_REWARD_XP} XP** and **${DUEL_REWARD_BELI.toLocaleString('en-US')}**<:money:1532532493578928178> Beli`;
+              }
             await response.edit(buildEndPayload(content, state));
             releaseUsers();
             return;

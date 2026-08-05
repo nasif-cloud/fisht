@@ -167,6 +167,21 @@ module.exports = {
       }
     }
 
+    // ── DUEL REWARD ──
+    // The duel reward shares the daily 10:30 PM ET reset window.
+    let duelDisplay;
+    if (!userData?.lastDuelRewardAt) {
+      duelDisplay = 'Ready';
+    } else {
+      const lastDailyReset = getLastDailyReset(now);
+      if (userData.lastDuelRewardAt < lastDailyReset) {
+        duelDisplay = 'Ready';
+      } else {
+        const nextDailyReset = getNextDailyReset(now);
+        duelDisplay = formatTimeLeft(nextDailyReset - now);
+      }
+    }
+
     // ── MANGA COOLDOWN ──
     // Rolling 20-minute personal timer. "Ready" if never played or cooldown expired.
     let mangaDisplay;
@@ -196,6 +211,7 @@ module.exports = {
     const content = [
       `**Next Reset**: \`${pullResetDisplay}\``,
       `**Next Daily**: \`${dailyDisplay}\``,
+      `**Next Duel Reward**: \`${duelDisplay}\``,
       `**Next Manga**: \`${mangaDisplay}\``,
       `**Next Trivia**: \`${triviaDisplay}\``,
     ].join('\n');

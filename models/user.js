@@ -108,6 +108,20 @@ const userSchema = new mongoose.Schema({
   // If true, the bot will DM this user when their daily quests refresh.
   dmQuestsReady: { type: Boolean, default: true },
 
+  // If true, the bot will DM this user when they receive a duel reward.
+  dmDuelReward: { type: Boolean, default: true },
+
+  // The last daily-reset window in which this user received a duel reward.
+  lastDuelRewardAt: { type: Date, default: null },
+
+  // Accepted duel counts by opponent for the current and previous months.
+  // Old month entries are removed when a new duel is accepted.
+  duelMonthlyOpponentCounts: [{
+    opponentId: { type: String, required: true },
+    monthKey: { type: String, required: true },
+    count: { type: Number, default: 0, min: 0, set: nonNegativeNumber }
+  }],
+
   // The three randomly assigned quests for the current daily reset window.
   dailyQuests: [{
     id: { type: String, required: true },

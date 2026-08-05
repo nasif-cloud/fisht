@@ -11,6 +11,7 @@
 //   • DM When Pulls Ready   — bot DMs you at each pull window reset
 //   • DM When Level Up      — bot DMs you when you reach a new level
 //   • DM When Quests Ready  — bot DMs you when daily quests refresh
+//   • DM When Duel Reward   — bot DMs you when you receive a duel reward
 //
 // Prefix aliases: setting, config
 
@@ -29,7 +30,14 @@ const User = require('../../models/user');
 //
 // disabled = true locks all buttons (used when the session expires).
 // Expired settings keep the same text; only their buttons are disabled.
-function buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, dmQuestsReady, disabled = false) {
+function buildComponents(
+  dmDailyReady,
+  dmPullsReady,
+  dmLevelUp,
+  dmQuestsReady,
+  dmDuelReward,
+  disabled = false
+) {
   return [
     {
       // A Container makes the entire settings page appear as one card,
@@ -118,6 +126,29 @@ function buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, dmQuestsReady, d
         // ── DIVIDER ──
         { type: 14, divider: true, spacing: 1 },
 
+        // ── SETTING 5: DM When Duel Reward ──
+        {
+          type: 9,
+          components: [
+            {
+              type: 10,
+              content: '# DM When Duel Reward\nReceive a DM when you earn the daily duel reward.'
+            }
+          ],
+          accessory: {
+            type: 2,
+            custom_id: 'settings_duel_reward_dm',
+            style:      dmDuelReward && !disabled ? 3 : 2,
+            label:      dmDuelReward ? 'Enabled' : 'Disabled',
+            emoji:      dmDuelReward ? { name: '✅', id: null } : null,
+            disabled
+          }
+        }
+        ,
+
+        // ── DIVIDER ──
+        { type: 14, divider: true, spacing: 1 },
+
         // ── SETTING 4: DM When Quests Ready ──
         {
           type: 9,
@@ -172,6 +203,7 @@ module.exports = {
     let dmPullsReady = userData.dmPullsReady ?? true;
     let dmLevelUp = userData.dmLevelUp ?? true;
     let dmQuestsReady = userData.dmQuestsReady ?? true;
+    let dmDuelReward = userData.dmDuelReward ?? true;
 
     // ── STEP 2: Build and send the Components V2 message ──
     // MessageFlags.IsComponentsV2 (= 32768) tells Discord to render
@@ -179,7 +211,13 @@ module.exports = {
     // instead of the classic button row format.
     const payload = {
       flags:      MessageFlags.IsComponentsV2,
-      components: buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, dmQuestsReady),
+      components: buildComponents(
+        dmDailyReady,
+        dmPullsReady,
+        dmLevelUp,
+        dmQuestsReady,
+        dmDuelReward
+      ),
       fetchReply: true  // fetchReply gives us back the message object to attach a collector
     };
 
@@ -226,13 +264,23 @@ module.exports = {
       } else if (interaction.customId === 'settings_quests_dm') {
         dmQuestsReady = !dmQuestsReady;
         await User.updateOne({ userId: user.id }, { dmQuestsReady });
+
+      } else if (interaction.customId === 'settings_duel_reward_dm') {
+        dmDuelReward = !dmDuelReward;
+        await User.updateOne({ userId: user.id }, { dmDuelReward });
       }
 
       // ── REBUILD AND UPDATE THE MESSAGE ──
       // We include the flag again so Discord knows to keep rendering in V2 mode
       await interaction.update({
         flags:      MessageFlags.IsComponentsV2,
-        components: buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, dmQuestsReady)
+        components: buildComponents(
+          dmDailyReady,
+          dmPullsReady,
+          dmLevelUp,
+          dmQuestsReady,
+          dmDuelReward
+        )
       });
     });
 
@@ -243,7 +291,14 @@ module.exports = {
     collector.on('end', () => {
       response.edit({
         flags:      MessageFlags.IsComponentsV2,
-        components: buildComponents(dmDailyReady, dmPullsReady, dmLevelUp, dmQuestsReady, true) // true = disabled
+        components: buildComponents(
+          dmDailyReady,
+          dmPullsReady,
+          dmLevelUp,
+          dmQuestsReady,
+          dmDuelReward,
+          true
+        ) // true = disabled
       }).catch(() => {});
       // .catch() silently handles the case where the message was deleted
     });
