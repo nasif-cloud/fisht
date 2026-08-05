@@ -104,6 +104,16 @@ function buildCardSection(card) {
   };
 }
 
+// Components V2 does not have a normal margin component. A zero-width space
+// gives Discord a real, visible blank line without adding extra text or
+// accidentally creating several blank lines from trailing newlines.
+function buildBlankSpace() {
+  return {
+    type: 10,
+    content: '\u200b'
+  };
+}
+
 function buildButtonRow(duelId, playerId, team, selected) {
   return {
     type: 1,
@@ -129,7 +139,7 @@ function buildPlayerComponents(duelId, player, selected) {
   if (player.avatarUrl) {
     components.push({
       type: 9,
-      components: [{ type: 10, content: `## **${player.username}**\n` }],
+      components: [{ type: 10, content: `## **${player.username}**` }],
       accessory: {
         type: 11,
         media: { url: player.avatarUrl },
@@ -139,14 +149,19 @@ function buildPlayerComponents(duelId, player, selected) {
   } else {
     components.push({
       type: 10,
-      content: `## **${player.username}**\n`
+      content: `## **${player.username}**`
     });
   }
+
+  // Keep exactly one blank space between the player's name and first card.
+  components.push(buildBlankSpace());
 
   for (const card of player.team) {
     components.push(buildCardSection(card));
   }
 
+  // Keep the cards visually separate from their selection buttons.
+  components.push(buildBlankSpace());
   components.push(buildButtonRow(duelId, player.id, player.team, selected));
   return components;
 }
@@ -179,6 +194,8 @@ function buildBattleComponents(state, logText) {
           // buttons, separator, player two, cards, buttons, separator, logs
           content: `**${state.challenger.username}** VS **${state.target.username}**`
         },
+        // One blank space between the users line and the first separator.
+        buildBlankSpace(),
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
           state.id,
@@ -192,7 +209,8 @@ function buildBattleComponents(state, logText) {
           state.selections[state.target.id]
         ),
         { type: 14, divider: true, spacing: 1 },
-        // Battle log text — the divider above already provides visual separation
+        // One blank space between the final separator and the newest battle log.
+        buildBlankSpace(),
         { type: 10, content: logText || 'Pick the card you want to attack with' }
       ]
     }
@@ -200,18 +218,11 @@ function buildBattleComponents(state, logText) {
 }
 
 function buildBattlePayload(state) {
-  // Discord limits all displayable text in a Components V2 message to
-  // 4,000 characters. Trim the oldest logs first so current card state and
-  // the latest combat events remain visible
-  const visibleLogs = state.logs.slice(-12);
-  let components = buildBattleComponents(state, visibleLogs.join('\n'));
-  while (
-    visibleLogs.length > 0 &&
-    getDisplayableTextLength(components) > 3900
-  ) {
-    visibleLogs.shift();
-    components = buildBattleComponents(state, visibleLogs.join('\n'));
-  }
+  // Only the newest round log is kept. Apart from matching the requested UI,
+  // this prevents old combat history from making the Components V2 message
+  // exceed Discord's 4,000-character display limit.
+  const latestLog = state.latestLog;
+  const components = buildBattleComponents(state, latestLog);
 
   return {
     flags: MessageFlags.IsComponentsV2,
@@ -253,8 +264,9 @@ function getFirstLivingCard(player) {
 }
 
 function addRoundLog(state, text) {
-  state.logs.push(text);
-  if (state.logs.length > 12) state.logs.shift();
+  // Build the current round's log separately. It replaces the previous round
+  // once combat resolves, so the message never becomes a transcript.
+  state.roundLogs.push(text);
 }
 
 function resolveRound(state) {
@@ -480,7 +492,8 @@ module.exports = {
           team: targetTeam
         },
         selections: {},
-        logs: []
+        latestLog: '',
+        roundLogs: []
       };
 
       await response.edit(buildBattlePayload(state));
@@ -488,53 +501,81 @@ module.exports = {
 
       const startRound = async () => {
         state.selections = {};
+        state.roundLogs = [];
         await response.edit(buildBattlePayload(state));
+
         roundCollector = response.createMessageComponentCollector({
           time: ROUND_TIMEOUT_MS
         });
+        let roundSettled = false;
+        // Discord may deliver both button clicks before either async handler
+        // finishes. Serialize the entire handler, not only response.edit(),
+        // so the collector cannot advance while the second selection is still
+        // being acknowledged.
+        let selectionQueue = Promise.resolve();
 
-        roundCollector.on('collect', async pickInteraction => {
-          const pick = parsePickId(pickInteraction.customId);
-          if (!pick || pick.duelId !== state.id) return;
-          if (![state.challenger.id, state.target.id].includes(pick.playerId)) {
-            return pickInteraction.reply({
-              content: 'This is not your duel',
-              flags: MessageFlags.Ephemeral
-            });
-          }
-          if (pickInteraction.user.id !== pick.playerId) {
-            return pickInteraction.reply({
-              content: 'You can only choose your own card',
-              flags: MessageFlags.Ephemeral
-            });
-          }
-          if (state.selections[pick.playerId] !== undefined) return;
+        roundCollector.on('collect', pickInteraction => {
+          selectionQueue = selectionQueue.then(async () => {
+            if (roundSettled) return;
 
-          const player = pick.playerId === state.challenger.id
-            ? state.challenger
-            : state.target;
-          if (!player.team[pick.cardIndex] || isKnockedOut(player.team[pick.cardIndex])) {
-            return pickInteraction.reply({
-              content: 'That card is knocked out',
-              flags: MessageFlags.Ephemeral
-            });
-          }
+            const pick = parsePickId(pickInteraction.customId);
+            if (!pick || pick.duelId !== state.id) return;
+            if (![state.challenger.id, state.target.id].includes(pick.playerId)) {
+              return pickInteraction.reply({
+                content: 'This is not your duel',
+                flags: MessageFlags.Ephemeral
+              });
+            }
+            if (pickInteraction.user.id !== pick.playerId) {
+              return pickInteraction.reply({
+                content: 'You can only choose your own card',
+                flags: MessageFlags.Ephemeral
+              });
+            }
+            if (state.selections[pick.playerId] !== undefined) return;
 
-          state.selections[pick.playerId] = pick.cardIndex;
-          await pickInteraction.deferUpdate();
-          await response.edit(buildBattlePayload(state));
+            const player = pick.playerId === state.challenger.id
+              ? state.challenger
+              : state.target;
+            if (!player.team[pick.cardIndex] || isKnockedOut(player.team[pick.cardIndex])) {
+              return pickInteraction.reply({
+                content: 'That card is knocked out',
+                flags: MessageFlags.Ephemeral
+              });
+            }
 
-          if (
-            state.selections[state.challenger.id] !== undefined &&
-            state.selections[state.target.id] !== undefined
-          ) {
-            roundCollector.stop('both-selected');
-          }
+            state.selections[pick.playerId] = pick.cardIndex;
+            await pickInteraction.deferUpdate();
+            await response.edit(buildBattlePayload(state));
+
+            if (
+              !roundSettled &&
+              state.selections[state.challenger.id] !== undefined &&
+              state.selections[state.target.id] !== undefined
+            ) {
+              roundSettled = true;
+              roundCollector.stop('both-selected');
+            }
+          });
+
+          return selectionQueue;
         });
 
         roundCollector.on('end', async (_collected, reason) => {
-          if (finished) return;
+          if (finished || roundSettled && reason !== 'both-selected') return;
+          roundSettled = true;
+
+          // Wait for both queued selection handlers before resolving combat.
+          // Otherwise the end handler can PATCH the message while the second
+          // player's interaction is still being acknowledged.
+          await selectionQueue.catch(() => {});
+
           const result = resolveRound(state);
+          if (!result.ended && reason !== 'both-selected') {
+            addRoundLog(state, '◇ The timer expired — the duel continues');
+          }
+          // Replace the previous round's display with this round's newest log.
+          state.latestLog = state.roundLogs.join('\n');
           if (result.ended) {
             const content = result.reason === 'no-actions'
               ? 'Duel ended with no winners'
@@ -546,10 +587,6 @@ module.exports = {
             return;
           }
 
-          await response.edit(buildBattlePayload(state));
-          if (reason !== 'both-selected') {
-            addRoundLog(state, '◇ The timer expired — the duel continues');
-          }
           await startRound();
         });
       };
