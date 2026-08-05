@@ -2627,7 +2627,7 @@ const cards = [
     health: '-',
     power: '+',
     speed: '=',
-    image: 'https://i.imgur.com/pSDRF2p.png', 
+    image: 'https://i.imgur.com/iIwhKJf.png', 
 
     M2: {
     title: 'Seven Warlords of the Sea',
@@ -2635,7 +2635,7 @@ const cards = [
     health: '=',
     power: '++',
     speed: '+',
-    image: 'https://i.imgur.com/FXy3OZz.png', 
+    image: 'https://i.imgur.com/O4F0BdO.png', 
     }, 
 
     M3: {
@@ -2644,7 +2644,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://i.imgur.com/yaTu2fz.png', 
+    image: 'https://i.imgur.com/YiPdn07.png', 
     }
   },
   {
@@ -2656,7 +2656,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '=',
-    image: 'https://i.imgur.com/1sZpVUM.png', 
+    image: 'https://i.imgur.com/HTq2ozZ.png', 
 
     M2: {
     title: 'First son of the Sea',
@@ -2664,7 +2664,7 @@ const cards = [
     health: '++',
     power: '++',
     speed: '+',
-    image: 'https://i.imgur.com/HB8Mxw3.png', 
+    image: 'https://i.imgur.com/CXAfrvT.png', 
     }, 
 
     M3: {
@@ -2673,7 +2673,7 @@ const cards = [
     health: '+',
     power: '+',
     speed: '=',
-    image: 'https://i.imgur.com/UfYNplo.png', 
+    image: 'https://i.imgur.com/PsyMRHE.png', 
     }
   },
   {
@@ -2685,7 +2685,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: 'https://i.imgur.com/q65k6vV.png', 
+    image: 'https://i.imgur.com/0n3wsDw.png', 
   isUpscale: true,
 
     M2: {
@@ -2703,7 +2703,7 @@ const cards = [
     health: '++',
     power: '++',
     speed: '++',
-    image: 'https://i.imgur.com/DTiYfxn.png',
+    image: 'https://i.imgur.com/5XV78zQ.png',
     }
   },
   /*
