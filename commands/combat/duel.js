@@ -328,6 +328,9 @@ function buildBattleComponents(state, logText, barSegments = 5, options = {}) {
     showButtons: player.id !== options.botPlayerId,
     commandPrefix: options.commandPrefix || 'duel'
   });
+  const players = options.topPlayerId === state.target.id
+    ? [state.target, state.challenger]
+    : [state.challenger, state.target];
 
   return [
     {
@@ -335,27 +338,27 @@ function buildBattleComponents(state, logText, barSegments = 5, options = {}) {
       components: [
         {
           type: 10,
-          // The battle order is: users, separator, player one, cards,
-          // buttons, separator, player two, cards, buttons, separator, logs
-          content: `**${state.challenger.username}** VS **${state.target.username}**`
+          // The battle order is: users, separator, top player, cards,
+          // buttons, separator, bottom player, cards, buttons, separator, logs
+          content: `**${players[0].username}** VS **${players[1].username}**`
         },
         // One blank space between the users line and the first separator.
         buildBlankSpace(),
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
           state.id,
-          state.challenger,
-          state.selections[state.challenger.id],
+          players[0],
+          state.selections[players[0].id],
           barSegments,
-          playerOptions(state.challenger)
+          playerOptions(players[0])
         ),
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
           state.id,
-          state.target,
-          state.selections[state.target.id],
+          players[1],
+          state.selections[players[1].id],
           barSegments,
-          playerOptions(state.target)
+          playerOptions(players[1])
         ),
         { type: 14, divider: true, spacing: 1 },
         // One blank space between the final separator and the newest battle log.

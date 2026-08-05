@@ -224,8 +224,8 @@ module.exports = {
       `**Next Daily**: \`${dailyDisplay}\``,
       `**Next Duel**: \`${duelDisplay}\``,
       `**Next Manga**: \`${mangaDisplay}\``,
-      `**Next Trivia**: \`${triviaDisplay}\``,
       `**Next Battle**: \`${battleDisplay}\``,
+      `**Next Trivia**: \`${triviaDisplay}\``,
     ].join('\n');
 
     if (interactionOrMessage.isChatInputCommand?.()) {

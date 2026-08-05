@@ -214,7 +214,8 @@ module.exports = {
       };
       const renderOptions = {
         botPlayerId: state.target.id,
-        commandPrefix: 'battle'
+        commandPrefix: 'battle',
+        topPlayerId: state.target.id
       };
 
       const payload = buildBattlePayload(state, renderOptions);
@@ -262,7 +263,6 @@ module.exports = {
 
         state.selections = {};
         state.roundLogs = [];
-        state.latestLog = '';
         const botIndex = getRandomLivingIndex(state.target.team);
         if (botIndex === null) {
           await finishBattle({ ended: true, winner: state.challenger });

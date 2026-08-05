@@ -3,7 +3,7 @@ name: AI battle combat
 description: Solo battle opponent selection, controls, rewards, and cooldown behavior
 ---
 
-AI battles use a random real guild member's persisted team and avatar when that member's calculated level is within five levels of the player. The AI selects a random living card each round, while only the human player receives card-selection buttons.
+AI battles use a random real guild member's persisted team and avatar when that member's calculated level is within five levels of the player. The AI is displayed above the human player, selects a random living card each round, and only the human player receives card-selection buttons. Battle screens retain the latest duel-style round log while the next choices are shown.
 
 **Why:** Solo battles should feel like the existing duel without requiring another active player, and using a saved in-range opponent keeps the match recognizable and level-appropriate.
 
