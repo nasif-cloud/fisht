@@ -2615,7 +2615,94 @@ const cards = [
       health: 670,
       power: 108,
       speed: 52,
-      image: 'https://files.catbox.moe/0edviq.png'
+      image: 'https://files.catbox.moe/0edviq.png',
+    }
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: 'Donquixote Doflamingo',
+    rank: 'S',
+    health: '-',
+    power: '+',
+    speed: '=',
+    image: '', 
+
+    M2: {
+    title: 'Donquixote Doflamingo',
+    rank: 'S',
+    health: '=',
+    power: '++',
+    speed: '+',
+    image: '', 
+    }, 
+
+    M3: {
+    title: 'Donquixote Doflamingo',
+    rank: 'SS',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    }
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+
+    M2: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    }, 
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    }
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+
+    M2: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    }, 
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
     }
   },
   /*

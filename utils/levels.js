@@ -44,6 +44,18 @@ function addXp(userData, amount) {
   const before = getLevelProgress(userData.xp);
   const safeAmount = Math.max(0, Math.floor(Number(amount) || 0));
 
+  // Older accounts may have reached levels before Meat rewards were saved.
+  // Reconcile those levels once, then track the highest rewarded level so
+  // future XP grants cannot award the same Meat twice.
+  const storedMeatLevel = Number(userData.levelUpMeatAwardedThrough);
+  const awardedThrough = Number.isFinite(storedMeatLevel) && storedMeatLevel >= 1
+    ? Math.floor(storedMeatLevel)
+    : 1;
+  const missedLevels = Math.max(0, before.level - awardedThrough);
+  if (missedLevels > 0) {
+    userData.meat = (Number(userData.meat) || 0) + missedLevels * LEVEL_UP_MEAT;
+  }
+
   userData.xp = Math.max(0, Number(userData.xp) || 0) + safeAmount;
   updateQuestProgress(userData, 'xp', safeAmount);
 
@@ -54,6 +66,7 @@ function addXp(userData, amount) {
     userData.balance = (Number(userData.balance) || 0) + levelsGained * LEVEL_UP_BELI;
     userData.meat = (Number(userData.meat) || 0) + levelsGained * LEVEL_UP_MEAT;
   }
+  userData.levelUpMeatAwardedThrough = Math.max(before.level, after.level);
 
   return {
     amount: safeAmount,
@@ -82,8 +95,8 @@ async function sendLevelUpNotifications(discordUser, userData, xpResult, channel
 
       const content =
         `${isDm ? 'You' : `<@${discordUser.id}>`} leveled up to **level ${level}** and received:\n` +
-        `${LEVEL_UP_BELI.toLocaleString('en-US')}<:money:1532532493578928178>\n` +
-        `${LEVEL_UP_MEAT} <:meatrbg:1532524176701657248>`;
+        `<:whitearrow:1532531439445344547> ${LEVEL_UP_BELI.toLocaleString('en-US')}<:money:1532532493578928178>\n` +
+        `<:whitearrow:1532531439445344547> ${LEVEL_UP_MEAT} <:meatrbg:1532524176701657248>`;
       const payload = {
         content,
         allowedMentions: isDm

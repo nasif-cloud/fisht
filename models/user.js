@@ -74,6 +74,11 @@ const userSchema = new mongoose.Schema({
   // Reset tokens are awarded when a player reaches a new level.
   resetTokens: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
 
+  // Highest level whose level-up Meat reward has been applied. A null value
+  // lets the progression helper reconcile older accounts created before this
+  // reward was persisted correctly.
+  levelUpMeatAwardedThrough: { type: Number, default: null, min: 1, set: nonNegativeNumber },
+
   // A list of every card the user has collected, with how many copies they own.
   // Each entry looks like: { cardName: 'Roronoa Zoro', amount: 3, mastery: 1, lastObtained: <date>, shiny: false }
   cardCopies: [{
@@ -119,6 +124,9 @@ const userSchema = new mongoose.Schema({
 
   // The last daily-reset window in which this user received a duel reward.
   lastDuelRewardAt: { type: Date, default: null },
+
+  // The last time this user claimed a daily quest.
+  lastQuestClaimAt: { type: Date, default: null },
 
   // Accepted duel counts by opponent for the current and previous months.
   // Old month entries are removed when a new duel is accepted.

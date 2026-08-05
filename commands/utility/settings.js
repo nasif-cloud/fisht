@@ -165,6 +165,10 @@ module.exports = {
       userData = new User({ userId: user.id });
       await userData.save();
     }
+    if (userData.dmLevelUp == null) {
+      userData.dmLevelUp = false;
+      await userData.save();
+    }
 
     let dmDailyReady = userData.dmDailyReady ?? true;
     let dmPullsReady = userData.dmPullsReady ?? true;

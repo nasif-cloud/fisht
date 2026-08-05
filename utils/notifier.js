@@ -62,6 +62,23 @@ function getResetCandidates(now, resetTimesET) {
   return candidates;
 }
 
+function getPreviousReset(resetTime, resetTimesET) {
+  return getResetCandidates(resetTime, resetTimesET)
+    .filter(candidate => candidate < resetTime)
+    .sort((a, b) => b - a)[0] || null;
+}
+
+function usedDuringPreviousWindow(value, resetTime, resetTimesET) {
+  if (!value) return false;
+  const previousReset = getPreviousReset(resetTime, resetTimesET);
+  const usedAt = new Date(value);
+  return Boolean(
+    previousReset &&
+    usedAt >= previousReset &&
+    usedAt < resetTime
+  );
+}
+
 // ─────────────────────────────────────────────
 // RESET TIME DEFINITIONS
 // ─────────────────────────────────────────────
@@ -144,9 +161,13 @@ async function checkAndNotify(client) {
       if (dailyResetKeys.has(resetTime.toISOString())) continue;
 
       notifiedPullResets.add(resetTime.toISOString());
+      const previousReset = getPreviousReset(resetTime, PULL_RESET_TIMES);
       const users = await User.find({
         dmPullsReady: true,
-        lastPullTime: { $ne: null }
+        lastPullTime: {
+          $gte: previousReset,
+          $lt: resetTime
+        }
       }).lean();
 
       console.log(`[Notifier] Pull reset at ${resetTime.toISOString()} — DMing ${users.length} users`);
@@ -176,13 +197,22 @@ async function checkAndNotify(client) {
         await user.save();
 
         const messages = [];
-        if (user.dmDailyReady && user.lastDailyClaim) {
+        if (
+          user.dmDailyReady &&
+          usedDuringPreviousWindow(user.lastDailyClaim, resetTime, DAILY_RESET_TIMES)
+        ) {
           messages.push('Your daily is ready. Claim it with `daily`');
         }
-        if (user.dmPullsReady && user.lastPullTime) {
+        if (
+          user.dmPullsReady &&
+          usedDuringPreviousWindow(user.lastPullTime, resetTime, PULL_RESET_TIMES)
+        ) {
           messages.push('Your pulls have been refreshed. Start pulling with `pull`');
         }
-        if (user.dmQuestsReady !== false) {
+        if (
+          user.dmQuestsReady !== false &&
+          usedDuringPreviousWindow(user.lastQuestClaimAt, resetTime, DAILY_RESET_TIMES)
+        ) {
           messages.push('Your daily quests are ready. View them with `quests`');
         }
         // Duel rewards become available at this same daily reset. Do not
@@ -190,8 +220,7 @@ async function checkAndNotify(client) {
         // already ready when they started, so there is no new cooldown ending.
         if (
           user.dmDuelReward !== false &&
-          user.lastDuelRewardAt &&
-          user.lastDuelRewardAt < resetTime
+          usedDuringPreviousWindow(user.lastDuelRewardAt, resetTime, DAILY_RESET_TIMES)
         ) {
           messages.push('Your daily duel reward is ready. Win a qualified duel to claim it');
         }

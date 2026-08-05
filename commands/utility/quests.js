@@ -156,6 +156,7 @@ module.exports = {
           return interaction.editReply(getEditPayload(result.reason));
         }
 
+        userData.lastQuestClaimAt = new Date();
         userData.balance = (Number(userData.balance) || 0) + QUEST_REWARD_BELI;
         const xpResult = addXp(userData, QUEST_REWARD_XP);
         await userData.save();

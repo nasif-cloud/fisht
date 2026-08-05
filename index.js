@@ -95,10 +95,16 @@ async function registerAccount(discordUser) {
   try {
     // Look for an existing save file for this user
     let userData = await User.findOne({ userId: discordUser.id });
+    const isNewAccount = !userData;
+    let accountChanged = isNewAccount;
 
     // If no save file exists yet, create one (brand new player)
-    if (!userData) {
+    if (isNewAccount) {
       userData = new User({ userId: discordUser.id });
+    }
+    if (userData.dmLevelUp == null) {
+      userData.dmLevelUp = false;
+      accountChanged = true;
     }
 
     // If the account hasn't been set up yet, give starter rewards
@@ -106,18 +112,24 @@ async function registerAccount(discordUser) {
       userData.balance        += STARTER_BERRIES; // Give starting Berries
       userData.meat           += STARTER_MEAT;    // Give starting Meat
       userData.accountCreated  = true;            // Mark as done so this never runs again
+      accountChanged = true;
+    }
+
+    if (accountChanged) {
       await userData.save();
 
       // Try to DM the player a welcome message.
       // If their DMs are closed, we silently skip — the bot shouldn't crash over this.
-      try {
-        await discordUser.send(
-          'Your account has been created. You received:\n' +
-          `<:money:1532532493578928178> **${STARTER_BERRIES.toLocaleString('en-US')}** Berries\n` +
-          `<:meatrbg:1532524176701657248> **${STARTER_MEAT}** Meat`
-        );
-      } catch {
-        // DMs are disabled for this user — skip silently
+      if (isNewAccount) {
+        try {
+          await discordUser.send(
+            'Your account has been created. You received:\n' +
+            `<:money:1532532493578928178> **${STARTER_BERRIES.toLocaleString('en-US')}** Berries\n` +
+            `<:meatrbg:1532524176701657248> **${STARTER_MEAT}** Meat`
+          );
+        } catch {
+          // DMs are disabled for this user — skip silently
+        }
       }
     }
   } catch (err) {
@@ -250,6 +262,13 @@ async function startBot() {
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Successfully connected to MongoDB Atlas!');
+
+    // Older profiles may not have this preference field. Preserve explicit
+    // DM choices, while making chat delivery the default for missing values.
+    await User.updateMany(
+      { $or: [{ dmLevelUp: { $exists: false } }, { dmLevelUp: null }] },
+      { $set: { dmLevelUp: false } }
+    );
 
     // Restore maintenance flags from the last saved state so a bot restart
     // doesn't silently clear a maintenance window the owner had set
