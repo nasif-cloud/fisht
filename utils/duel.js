@@ -2,7 +2,14 @@
 // DUEL TEAM AND COMBAT HELPERS
 // ─────────────────────────────────────────────
 
-const { cards, rankEmojis, resolveStat, safeRank, safeStat } = require('../data/cards');
+const {
+  cards,
+  rankEmojis,
+  resolveStat,
+  safeRank,
+  safeStat,
+  statRanges
+} = require('../data/cards');
 const { computeBoosts } = require('./boosts');
 const { buildProgressBar } = require('./quests');
 
@@ -101,70 +108,80 @@ function buildDuelTeam(userData) {
   return assignRoles(team);
 }
 
-// The three stats use different numeric scales: health can reach 700, power
-// can reach 125, and speed can reach 60. Comparing raw values or comparing
-// each stat only to the team's maximum makes a card such as 71 power / 29
-// speed look equally strong in both categories.
-const ROLE_STAT_CEILINGS = {
-  health: 700,
-  power: 125,
-  speed: 60
+// Stat values are grouped before comparison so the larger HP range does not
+// overpower the smaller ATK and SPD ranges.
+const ROLE_STAT_STEPS = {
+  health: 7,
+  power: 2,
+  speed: 1
 };
 
-// Assign HP/ATK/SPD exactly once each.
-//
-// Role meaning is intentionally deterministic:
-//   1. The strongest power card is ATK
-//   2. The strongest health card among the remaining cards is HP
-//   3. The remaining card is SPD
-//
-// This prevents a card with clearly higher power (for example 71 power and
-// 29 speed) from being labelled SPD because another card contested a role in
-// the old weighted assignment.
+// Return how far a card has progressed through its own rank range.
+// Example: a 30 SPD card at the bottom of a 30-40 range scores low, while
+// 389 HP in a 200-400 range scores near the top. This compares the card's
+// position inside its rank instead of comparing raw HP, ATK, and SPD values.
+function getRoleScore(card, role) {
+  const stat = ROLE_STATS[role];
+  const range = statRanges[card.rank]?.[stat];
+  if (!range) return 0;
+
+  const rawValue = Math.max(0, Number(card[stat]) || 0);
+  const step = ROLE_STAT_STEPS[stat] || 1;
+  const rangeSize = Math.max(range.max - range.min, 1);
+  const clampedValue = Math.min(Math.max(rawValue, range.min), range.max);
+  const steppedProgress = Math.floor(
+    Math.max(0, clampedValue - range.min) / step
+  ) * step;
+  return steppedProgress / rangeSize;
+}
+
+// Assign HP/ATK/SPD exactly once each by maximizing each card's rank-relative
+// role score. A card can be strongest in more than one role, so all possible
+// one-to-one assignments are checked and the highest total is selected.
 function assignRoles(team) {
   const result = team.map(card => ({ ...card }));
   if (result.length === 0) return result;
 
   const roles = ROLE_ORDER.slice(0, result.length);
-  const unassigned = new Set(result.map((_, index) => index));
+  let best = null;
 
-  function pickHighest(stat) {
-    let bestIndex = null;
-    for (const index of unassigned) {
-      if (
-        bestIndex === null ||
-        (Number(result[index][stat]) || 0) > (Number(result[bestIndex][stat]) || 0)
-      ) {
-        bestIndex = index;
+  function visit(index, usedCards, assignment, score) {
+    if (index >= roles.length) {
+      if (!best || score > best.score) {
+        best = { assignment: [...assignment], score };
       }
+      return;
     }
-    if (bestIndex !== null) unassigned.delete(bestIndex);
-    return bestIndex;
+
+    const role = roles[index];
+    for (let cardIndex = 0; cardIndex < result.length; cardIndex += 1) {
+      if (usedCards.has(cardIndex)) continue;
+      usedCards.add(cardIndex);
+      assignment.push(cardIndex);
+      visit(
+        index + 1,
+        usedCards,
+        assignment,
+        score + getRoleScore(result[cardIndex], role)
+      );
+      assignment.pop();
+      usedCards.delete(cardIndex);
+    }
   }
 
-  // ATK always belongs to the card with the highest power.
-  if (roles.includes('ATK')) {
-    const attackIndex = pickHighest('power');
-    if (attackIndex !== null) result[attackIndex].role = 'ATK';
-  }
+  visit(0, new Set(), [], 0);
+  result.forEach(card => {
+    card.role = null;
+  });
+  roles.forEach((role, roleIndex) => {
+    const cardIndex = best?.assignment[roleIndex];
+    if (cardIndex !== undefined) result[cardIndex].role = role;
+  });
 
-  // HP is assigned from the cards still available after ATK.
-  if (roles.includes('HP')) {
-    const healthIndex = pickHighest('health');
-    if (healthIndex !== null) result[healthIndex].role = 'HP';
-  }
-
-  // With a three-card team this is the last unassigned card. The fallback
-  // also keeps two-card or one-card teams valid if they are ever rendered.
-  if (roles.includes('SPD')) {
-    const speedIndex = pickHighest('speed');
-    if (speedIndex !== null) result[speedIndex].role = 'SPD';
-  }
-
-  // Safety fallback for any unusual team shape.
-  for (const index of unassigned) {
-    result[index].role = roles[index] || 'HP';
-  }
+  // Safety fallback for an unusual empty assignment.
+  result.forEach((card, index) => {
+    if (!card.role) card.role = roles[index] || 'HP';
+  });
   return result;
 }
 

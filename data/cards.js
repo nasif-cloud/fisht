@@ -2804,4 +2804,4 @@ validateAllCards(cards);
 // --- 3. EXPORT ---
 // This allows other files (like your gacha command) to read this data
 // Export everything so other command files can import what they need
-module.exports = { rankConfig, cards, resolveStat, safeRank, safeStat, rankEmojis };
+module.exports = { statRanges, rankConfig, cards, resolveStat, safeRank, safeStat, rankEmojis };
