@@ -111,58 +111,60 @@ const ROLE_STAT_CEILINGS = {
   speed: 60
 };
 
-// Assign HP/ATK/SPD exactly once each. Each card's role affinity is first
-// normalized against the shared stat scale, then the best one-to-one
-// assignment is selected. This keeps a card with clearly stronger power from
-// being labelled SPD simply because its speed happens to lead its team.
+// Assign HP/ATK/SPD exactly once each.
+//
+// Role meaning is intentionally deterministic:
+//   1. The strongest power card is ATK
+//   2. The strongest health card among the remaining cards is HP
+//   3. The remaining card is SPD
+//
+// This prevents a card with clearly higher power (for example 71 power and
+// 29 speed) from being labelled SPD because another card contested a role in
+// the old weighted assignment.
 function assignRoles(team) {
   const result = team.map(card => ({ ...card }));
   if (result.length === 0) return result;
 
   const roles = ROLE_ORDER.slice(0, result.length);
-  const affinity = result.map(card => {
-    const values = {};
-    for (const role of roles) {
-      const stat = ROLE_STATS[role];
-      const ceiling = ROLE_STAT_CEILINGS[stat];
-      values[role] = Math.max(0, Number(card[stat]) || 0) / ceiling;
-    }
+  const unassigned = new Set(result.map((_, index) => index));
 
-    const preferredRole = roles.reduce((bestRole, role) =>
-      values[role] > values[bestRole] ? role : bestRole
-    , roles[0]);
-
-    return { values, preferredRole };
-  });
-  let best = null;
-
-  function visit(index, usedRoles, assignment, score) {
-    if (index >= result.length) {
-      if (!best || score > best.score) {
-        best = { assignment: [...assignment], score };
+  function pickHighest(stat) {
+    let bestIndex = null;
+    for (const index of unassigned) {
+      if (
+        bestIndex === null ||
+        (Number(result[index][stat]) || 0) > (Number(result[bestIndex][stat]) || 0)
+      ) {
+        bestIndex = index;
       }
-      return;
     }
-
-    for (const role of roles) {
-      if (usedRoles.has(role)) continue;
-      // The preference bonus keeps each card on its naturally strongest role.
-      // The normalized value breaks conflicts when multiple cards prefer the
-      // same role, while still letting a clearly stronger card keep it.
-      const roleScore = affinity[index].values[role] +
-        (affinity[index].preferredRole === role ? 2 : 0);
-      usedRoles.add(role);
-      assignment.push(role);
-      visit(index + 1, usedRoles, assignment, score + roleScore);
-      assignment.pop();
-      usedRoles.delete(role);
-    }
+    if (bestIndex !== null) unassigned.delete(bestIndex);
+    return bestIndex;
   }
 
-  visit(0, new Set(), [], 0);
-  result.forEach((card, index) => {
-    card.role = best?.assignment[index] || roles[index] || 'HP';
-  });
+  // ATK always belongs to the card with the highest power.
+  if (roles.includes('ATK')) {
+    const attackIndex = pickHighest('power');
+    if (attackIndex !== null) result[attackIndex].role = 'ATK';
+  }
+
+  // HP is assigned from the cards still available after ATK.
+  if (roles.includes('HP')) {
+    const healthIndex = pickHighest('health');
+    if (healthIndex !== null) result[healthIndex].role = 'HP';
+  }
+
+  // With a three-card team this is the last unassigned card. The fallback
+  // also keeps two-card or one-card teams valid if they are ever rendered.
+  if (roles.includes('SPD')) {
+    const speedIndex = pickHighest('speed');
+    if (speedIndex !== null) result[speedIndex].role = 'SPD';
+  }
+
+  // Safety fallback for any unusual team shape.
+  for (const index of unassigned) {
+    result[index].role = roles[index] || 'HP';
+  }
   return result;
 }
 
