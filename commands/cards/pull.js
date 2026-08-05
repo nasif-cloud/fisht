@@ -15,7 +15,6 @@ const { previewPityPull, applyPityPull } = require('../../utils/pity');
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  shouldUpscale,
   getUpscaledImageBuffer,
   getUpscaledBuffer
 } = require('../../utils/upscale');
@@ -330,16 +329,17 @@ module.exports = {
         generateShinyImage(pulledCard.image, pulledCard.name),
         generateShinyIcon(visualSettings.icon)
       ]);
-      const finalCardBuffer = shouldUpscale(pulledCard)
-        ? await getUpscaledBuffer(cardBuf, `shiny:${pulledCard.image}`)
-        : cardBuf;
+      const finalCardBuffer = await getUpscaledBuffer(
+        cardBuf,
+        `shiny:${pulledCard.image}`
+      );
       files    = [
         new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
         new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
       ];
       imageUrl = `attachment://shiny_card.png`;
       iconUrl  = `attachment://shiny_icon.png`;
-    } else if (shouldUpscale(pulledCard)) {
+    } else {
       const upscaledBuffer = await getUpscaledImageBuffer(pulledCard.image);
       files = [new AttachmentBuilder(upscaledBuffer, { name: 'upscaled_card.png' })];
       imageUrl = 'attachment://upscaled_card.png';

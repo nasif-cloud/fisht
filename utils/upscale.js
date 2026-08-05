@@ -1,19 +1,24 @@
 // ─────────────────────────────────────────────
-// FAST CARD IMAGE UPSCALER
+// FAST CARD IMAGE NORMALIZER
 // ─────────────────────────────────────────────
-// Cards opt in with `isUpscale: true`. Sharp performs a fast 2x Lanczos
-// resize, and the promise cache prevents duplicate downloads/processing when
-// several users request the same card at once.
+// Every card is processed through the same fixed 2x canvas. Sharp performs a
+// fast Lanczos resize, and the promise cache prevents duplicate downloads or
+// processing when several users request the same card at once.
 
 const sharp = require('sharp');
 
 const upscaleCache = new Map();
 const IMAGE_FETCH_TIMEOUT_MS = 10_000;
 const UPSCALE_FACTOR = 2;
+const CARD_WIDTH = 573;
+const CARD_HEIGHT = 800;
+const OUTPUT_WIDTH = CARD_WIDTH * UPSCALE_FACTOR;
+const OUTPUT_HEIGHT = CARD_HEIGHT * UPSCALE_FACTOR;
 
 function shouldUpscale(cardData, baseCard = null) {
-  if (typeof cardData?.isUpscale === 'boolean') return cardData.isUpscale;
-  return baseCard?.isUpscale === true;
+  // Kept as a compatibility helper for existing callers. All card images are
+  // now normalized so every card has the same output dimensions.
+  return Boolean(cardData || baseCard);
 }
 
 async function fetchImageBuffer(imageUrl) {
@@ -37,14 +42,13 @@ async function upscaleImage(imageUrl) {
 }
 
 async function upscaleImageBuffer(input) {
-  const metadata = await sharp(input).metadata();
-  const width = Math.max(1, Number(metadata.width) || 1);
-  const height = Math.max(1, Number(metadata.height) || 1);
-
   return sharp(input)
     .resize({
-      width: width * UPSCALE_FACTOR,
-      height: height * UPSCALE_FACTOR,
+      width: OUTPUT_WIDTH,
+      height: OUTPUT_HEIGHT,
+      fit: 'contain',
+      position: 'center',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
       kernel: sharp.kernel.lanczos3
     })
     .png()
@@ -79,7 +83,7 @@ async function getUpscaledImageBuffer(imageUrl) {
 
 async function getCardImageSource(cardData, baseCard = null) {
   const imageUrl = cardData?.image || baseCard?.image;
-  if (!imageUrl || !shouldUpscale(cardData, baseCard)) {
+  if (!imageUrl) {
     return { source: imageUrl, upscaled: false };
   }
 
@@ -95,6 +99,10 @@ async function getCardImageSource(cardData, baseCard = null) {
 }
 
 module.exports = {
+  CARD_WIDTH,
+  CARD_HEIGHT,
+  OUTPUT_WIDTH,
+  OUTPUT_HEIGHT,
   UPSCALE_FACTOR,
   shouldUpscale,
   upscaleImageBuffer,

@@ -222,9 +222,7 @@ async function buildShinyPayload(entry, footerText, user) {
     generateShinyImage(cardData.image, card.name),
     generateShinyIcon(visual.icon)
   ]);
-  const finalCardBuffer = cardData.isUpscale || card.isUpscale
-    ? await getUpscaledBuffer(cardBuf, `shiny:${cardData.image}`)
-    : cardBuf;
+  const finalCardBuffer = await getUpscaledBuffer(cardBuf, `shiny:${cardData.image}`);
 
   const files = [
     new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
