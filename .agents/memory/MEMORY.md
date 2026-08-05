@@ -9,4 +9,5 @@
 - [Slash rank filters](rank-filter-behavior.md) — rank filters constrain source lists before search, sorting, and pagination; allcards has no shiny filter
 - [Persistent pity system](pity-system.md) — independent S/SS/UR pity counters persist across daily pull resets and preserve higher-tier progress
 - [Player duel combat](duel-combat.md) — timed PvP sessions use saved teams, hidden card choices, role matchups, and speed tiebreaks
+- [Duel rewards](duel-rewards.md) — daily duel reward readiness and opt-in DM notifications share the daily reset boundary
 - [Team image decoding](team-image-decoding.md) — await canvas image decoding and use mastery/base URL fallbacks so op team renders cannot reject on image failures

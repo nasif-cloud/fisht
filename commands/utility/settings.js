@@ -11,7 +11,7 @@
 //   • DM When Pulls Ready   — bot DMs you at each pull window reset
 //   • DM When Level Up      — bot DMs you when you reach a new level
 //   • DM When Quests Ready  — bot DMs you when daily quests refresh
-//   • DM When Duel Reward   — bot DMs you when you receive a duel reward
+//   • DM When Duel Reward   — bot DMs you when the daily duel reward is ready
 //
 // Prefix aliases: setting, config
 
@@ -132,7 +132,7 @@ function buildComponents(
           components: [
             {
               type: 10,
-              content: '# DM When Duel Reward\nReceive a DM when you earn the daily duel reward.'
+              content: '# DM When Duel Reward\nReceive a DM when your daily duel reward is ready at `10:30PM ET`.'
             }
           ],
           accessory: {

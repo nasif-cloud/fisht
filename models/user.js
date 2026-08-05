@@ -108,7 +108,8 @@ const userSchema = new mongoose.Schema({
   // If true, the bot will DM this user when their daily quests refresh.
   dmQuestsReady: { type: Boolean, default: true },
 
-  // If true, the bot will DM this user when they receive a duel reward.
+  // If true, the bot will DM this user when their duel reward becomes ready
+  // at the daily reset. The reward itself can only be claimed once per reset.
   dmDuelReward: { type: Boolean, default: true },
 
   // The last daily-reset window in which this user received a duel reward.

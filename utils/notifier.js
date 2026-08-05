@@ -182,6 +182,16 @@ async function checkAndNotify(client) {
         if (user.dmQuestsReady !== false) {
           messages.push('Your daily quests are ready. View them with `quests`');
         }
+        // Duel rewards become available at this same daily reset. Do not
+        // notify players who have never earned one yet — their reward was
+        // already ready when they started, so there is no new cooldown ending.
+        if (
+          user.dmDuelReward !== false &&
+          user.lastDuelRewardAt &&
+          user.lastDuelRewardAt < resetTime
+        ) {
+          messages.push('Your daily duel reward is ready. Win a qualified duel to claim it');
+        }
 
         await tryGroupedDM(client, user.userId, messages);
         await new Promise(r => setTimeout(r, 100));

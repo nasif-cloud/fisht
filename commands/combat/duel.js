@@ -189,13 +189,6 @@ async function awardDuelReward(state, winner) {
     winnerData.lastDuelRewardAt = now;
     await winnerData.save();
 
-    if (winnerData.dmDuelReward !== false && typeof winner.send === 'function') {
-      await winner.send(
-        `You won a duel and received **${DUEL_REWARD_XP} XP** and ` +
-        `**${DUEL_REWARD_BELI.toLocaleString('en-US')}** <:money:1532532493578928178> Beli`
-      ).catch(() => {});
-    }
-
     return { awarded: true, xpResult };
   } catch (error) {
     console.error('[Duel] Reward failed:', error.message);
