@@ -2,7 +2,7 @@
 // CARD IMAGE NORMALIZER
 // ─────────────────────────────────────────────
 // Every card image is rendered on the same fixed 573×800 canvas. Sharp keeps
-// the original aspect ratio and uses transparent padding when necessary.
+// the original aspect ratio and crops only the excess so there is no padding.
 
 const sharp = require('sharp');
 
@@ -27,16 +27,18 @@ async function fetchImageBuffer(imageUrl) {
 }
 
 async function normalizeImageBuffer(input) {
-  return sharp(input)
+  return sharp(input, { sequentialRead: true })
     .resize({
       width: CARD_WIDTH,
       height: CARD_HEIGHT,
-      fit: 'contain',
+      fit: 'cover',
       position: 'center',
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-      kernel: sharp.kernel.lanczos3
+      kernel: sharp.kernel.cubic
     })
-    .png()
+    .png({
+      compressionLevel: 1,
+      adaptiveFiltering: false
+    })
     .toBuffer();
 }
 
