@@ -5,6 +5,7 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 const User = require('../../models/user');
 const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage } = require('../../utils/shinyImage');
+const { shouldUpscale, getUpscaledBuffer } = require('../../utils/upscale');
 const { assignRoles } = require('../../utils/duel');
 
 const CANVAS_WIDTH = 860;
@@ -235,13 +236,31 @@ async function loadCardImage(entry) {
     const buffer = entry.isShiny
       ? await generateShinyImage(imageUrl, entry.card.name)
       : await fetchImageBuffer(imageUrl);
-    imageBufferCache.set(cacheKey, buffer);
-    return await loadImage(buffer);
+    const finalBuffer = shouldUpscale(
+      getMasteryCardData(entry),
+      entry.card
+    )
+      ? await getUpscaledBuffer(
+          buffer,
+          `${entry.isShiny ? 'shiny' : 'normal'}:${imageUrl}`
+        )
+      : buffer;
+    imageBufferCache.set(cacheKey, finalBuffer);
+    return await loadImage(finalBuffer);
   } catch (error) {
     console.warn(`[Crew] Failed to load image for ${entry.card.name}: ${error.message}`);
     imageBufferCache.set(cacheKey, null);
     return null;
   }
+}
+
+function getMasteryCardData(entry) {
+  const mastery = Math.min(3, Math.max(1, Number(entry?.mastery) || 1));
+  return mastery === 3
+    ? entry?.card?.M3 || entry?.card?.M2 || entry?.card
+    : mastery === 2
+      ? entry?.card?.M2 || entry?.card
+      : entry?.card;
 }
 
 // Prefer the image for the mastery the player owns, then fall back to the

@@ -20,6 +20,11 @@ const { computeBoosts } = require('../../utils/boosts');
 
 // Shiny image generators — produce the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
+const {
+  shouldUpscale,
+  getCardImageSource,
+  getUpscaledBuffer
+} = require('../../utils/upscale');
 
 // ─── EMOJI CONSTANTS ───
 // SHINY_EMOJI appears before the card name when the card is shiny.
@@ -148,6 +153,11 @@ module.exports = {
 
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
+    const normalCardImage = await getCardImageSource(cardData, foundCard);
+    const normalCardImageUrl = normalCardImage.upscaled
+      ? 'attachment://upscaled_card.png'
+      : normalCardImage.source;
+
     // --- STEP 9: Build the embed with plain image URLs ---
     // We always send with plain URLs first so the embed appears instantly.
     // If the card is shiny, the holographic shimmer is applied in a second
@@ -171,7 +181,7 @@ module.exports = {
       },
       color:     visual.color,
       thumbnail: { url: visual.icon    }, // plain rank icon — shimmer applied later if shiny
-      image:     { url: cardData.image } // plain card image — shimmer applied later if shiny
+      image:     { url: normalCardImageUrl } // plain card image — shimmer applied later if shiny
     };
 
     // --- STEP 11: Build the boosts button ---
@@ -189,7 +199,13 @@ module.exports = {
     // Slash: use editReply (because we deferred in step 3).
     // Prefix: use channel.send (no defer was needed, no time limit).
     let response;
-    const payload = { embeds: [embed], components: [boostsRow], files: [] };
+    const payload = {
+      embeds: [embed],
+      components: [boostsRow],
+      files: normalCardImage.upscaled
+        ? [new AttachmentBuilder(normalCardImage.source, { name: 'upscaled_card.png' })]
+        : []
+    };
 
     if (isSlash) {
       response = await interactionOrMessage.editReply(payload);
@@ -209,8 +225,11 @@ module.exports = {
             generateShinyImage(cardData.image, foundCard.name),
             generateShinyIcon(visual.icon)
           ]);
+          const finalCardBuffer = shouldUpscale(cardData, foundCard)
+            ? await getUpscaledBuffer(cardBuf, `shiny:${cardData.image}`)
+            : cardBuf;
           const shinyFiles = [
-            new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
+            new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
             new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
           ];
           // Same embed object, but now pointing at the uploaded shiny files

@@ -41,6 +41,10 @@ const { computeBoosts } = require('../../utils/boosts');
 
 // Shiny image generators — holographic overlay for card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
+const {
+  getCardImageSource,
+  getUpscaledBuffer
+} = require('../../utils/upscale');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -218,9 +222,12 @@ async function buildShinyPayload(entry, footerText, user) {
     generateShinyImage(cardData.image, card.name),
     generateShinyIcon(visual.icon)
   ]);
+  const finalCardBuffer = cardData.isUpscale || card.isUpscale
+    ? await getUpscaledBuffer(cardBuf, `shiny:${cardData.image}`)
+    : cardBuf;
 
   const files = [
-    new AttachmentBuilder(cardBuf, { name: `shiny_card.png` }),
+    new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
     new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
   ];
 
@@ -254,9 +261,18 @@ async function renderCardUpdate({ editFn, entry, footerText, user, components, g
   const myVersion = getVersion();
 
   // Step 1 — send the plain embed right away (no image generation needed)
+  const cardData = getCardData(entry.card, entry.mastery ?? 1);
+  const image = await getCardImageSource(cardData, entry.card);
   await editFn({
-    embeds:     [buildCardEmbed(entry, footerText, user)],
-    files:      [],
+    embeds:     [buildCardEmbed(
+      entry,
+      footerText,
+      user,
+      image.upscaled ? 'attachment://upscaled_card.png' : image.source
+    )],
+    files: image.upscaled
+      ? [{ attachment: image.source, name: 'upscaled_card.png' }]
+      : [],
     components
   });
 
@@ -548,9 +564,18 @@ module.exports = {
     // For shiny cards we send the plain embed first so it appears instantly,
     // then renderCardUpdate applies the holographic shimmer in a second edit.
     let response;
+    const initialCardData = getCardData(initialEntry.card, initialEntry.mastery ?? 1);
+    const initialImage = await getCardImageSource(initialCardData, initialEntry.card);
     const fastInitial = {
-      embeds:     [buildCardEmbed(initialEntry, initialFooter, user)],
-      files:      [],
+      embeds:     [buildCardEmbed(
+        initialEntry,
+        initialFooter,
+        user,
+        initialImage.upscaled ? 'attachment://upscaled_card.png' : initialImage.source
+      )],
+      files: initialImage.upscaled
+        ? [{ attachment: initialImage.source, name: 'upscaled_card.png' }]
+        : [],
       components: initialComponents
     };
 

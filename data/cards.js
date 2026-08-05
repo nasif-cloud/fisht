@@ -2686,6 +2686,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/q65k6vV.png', 
+  isUpscale: true,
 
     M2: {
     title: 'Biscut Knight',
@@ -2702,7 +2703,7 @@ const cards = [
     health: '++',
     power: '++',
     speed: '++',
-    image: 'https://i.imgur.com/DTiYfxn.png', 
+    image: 'https://i.imgur.com/DTiYfxn.png',
     }
   },
   /*

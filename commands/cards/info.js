@@ -5,6 +5,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
+const { getCardImageSource } = require('../../utils/upscale');
 const { updateQuestProgress } = require('../../utils/quests');
 
 
@@ -86,7 +87,7 @@ module.exports = {
     // An embed is the fancy card Discord shows with colours, images, and fields.
     // This function is called once when the command first runs, then again each
     // time the user clicks Previous or Next.
-    const generateEmbed = (masteryLevel) => {
+    const generateEmbed = async (masteryLevel) => {
       // Pick the right stat block: M1 is the base card, M2/M3 are upgraded versions
       let cardData = foundCard;              // defaults to M1
       if (masteryLevel === 2) cardData = foundCard.M2;
@@ -108,8 +109,11 @@ module.exports = {
 
       // Grab the colour and thumbnail icon for this rank + mastery level from rankConfig
       const visual = rankConfig[rank][`M${masteryLevel}`];
+      const image = await getCardImageSource(cardData, foundCard);
+      const imageUrl = image.upscaled ? 'attachment://upscaled_card.png' : image.source;
 
       return {
+        imageSource: image,
         title: foundCard.name,
         description: [
           `${cardData.title}`,
@@ -125,7 +129,7 @@ module.exports = {
         },
         color: visual.color,
         thumbnail: { url: visual.icon },
-        image: { url: cardData.image }
+        image: { url: imageUrl }
       };
     };
 
@@ -148,11 +152,16 @@ module.exports = {
 
     // --- STEP 7: Send the initial embed (M1) ---
     // fetchReply: true lets us save the sent message so we can attach a button collector
+    const initial = await generateEmbed(currentMastery);
     const payload = {
-      embeds: [generateEmbed(currentMastery)],
+      embeds: [initial],
+      files: initial.imageSource.upscaled
+        ? [{ attachment: initial.imageSource.source, name: 'upscaled_card.png' }]
+        : [],
       components: [generateButtons(currentMastery)],
       fetchReply: true
     };
+    delete payload.embeds[0].imageSource;
 
     let response;
     if (interactionOrMessage.isChatInputCommand?.()) {
@@ -180,8 +189,14 @@ module.exports = {
       if (interaction.customId === 'prev_mastery') currentMastery--;
 
       // Update the message with the new mastery's embed and buttons
+      const next = await generateEmbed(currentMastery);
+      const nextEmbed = { ...next };
+      delete nextEmbed.imageSource;
       await interaction.update({
-        embeds: [generateEmbed(currentMastery)],
+        embeds: [nextEmbed],
+        files: next.imageSource.upscaled
+          ? [{ attachment: next.imageSource.source, name: 'upscaled_card.png' }]
+          : [],
         components: [generateButtons(currentMastery)]
       });
     });

@@ -34,6 +34,7 @@ const {
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
+const { getCardImageSource } = require('../../utils/upscale');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -106,7 +107,7 @@ function sortCards(cardList, sortMode, mastery, isAscending = false) {
 // HELPER — build the embed for a card at a given mastery
 // Used in both normal mode and search mode
 // ─────────────────────────────────────────────
-function buildCardEmbed(card, mastery, footerText, user) {
+function buildCardEmbed(card, mastery, footerText, user, imageUrl = null) {
   const cardData = getCardData(card, mastery);
   const rank     = safeRank(cardData.rank || card.rank);
 
@@ -137,13 +138,24 @@ function buildCardEmbed(card, mastery, footerText, user) {
     },
     color: visual.color,
     thumbnail: { url: visual.icon },
-    image: { url: cardData.image }
+    image: { url: imageUrl || cardData.image }
   };
 }
 
 async function renderCardUpdate({ editFn, card, mastery, footerText, user, components }) {
+  const cardData = getCardData(card, mastery);
+  const image = await getCardImageSource(cardData, card);
   return editFn({
-    embeds: [buildCardEmbed(card, mastery, footerText, user)],
+    embeds: [buildCardEmbed(
+      card,
+      mastery,
+      footerText,
+      user,
+      image.upscaled ? 'attachment://upscaled_card.png' : image.source
+    )],
+    files: image.upscaled
+      ? [{ attachment: image.source, name: 'upscaled_card.png' }]
+      : [],
     components
   });
 }
@@ -415,19 +427,47 @@ module.exports = {
     // ── STEP 5: Build the initial embed and components ──
     let embed, components;
 
+    let initialImage;
     if (isSearchMode) {
+      initialImage = await getCardImageSource(
+        getCardData(searchCard, searchMastery),
+        searchCard
+      );
       // Search mode: single card, no direction button
-      embed      = buildCardEmbed(searchCard, searchMastery, searchFooter(searchMastery), user);
+      embed      = buildCardEmbed(
+        searchCard,
+        searchMastery,
+        searchFooter(searchMastery),
+        user,
+        initialImage.upscaled ? 'attachment://upscaled_card.png' : initialImage.source
+      );
       components = buildSearchComponents(searchMastery);
     } else {
+      initialImage = await getCardImageSource(
+        getCardData(sortedCards[currentPage], mastery),
+        sortedCards[currentPage]
+      );
       // Normal browse mode: full nav with direction button
-      embed      = buildCardEmbed(sortedCards[currentPage], mastery, normalFooter(currentPage, sortedCards.length, sortMode, mastery), user);
+      embed      = buildCardEmbed(
+        sortedCards[currentPage],
+        mastery,
+        normalFooter(currentPage, sortedCards.length, sortMode, mastery),
+        user,
+        initialImage.upscaled ? 'attachment://upscaled_card.png' : initialImage.source
+      );
       components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending);
     }
 
     // ── STEP 6: Send the message ──
     // fetchReply: true gives us back the sent message object so we can attach a collector to it
-    const payload = { embeds: [embed], components, fetchReply: true };
+    const payload = {
+      embeds: [embed],
+      files: initialImage.upscaled
+        ? [{ attachment: initialImage.source, name: 'upscaled_card.png' }]
+        : [],
+      components,
+      fetchReply: true
+    };
     let response;
 
     if (isSlash) {
