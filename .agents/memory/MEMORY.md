@@ -14,3 +14,4 @@
 - [Team image decoding](team-image-decoding.md) — await canvas image decoding and use mastery/base URL fallbacks so op team renders cannot reject on image failures
 - [Universal card image sizing](flagged-image-upscaling.md) — all card art uses cached Sharp normalization on one fixed 573×800 canvas
 - [Attachment embed preservation](attachment-embed-preservation.md) — expiry edits must remove controls only when an embed image comes from a Discord attachment
+- [Portable npm lockfiles](portable-npm-lockfiles.md) — deployment lockfiles must use public registry tarball URLs, not Replit package-firewall hosts
