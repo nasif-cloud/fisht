@@ -146,6 +146,13 @@ function getDamageMultiplier(attackerRole, defenderRole) {
   return DAMAGE_MULTIPLIERS[attackerRole]?.[defenderRole] || 1;
 }
 
+function getAttackType(attackerRole, defenderRole) {
+  const multiplier = getDamageMultiplier(attackerRole, defenderRole);
+  if (multiplier > 1) return '+';
+  if (multiplier < 1) return '-';
+  return '=';
+}
+
 function calculateDamage(attacker, defender) {
   return Math.max(
     1,
@@ -190,7 +197,9 @@ module.exports = {
   calculateDamage,
   formatCardLine,
   formatRole,
+  getAttackType,
   getDamageMultiplier,
+  assignRoles,
   isKnockedOut,
   isTeamDefeated
 };

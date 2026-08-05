@@ -3,7 +3,7 @@ name: Player duel combat
 description: Duel command uses saved three-card teams, persistent active-session locks, role matchups, and timed private card selection
 ---
 
-Duels use each player's saved three-card team with effective mastery, copy, and shiny stats. Cards receive one unique role each—HP, ATK, or SPD—then damage uses the cyclic 2x/1x/0.5x matchup table. Requests expire after 60 seconds and card choices time out after 30 seconds; simultaneous final knockouts use speed, with equal speed producing a draw. Components V2 displays only the current/latest round log and serializes simultaneous picks before advancing.
+Duels use each player's saved three-card team with effective mastery, copy, and shiny stats. Cards receive one unique role each—HP, ATK, or SPD—then damage uses the cyclic 2x/1x/0.5x matchup table, logged as + / = / - for special, normal, and weak attacks. Requests expire after 60 seconds and card choices time out after 30 seconds; simultaneous final knockouts use speed, with equal speed producing a draw. Components V2 displays only the current/latest round log and serializes simultaneous picks before advancing.
 
 **Why:** Duel state must be isolated per active player and must not reveal a player's selected card while preserving the existing team-stat rules.
 

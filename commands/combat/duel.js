@@ -14,6 +14,7 @@ const {
   buildDuelTeam,
   calculateDamage,
   formatCardLine,
+  getAttackType,
   isKnockedOut,
   isTeamDefeated
 } = require('../../utils/duel');
@@ -304,7 +305,7 @@ function resolveRound(state) {
     fallbackDefender.health -= damage;
     addRoundLog(
       state,
-      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals **${damage}<:punch:1534337550137954376>** to **${fallbackDefender.name}**`
+      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals ${getAttackType(activeCard.role, fallbackDefender.role)} **${damage}<:punch:1534337550137954376>** to **${fallbackDefender.name}**`
     );
 
     if (isTeamDefeated(state.challenger.team) && isTeamDefeated(state.target.team)) {
@@ -329,11 +330,11 @@ function resolveRound(state) {
 
   addRoundLog(
     state,
-    `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals **${challengerDamage}<:punch:1534337550137954376>** to **${defender.name}**`
+      `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals ${getAttackType(attacker.role, defender.role)} **${challengerDamage}<:punch:1534337550137954376>** to **${defender.name}**`
   );
   addRoundLog(
     state,
-    `${rankEmojis[defender.rank] || ''} **${defender.name}** deals **${targetDamage}<:punch:1534337550137954376>** to **${attacker.name}**`
+      `${rankEmojis[defender.rank] || ''} **${defender.name}** deals ${getAttackType(defender.role, attacker.role)} **${targetDamage}<:punch:1534337550137954376>** to **${attacker.name}**`
   );
 
   // If both cards would be knocked out by the final exchange, the faster card

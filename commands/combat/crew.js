@@ -5,16 +5,23 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 const User = require('../../models/user');
 const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage } = require('../../utils/shinyImage');
+const { assignRoles } = require('../../utils/duel');
 
 const CANVAS_WIDTH = 860;
 const CANVAS_HEIGHT = 500;
 const SUCCESS_REACTION = '<:Success:1533154745731256531>';
 const TEAM_COOLDOWN_MS = 5000;
-const IMAGE_FETCH_TIMEOUT_MS = 2500;
+const IMAGE_FETCH_TIMEOUT_MS = 8000;
 const SHINY_EMOJI_URL = 'https://cdn.discordapp.com/emojis/1533666993637687466.png?size=32&quality=lossless';
+const ROLE_EMOJI_URLS = {
+  HP: 'https://cdn.discordapp.com/emojis/1534326743459037244.png?size=32&quality=lossless',
+  ATK: 'https://cdn.discordapp.com/emojis/1534326742678769684.png?size=32&quality=lossless',
+  SPD: 'https://cdn.discordapp.com/emojis/1534326741693104168.png?size=32&quality=lossless'
+};
 
 const imageBufferCache = new Map();
 let shinyEmojiImagePromise = null;
+const roleEmojiImagePromises = new Map();
 
 function buildOwnedCardPool(userData) {
   const ownedCards = [];
@@ -26,20 +33,29 @@ function buildOwnedCardPool(userData) {
     const copies = Number(entry.amount);
     if (!Number.isFinite(copies) || copies <= 0) continue;
 
-    const rank = safeRank(card.rank);
+    const mastery = Math.min(3, Math.max(1, Number(entry.mastery) || 1));
+    const cardData = mastery === 3
+      ? card.M3 || card.M2 || card
+      : mastery === 2
+        ? card.M2 || card
+        : card;
+    const rank = safeRank(cardData.rank || card.rank);
     const isShiny = entry.shiny ?? false;
-    const baseHealth = resolveStat(rank, 'health', safeStat(card.health), card.name, 1);
-    const basePower = resolveStat(rank, 'power', safeStat(card.power), card.name, 1);
-    const baseSpeed = resolveStat(rank, 'speed', safeStat(card.speed), card.name, 1);
+    const baseHealth = resolveStat(rank, 'health', safeStat(cardData.health), card.name, mastery);
+    const basePower = resolveStat(rank, 'power', safeStat(cardData.power), card.name, mastery);
+    const baseSpeed = resolveStat(rank, 'speed', safeStat(cardData.speed), card.name, mastery);
     const boosted = computeBoosts(baseHealth, basePower, baseSpeed, copies, isShiny);
 
     ownedCards.push({
       card,
       copies,
       isShiny,
+      mastery,
+      health: boosted.health,
       // Auto-team selection and visual ordering use the same effective power
       // that the card displays elsewhere in the bot.
       power: boosted.power,
+      speed: boosted.speed,
       rank
     });
   }
@@ -203,26 +219,44 @@ function getSmartCrop(img) {
 async function loadCardImage(entry) {
   if (!entry) return null;
 
-  // Keep normal and shiny versions in separate canvas caches.
-  const cacheKey = `${entry.card.image}|${entry.isShiny ? 'shiny' : 'normal'}`;
-  if (imageBufferCache.has(cacheKey)) {
-    const cached = imageBufferCache.get(cacheKey);
-    return cached ? loadImage(cached) : null;
-  }
+  const imageUrl = getCardImageUrl(entry);
+  if (!imageUrl) return null;
 
+  // Keep normal and shiny versions in separate canvas caches.
+  const cacheKey = `${imageUrl}|${entry.isShiny ? 'shiny' : 'normal'}`;
   try {
+    if (imageBufferCache.has(cacheKey)) {
+      const cached = imageBufferCache.get(cacheKey);
+      return cached ? await loadImage(cached) : null;
+    }
+
     // A shiny-owned card must use the generated holographic image, not the
     // original card URL. The generator has its own buffer cache as well.
     const buffer = entry.isShiny
-      ? await generateShinyImage(entry.card.image, entry.card.name)
-      : await fetchImageBuffer(entry.card.image);
+      ? await generateShinyImage(imageUrl, entry.card.name)
+      : await fetchImageBuffer(imageUrl);
     imageBufferCache.set(cacheKey, buffer);
-    return loadImage(buffer);
+    return await loadImage(buffer);
   } catch (error) {
     console.warn(`[Crew] Failed to load image for ${entry.card.name}: ${error.message}`);
     imageBufferCache.set(cacheKey, null);
     return null;
   }
+}
+
+// Prefer the image for the mastery the player owns, then fall back to the
+// nearest available image. Empty image fields must never be sent to canvas.
+function getCardImageUrl(entry) {
+  const mastery = Math.min(3, Math.max(1, Number(entry.mastery) || 1));
+  const masteryData = mastery === 3
+    ? entry.card.M3 || entry.card.M2 || entry.card
+    : mastery === 2
+      ? entry.card.M2 || entry.card
+      : entry.card;
+  const masteryImage = masteryData?.image;
+  if (typeof masteryImage === 'string' && masteryImage.trim()) return masteryImage;
+  const baseImage = entry.card.image;
+  return typeof baseImage === 'string' && baseImage.trim() ? baseImage : null;
 }
 
 // Load the small shiny emoji used as a badge on shiny team cards.
@@ -240,9 +274,26 @@ async function loadShinyEmojiImage() {
   return shinyEmojiImagePromise;
 }
 
+async function loadRoleEmojiImage(role) {
+  const url = ROLE_EMOJI_URLS[role];
+  if (!url) return null;
+  if (!roleEmojiImagePromises.has(role)) {
+    roleEmojiImagePromises.set(
+      role,
+      fetchImageBuffer(url)
+        .then(buffer => loadImage(buffer))
+        .catch(error => {
+          console.warn(`[Crew] Failed to load ${role} role emoji: ${error.message}`);
+          return null;
+        })
+    );
+  }
+  return roleEmojiImagePromises.get(role);
+}
+
 // renderCardSlot now accepts an already-loaded sourceImage (or null for empty slots)
 // so all network work can be done in parallel before any drawing starts.
-function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
+function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, roleEmojiImage, layout) {
   const { x, y, size, innerPadding, featured } = layout;
   const cardName = entry?.card?.name?.toUpperCase() || '';
   const innerX = x + innerPadding;
@@ -270,22 +321,56 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, layout) {
   ctx.fill();
   ctx.restore();
 
-  if (entry && sourceImage) {
-    const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(sourceImage, crop.x, crop.y, crop.size, crop.size, innerX, innerY, innerSize, innerSize);
+  if (entry) {
+    // Draw the art when it decoded successfully. The name, role, and rank
+    // badges below are intentionally outside this check so one bad image
+    // cannot make the whole team card appear empty.
+    if (sourceImage) {
+      const crop = getSmartCrop(sourceImage); // top-biased crop — shows face area
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sourceImage, crop.x, crop.y, crop.size, crop.size, innerX, innerY, innerSize, innerSize);
+    }
 
     // Attached full-width name bar inside the bottom edge.
     const nameBarHeight = 30;
     ctx.save();
     ctx.fillStyle = '#1A202C';
     ctx.fillRect(innerX, innerY + innerSize - nameBarHeight, innerSize, nameBarHeight);
+    const roleLabel = entry.role || '';
+    const roleBadgeSize = 18;
+    const roleGap = roleLabel ? 5 : 0;
+    const textWidth = innerSize - 18 - (roleLabel ? roleBadgeSize + roleGap : 0);
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `700 ${fitFontSize(ctx, cardName, innerSize - 18, 14)}px "Trebuchet MS", sans-serif`;
-    ctx.textAlign = 'center';
+    ctx.font = `700 ${fitFontSize(ctx, cardName, textWidth, 14)}px "Trebuchet MS", sans-serif`;
     ctx.textBaseline = 'middle';
-    ctx.fillText(cardName, innerX + innerSize / 2, innerY + innerSize - nameBarHeight / 2);
+    const nameWidth = ctx.measureText(cardName).width;
+    const contentWidth = (roleLabel ? roleBadgeSize + roleGap : 0) + nameWidth;
+    const contentStart = innerX + (innerSize - contentWidth) / 2;
+    if (roleLabel) {
+      if (roleEmojiImage) {
+        ctx.drawImage(
+          roleEmojiImage,
+          contentStart,
+          innerY + innerSize - nameBarHeight / 2 - roleBadgeSize / 2,
+          roleBadgeSize,
+          roleBadgeSize
+        );
+      } else {
+        ctx.fillStyle = '#FFD166';
+        ctx.font = '700 10px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(roleLabel, contentStart + roleBadgeSize / 2, innerY + innerSize - nameBarHeight / 2);
+      }
+    }
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `700 ${fitFontSize(ctx, cardName, textWidth, 14)}px "Trebuchet MS", sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      cardName,
+      contentStart + (roleLabel ? roleBadgeSize + roleGap : 0),
+      innerY + innerSize - nameBarHeight / 2
+    );
     ctx.restore();
 
     if (entry.isShiny) {
@@ -369,16 +454,20 @@ async function renderTeamImage(teamEntries, username) {
   };
 
   // Fetch all card images in parallel — one round-trip instead of three sequential ones.
-  const [imgLeft, imgMiddle, imgRight, shinyEmojiImage] = await Promise.all([
+  const [imgLeft, imgMiddle, imgRight, shinyEmojiImage, hpEmoji, atkEmoji, spdEmoji] = await Promise.all([
     loadCardImage(slots[0]),
     loadCardImage(slots[1]),
     loadCardImage(slots[2]),
-    loadShinyEmojiImage()
+    loadShinyEmojiImage(),
+    loadRoleEmojiImage('HP'),
+    loadRoleEmojiImage('ATK'),
+    loadRoleEmojiImage('SPD')
   ]);
 
-  renderCardSlot(ctx, slots[0], imgLeft,   shinyEmojiImage, layout.left);
-  renderCardSlot(ctx, slots[1], imgMiddle, shinyEmojiImage, layout.middle);
-  renderCardSlot(ctx, slots[2], imgRight,  shinyEmojiImage, layout.right);
+  const roleImages = { HP: hpEmoji, ATK: atkEmoji, SPD: spdEmoji };
+  renderCardSlot(ctx, slots[0], imgLeft,   shinyEmojiImage, roleImages[slots[0]?.role], layout.left);
+  renderCardSlot(ctx, slots[1], imgMiddle, shinyEmojiImage, roleImages[slots[1]?.role], layout.middle);
+  renderCardSlot(ctx, slots[2], imgRight,  shinyEmojiImage, roleImages[slots[2]?.role], layout.right);
 
   return canvas.toBuffer('image/png');
 }
@@ -391,7 +480,7 @@ async function saveAutoTeam(userData, ownedCards) {
 }
 
 async function buildTeamPayload(user, teamEntries) {
-  const image = await renderTeamImage(teamEntries, user.username);
+  const image = await renderTeamImage(assignRoles(teamEntries), user.username);
 
   return {
     content: normalizeContentName(user.username),
