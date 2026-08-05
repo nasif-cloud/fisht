@@ -62,7 +62,7 @@ function buildComponents(
     ? [
         settingRow(
           'settings_duel_reward_dm',
-          '# DM When Duel Reward\nReceive a DM when your daily duel reward is ready at `10:30PM ET`.',
+          '# DM When Duel Reward\nReceive a DM when your daily duel reward is ready every `24 Hours`.',
           dmDuelReward,
           disabled
         )
@@ -70,7 +70,7 @@ function buildComponents(
     : [
         settingRow(
           'settings_daily_dm',
-          '# DM When Daily Ready\nEvery `24 hours` at **10:30PM ET**.',
+          '# DM When Daily Ready\nEvery `24 hours`.',
           dmDailyReady,
           disabled
         ),

@@ -7,4 +7,4 @@ The team renderer must await every `loadImage` call, including cached buffers. C
 
 **Why:** Canvas image decoding can reject asynchronously after the network fetch succeeds. Returning the unresolved promise from a renderer-level helper lets the rejection escape the command and prevents the team response from being sent.
 
-**How to apply:** Keep image fetch/decode failures inside the per-card helper, cache failed URLs as null, and let the rest of the team render with a placeholder slot. Role badges and other auxiliary images should follow the same cached, failure-safe pattern.
+**How to apply:** Keep image fetch/decode failures inside the per-card helper, cache failed URLs as null, and let the rest of the team render with a placeholder slot. Role badges and other auxiliary images should follow the same cached, failure-safe pattern. Keep the HP/ATK/SPD badge inside the name bar, aligned beside the card name and slightly below the bar midpoint so it does not disappear or make the label look too high.

@@ -333,7 +333,9 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, roleEmojiImage
     }
 
     // Attached full-width name bar inside the bottom edge.
+    // Keep the label a few pixels lower so it sits comfortably in the bar.
     const nameBarHeight = 30;
+    const nameBaselineY = innerY + innerSize - nameBarHeight / 2 + 3;
     ctx.save();
     ctx.fillStyle = '#1A202C';
     ctx.fillRect(innerX, innerY + innerSize - nameBarHeight, innerSize, nameBarHeight);
@@ -352,7 +354,7 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, roleEmojiImage
         ctx.drawImage(
           roleEmojiImage,
           contentStart,
-          innerY + innerSize - nameBarHeight / 2 - roleBadgeSize / 2,
+          nameBaselineY - roleBadgeSize / 2,
           roleBadgeSize,
           roleBadgeSize
         );
@@ -360,7 +362,7 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, roleEmojiImage
         ctx.fillStyle = '#FFD166';
         ctx.font = '700 10px "Trebuchet MS", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(roleLabel, contentStart + roleBadgeSize / 2, innerY + innerSize - nameBarHeight / 2);
+        ctx.fillText(roleLabel, contentStart + roleBadgeSize / 2, nameBaselineY);
       }
     }
     ctx.fillStyle = '#FFFFFF';
@@ -369,7 +371,7 @@ function renderCardSlot(ctx, entry, sourceImage, shinyEmojiImage, roleEmojiImage
     ctx.fillText(
       cardName,
       contentStart + (roleLabel ? roleBadgeSize + roleGap : 0),
-      innerY + innerSize - nameBarHeight / 2
+      nameBaselineY
     );
     ctx.restore();
 

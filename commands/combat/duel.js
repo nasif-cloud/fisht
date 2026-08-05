@@ -542,17 +542,17 @@ module.exports = {
     }
 
     const challengerData = await User.findOne({ userId: challenger.id });
-    if (buildDuelTeam(challengerData).length !== 3) {
+    if (buildDuelTeam(challengerData).length === 0) {
       return privateReply(
         interactionOrMessage,
-        'You need a full 3-card team before starting a duel'
+        'You need at least 1 card in your team before starting a duel'
       );
     }
     const targetData = await User.findOne({ userId: target.id });
-    if (buildDuelTeam(targetData).length !== 3) {
+    if (buildDuelTeam(targetData).length === 0) {
       return privateReply(
         interactionOrMessage,
-        `${target.username} needs a full 3-card team before they can duel`
+        `${target.username} needs at least 1 card in their team before they can duel`
       );
     }
 
@@ -611,9 +611,9 @@ module.exports = {
       const challengerTeam = buildDuelTeam(freshChallenger);
       const targetTeam = buildDuelTeam(freshTarget);
 
-      if (challengerTeam.length !== 3 || targetTeam.length !== 3) {
+      if (challengerTeam.length === 0 || targetTeam.length === 0) {
         await response.edit({
-          content: 'The duel could not start because both players need a full 3-card team',
+          content: 'The duel could not start because both players need at least 1 card in their team',
           embeds: [],
           components: []
         });
@@ -736,7 +736,7 @@ module.exports = {
                 await recordDuelWin(result.winner.id);
                 rewardResult = await awardDuelReward(state, result.winner);
               }
-              const content = result.reason === 'no-actions'
+              let content = result.reason === 'no-actions'
                 ? 'Duel ended with no winners'
                 : result.reason === 'draw'
                   ? 'The duel ended in a draw'
