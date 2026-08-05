@@ -21,7 +21,7 @@ const { computeBoosts } = require('../../utils/boosts');
 // Shiny image generators — produce the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getCardImageResult,
+  getCardImagePayload,
   getNormalizedBuffer
 } = require('../../utils/cardImage');
 
@@ -152,16 +152,9 @@ module.exports = {
 
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
-    const normalCardImage = {
-      source: cardData.image || foundCard.image,
-      normalized: false
-    };
-    const normalCardImageUrl = normalCardImage.source;
+    const normalCardImageUrl = cardData.image || foundCard.image;
 
-    // --- STEP 9: Build the embed with plain image URLs ---
-    // We always send with plain URLs first so the embed appears instantly.
-    // If the card is shiny, the holographic shimmer is applied in a second
-    // background edit after the message is already visible to the user.
+    // --- STEP 9: Build the embed and final image before sending ---
     const cardTitle = isShiny ? `${SHINY_EMOJI} ${foundCard.name}` : foundCard.name;
 
     const embed = {
@@ -180,8 +173,8 @@ module.exports = {
         text: `Mastery ${masteryLevel}/3`
       },
       color:     visual.color,
-      thumbnail: { url: visual.icon    }, // plain rank icon — shimmer applied later if shiny
-      image:     { url: normalCardImageUrl } // plain card image — shimmer applied later if shiny
+      thumbnail: { url: visual.icon },
+      image:     { url: normalCardImageUrl }
     };
 
     // --- STEP 11: Build the boosts button ---
@@ -195,73 +188,49 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // --- STEP 11: Send the message immediately (no shiny delay) ---
+    // --- STEP 11: Prepare the final image before sending ---
+    let finalEmbed = embed;
+    let imageFiles = [];
+    if (isShiny) {
+      const [cardBuf, iconBuf] = await Promise.all([
+        generateShinyImage(cardData.image, foundCard.name),
+        generateShinyIcon(visual.icon)
+      ]);
+      const finalCardBuffer = await getNormalizedBuffer(
+        cardBuf,
+        `shiny:${cardData.image}`
+      );
+      finalEmbed = {
+        ...embed,
+        thumbnail: { url: 'attachment://shiny_icon.png' },
+        image: { url: 'attachment://shiny_card.jpg' }
+      };
+      imageFiles = [
+        new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.jpg' }),
+        new AttachmentBuilder(iconBuf, { name: 'shiny_icon.png' })
+      ];
+    } else {
+      const imagePayload = await getCardImagePayload(normalCardImageUrl);
+      finalEmbed = { ...embed, image: { url: imagePayload.imageUrl } };
+      imageFiles = imagePayload.files.map(file =>
+        new AttachmentBuilder(file.attachment, { name: file.name })
+      );
+    }
+
+    // --- STEP 12: Send the complete message once ---
     // Slash: use editReply (because we deferred in step 3).
     // Prefix: use channel.send (no defer was needed, no time limit).
     let response;
     const payload = {
-      embeds: [embed],
+      embeds: [finalEmbed],
       components: [boostsRow],
-      files: []
+      files: imageFiles
     };
 
     if (isSlash) {
       response = await interactionOrMessage.editReply(payload);
     } else {
       response = await interactionOrMessage.channel.send(payload);
-    }
-
-    // --- STEP 12: Apply shiny shimmer in the background (shiny cards only) ---
-    // This runs asynchronously so the embed above is visible to the user right away.
-    // generateShinyImage and generateShinyIcon both cache their results in memory,
-    // so after the first view for a given card the second edit is near-instant.
-    if (isShiny) {
-      (async () => {
-        try {
-          // Generate the holographic card image and rank icon in parallel
-          const [cardBuf, iconBuf] = await Promise.all([
-            generateShinyImage(cardData.image, foundCard.name),
-            generateShinyIcon(visual.icon)
-          ]);
-          const finalCardBuffer = await getNormalizedBuffer(
-            cardBuf,
-            `shiny:${cardData.image}`
-          );
-          const shinyFiles = [
-            new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.jpg' }),
-            new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
-          ];
-          // Same embed object, but now pointing at the uploaded shiny files
-          const shinyEmbed = {
-            ...embed,
-            thumbnail: { url: `attachment://shiny_icon.png` },
-            image:     { url: `attachment://shiny_card.jpg` }
-          };
-          await response.edit({
-            embeds:     [shinyEmbed],
-            components: [boostsRow],
-            files:      shinyFiles
-          });
-        } catch (err) {
-          // Shimmer failed silently — the plain card is already showing, no action needed
-          console.error(`[MyCard] Shiny shimmer failed:`, err.message);
-        }
-      })();
-    } else {
-      (async () => {
-        try {
-          const imageResult = await getCardImageResult(normalCardImage.source);
-          if (!imageResult.normalized) return;
-          await response.edit({
-            embeds: [{ ...embed, image: { url: 'attachment://card_image.jpg' } }],
-            files: [
-              new AttachmentBuilder(imageResult.source, { name: 'card_image.jpg' })
-            ]
-          });
-        } catch (error) {
-          console.warn(`[MyCard] Background card image processing failed: ${error.message}`);
-        }
-      })();
     }
 
     // --- STEP 13: Listen for the boosts button ---

@@ -123,6 +123,28 @@ async function getCardImageResult(imageUrl) {
   return promise;
 }
 
+async function getCardImagePayload(imageUrl, attachmentName = 'card_image.jpg') {
+  try {
+    const result = await getCardImageResult(imageUrl);
+    return {
+      imageUrl: result.normalized
+        ? `attachment://${attachmentName}`
+        : result.source,
+      files: result.normalized
+        ? [{ attachment: result.source, name: attachmentName }]
+        : [],
+      normalized: result.normalized
+    };
+  } catch (error) {
+    console.warn(`[Card image] Failed for ${imageUrl}: ${error.message}`);
+    return {
+      imageUrl,
+      files: [],
+      normalized: false
+    };
+  }
+}
+
 async function getCardImageSource(cardData, baseCard = null) {
   const imageUrl = cardData?.image || baseCard?.image;
 
@@ -143,5 +165,6 @@ module.exports = {
   getNormalizedBuffer,
   getNormalizedImageBuffer,
   getCardImageResult,
+  getCardImagePayload,
   getCardImageSource
 };

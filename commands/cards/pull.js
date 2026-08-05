@@ -15,7 +15,7 @@ const { previewPityPull, applyPityPull } = require('../../utils/pity');
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getCardImageResult,
+  getCardImagePayload,
   getNormalizedBuffer
 } = require('../../utils/cardImage');
 
@@ -166,7 +166,10 @@ function getNextReset(now) {
 // For prefix commands, allowedMentions prevents the bot from pinging the user.
 function sendPrivate(interactionOrMessage, content) {
   if (interactionOrMessage.isChatInputCommand?.()) {
-    return interactionOrMessage.reply({ content, flags: 64 });
+    const payload = { content, flags: 64 };
+    return interactionOrMessage.deferred || interactionOrMessage.replied
+      ? interactionOrMessage.editReply(payload)
+      : interactionOrMessage.reply(payload);
   }
   return interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
 }
@@ -188,6 +191,12 @@ module.exports = {
   async execute(interactionOrMessage) {
     const user = interactionOrMessage.user || interactionOrMessage.author;
     const now = new Date();
+
+    // Image preparation happens before the final reply, so acknowledge slash
+    // commands before database work and remote image processing begins.
+    if (interactionOrMessage.isChatInputCommand?.()) {
+      await interactionOrMessage.deferReply();
+    }
 
     // ── STEP 1: Load the player's save data (or create one if it's their first time) ──
     let userData = await User.findOne({ userId: user.id });
@@ -266,6 +275,9 @@ module.exports = {
     // Shiny is permanent — once a card is shiny, it stays shiny forever.
     // Pulling a non-shiny duplicate later does NOT remove the shiny status.
     const isShinyPull = Math.random() < SHINY_CHANCE;
+    const normalImagePromise = isShinyPull
+      ? null
+      : getCardImagePayload(pulledCard.image);
 
     // ── STEP 6: Resolve the card's stats ──
     // safeRank catches invalid rank values; resolveStat converts filter strings to numbers.
@@ -313,12 +325,34 @@ module.exports = {
     const xpResult = addXp(userData, 1);
     await userData.save(); // Writes all the changes above to MongoDB
 
-    // ── STEP 9: Build the shiny image files (if this pull is shiny) ──
-    // Generates a holographic rainbow overlay on both the card image and the rank icon.
-    // Both are uploaded as Discord file attachments and referenced via attachment:// URLs.
+    // ── STEP 9: Prepare the final image before sending ──
+    // The complete image payload is prepared first so Discord only receives one
+    // message and the card never flashes from a plain image to an attachment.
     let files      = [];
-    let imageUrl   = pulledCard.image;    // Default: plain card image URL
-    let iconUrl    = visualSettings.icon; // Default: plain rank icon URL
+    let imageUrl   = pulledCard.image;
+    let iconUrl    = visualSettings.icon;
+    if (isShinyPull) {
+      const [cardBuf, iconBuf] = await Promise.all([
+        generateShinyImage(pulledCard.image, pulledCard.name),
+        generateShinyIcon(visualSettings.icon)
+      ]);
+      const finalCardBuffer = await getNormalizedBuffer(
+        cardBuf,
+        `shiny:${pulledCard.image}`
+      );
+      files = [
+        new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.jpg' }),
+        new AttachmentBuilder(iconBuf, { name: 'shiny_icon.png' })
+      ];
+      imageUrl = 'attachment://shiny_card.jpg';
+      iconUrl = 'attachment://shiny_icon.png';
+    } else {
+      const imagePayload = await normalImagePromise;
+      imageUrl = imagePayload.imageUrl;
+      files = imagePayload.files.map(file =>
+        new AttachmentBuilder(file.attachment, { name: file.name })
+      );
+    }
     const cardTitle = isShinyPull
       ? `${SHINY_EMOJI} ${pulledCard.name}` // Shiny prefix emoji before the name
       : pulledCard.name;
@@ -350,7 +384,12 @@ module.exports = {
 
     let resultMessage;
     if (interactionOrMessage.isChatInputCommand?.()) {
-      if (interactionOrMessage.replied || interactionOrMessage.deferred) {
+      if (interactionOrMessage.deferred && !interactionOrMessage.replied) {
+        resultMessage = await interactionOrMessage.editReply({
+          embeds: [embed],
+          files
+        });
+      } else if (interactionOrMessage.replied) {
         resultMessage = await interactionOrMessage.followUp({
           embeds: [embed],
           files,
@@ -362,46 +401,6 @@ module.exports = {
     } else {
       resultMessage = await interactionOrMessage.channel.send({ embeds: [embed], files });
     }
-
-    // Keep the pull response as fast as it was before fixed-size processing.
-    // The original image is sent immediately; normalization is applied in the
-    // background and cached for future commands.
-    (async () => {
-      try {
-        if (isShinyPull) {
-          const [cardBuf, iconBuf] = await Promise.all([
-            generateShinyImage(pulledCard.image, pulledCard.name),
-            generateShinyIcon(visualSettings.icon)
-          ]);
-          const finalCardBuffer = await getNormalizedBuffer(
-            cardBuf,
-            `shiny:${pulledCard.image}`
-          );
-          await resultMessage.edit({
-            embeds: [{
-              ...embed,
-              thumbnail: { url: 'attachment://shiny_icon.png' },
-              image: { url: 'attachment://shiny_card.jpg' }
-            }],
-            files: [
-              new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.jpg' }),
-              new AttachmentBuilder(iconBuf, { name: 'shiny_icon.png' })
-            ]
-          });
-        } else {
-          const imageResult = await getCardImageResult(pulledCard.image);
-          if (!imageResult.normalized) return;
-          await resultMessage.edit({
-            embeds: [{ ...embed, image: { url: 'attachment://card_image.jpg' } }],
-            files: [
-              new AttachmentBuilder(imageResult.source, { name: 'card_image.jpg' })
-            ]
-          });
-        }
-      } catch (error) {
-        console.warn(`[Pull] Background card image processing failed: ${error.message}`);
-      }
-    })();
 
     await sendLevelUpNotifications(
       user,

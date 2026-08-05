@@ -43,7 +43,7 @@ const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
   getNormalizedBuffer,
-  getCardImageResult
+  getCardImagePayload
 } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
@@ -240,16 +240,10 @@ async function buildShinyPayload(entry, footerText, user) {
 }
 
 // ─────────────────────────────────────────────
-// HELPER — render a card via an editFn, then apply the shiny shimmer
-//
-// Step 1 (fast): calls editFn with plain image URLs immediately — no delay.
-// Step 2 (shiny): if the card is shiny, generates the holographic files and
-//   calls editFn a second time with attachment:// URLs.
+// HELPER — render a card via one final editFn payload
 //
 // The version counter (getVersion / bumpVersion) prevents a race condition
-// where navigating quickly could apply an old card's shimmer over a new card:
-// each render bumps the counter, and the shimmer edit is discarded if the
-// counter changed while the images were generating.
+// where navigating quickly could apply an old card over a new card.
 //
 // editFn: async (payload) → void — the function that updates the Discord message
 // ─────────────────────────────────────────────
@@ -258,56 +252,21 @@ async function renderCardUpdate({ editFn, entry, footerText, user, components, g
   bumpVersion();
   const myVersion = getVersion();
 
-  // Step 1 — send the plain embed right away (no image generation needed)
   const cardData = getCardData(entry.card, entry.mastery ?? 1);
   const source = cardData.image || entry.card.image;
-  await editFn({
-    embeds:     [buildCardEmbed(
-      entry,
-      footerText,
-      user,
-      source
-    )],
-    files: [],
-    components
-  });
-
-  // Step 2 — replace the source image in the background. Shiny processing
-  // remains separate because it also applies the holographic overlay.
+  let payload;
   if (entry.isShiny) {
-    void (async () => {
-      try {
-        const shiny = await buildShinyPayload(entry, footerText, user);
-        // Only apply if we haven't navigated to a different card since this render started
-        if (getVersion() === myVersion) {
-          await editFn({ ...shiny, components });
-        }
-      } catch (err) {
-        // Shimmer failed silently — the plain card is already showing
-        console.error(`[Collection] Shiny shimmer failed:`, err.message);
-      }
-    })();
+    payload = await buildShinyPayload(entry, footerText, user);
   } else {
-    void (async () => {
-      try {
-        const imageResult = await getCardImageResult(source);
-        if (!imageResult.normalized) return;
-        if (getVersion() === myVersion) {
-          await editFn({
-            embeds: [buildCardEmbed(
-              entry,
-              footerText,
-              user,
-              'attachment://card_image.jpg'
-            )],
-            files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
-            components
-          });
-        }
-      } catch (error) {
-        console.warn(`[Collection] Background card image processing failed: ${error.message}`);
-      }
-    })();
+    const image = await getCardImagePayload(source);
+    payload = {
+      embeds: [buildCardEmbed(entry, footerText, user, image.imageUrl)],
+      files: image.files
+    };
+  }
+
+  if (getVersion() === myVersion) {
+    await editFn({ ...payload, components });
   }
 }
 
@@ -577,7 +536,7 @@ module.exports = {
       ? buildSearchComponents()
       : buildNormalComponents(sortedList.length, currentPage, sortMode, isSlash, isAscending, isShinyFilter);
 
-    // ── STEP 6: Send the initial message immediately with plain URLs ──
+    // ── STEP 6: Prepare and send the complete initial message once ──
     // Slash: editReply (already deferred in step 1).
     // Prefix: channel.send (no defer, no time limit).
     //
@@ -589,58 +548,22 @@ module.exports = {
       source: initialCardData.image || initialEntry.card.image,
       normalized: false
     };
-    const fastInitial = {
-      embeds:     [buildCardEmbed(
-        initialEntry,
-        initialFooter,
-        user,
-        initialImage.source
-      )],
-      files: [],
-      components: initialComponents
-    };
+    let initialPayload;
+    if (initialEntry.isShiny) {
+      initialPayload = await buildShinyPayload(initialEntry, initialFooter, user);
+    } else {
+      const image = await getCardImagePayload(initialImage.source);
+      initialPayload = {
+        embeds: [buildCardEmbed(initialEntry, initialFooter, user, image.imageUrl)],
+        files: image.files
+      };
+    }
+    const fastInitial = { ...initialPayload, components: initialComponents };
 
     if (isSlash) {
       response = await interactionOrMessage.editReply(fastInitial);
     } else {
       response = await interactionOrMessage.channel.send(fastInitial);
-    }
-
-    // Apply shiny shimmer to the initial card if needed.
-    // This runs after the message is sent so the card is visible right away.
-    if (initialEntry.isShiny) {
-      bumpVersion();
-      const mv = getVersion();
-      (async () => {
-        try {
-          const shiny = await buildShinyPayload(initialEntry, initialFooter, user);
-          if (getVersion() === mv) {
-            await response.edit({ ...shiny, components: initialComponents });
-          }
-        } catch (err) {
-          console.error(`[Collection] Initial shiny shimmer failed:`, err.message);
-        }
-      })();
-    } else {
-      const initialVersion = getVersion();
-      (async () => {
-        try {
-          const imageResult = await getCardImageResult(initialImage.source);
-          if (!imageResult.normalized) return;
-          if (getVersion() === initialVersion) {
-            await response.edit({
-              embeds: [{
-                ...fastInitial.embeds[0],
-                image: { url: 'attachment://card_image.jpg' }
-              }],
-              files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
-              components: initialComponents
-            });
-          }
-        } catch (error) {
-          console.warn(`[Collection] Initial card image processing failed: ${error.message}`);
-        }
-      })();
     }
 
     // ── STEP 7: Interaction collector ──

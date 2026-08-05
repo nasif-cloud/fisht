@@ -34,7 +34,7 @@ const {
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
-const { getCardImageResult } = require('../../utils/cardImage');
+const { getCardImagePayload } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -145,37 +145,18 @@ function buildCardEmbed(card, mastery, footerText, user, imageUrl = null) {
 async function renderCardUpdate({ editFn, card, mastery, footerText, user, components }) {
   const cardData = getCardData(card, mastery);
   const source = cardData.image || card.image;
+  const image = await getCardImagePayload(source);
   await editFn({
     embeds: [buildCardEmbed(
       card,
       mastery,
       footerText,
       user,
-      source
+      image.imageUrl
     )],
-    files: [],
+    files: image.files,
     components
   });
-
-  void (async () => {
-    try {
-      const imageResult = await getCardImageResult(source);
-      if (!imageResult.normalized) return;
-      await editFn({
-        embeds: [buildCardEmbed(
-          card,
-          mastery,
-          footerText,
-          user,
-          'attachment://card_image.jpg'
-        )],
-        files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
-        components
-      });
-    } catch (error) {
-      console.warn(`[AllCards] Background card image processing failed: ${error.message}`);
-    }
-  })();
 }
 
 // ─────────────────────────────────────────────
@@ -480,9 +461,10 @@ module.exports = {
 
     // ── STEP 6: Send the message ──
     // fetchReply: true gives us back the sent message object so we can attach a collector to it
+    const initialImagePayload = await getCardImagePayload(initialImage.source);
     const payload = {
-      embeds: [embed],
-      files: [],
+      embeds: [{ ...embed, image: { url: initialImagePayload.imageUrl } }],
+      files: initialImagePayload.files,
       components,
       fetchReply: true
     };
@@ -493,27 +475,6 @@ module.exports = {
     } else {
       response = await interactionOrMessage.channel.send(payload);
     }
-
-    // Send the original URL immediately. Normalize in the background so the
-    // command stays responsive while later renders reuse the shared cache.
-    (async () => {
-      try {
-        const imageResult = await getCardImageResult(initialImage.source);
-        if (!imageResult.normalized) return;
-        const latest = await response.fetch();
-        if (latest.embeds[0]?.image?.url !== initialImage.source) return;
-        await response.edit({
-          embeds: [{
-            ...embed,
-            image: { url: 'attachment://card_image.jpg' }
-          }],
-          files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
-          components
-        });
-      } catch (error) {
-        console.warn(`[AllCards] Initial card image processing failed: ${error.message}`);
-      }
-    })();
 
     // ── STEP 7: Set up the interaction collector ──
     // A "collector" listens for button clicks and dropdown changes on this specific message.

@@ -5,7 +5,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
-const { getCardImageResult } = require('../../utils/cardImage');
+const { getCardImagePayload } = require('../../utils/cardImage');
 const { updateQuestProgress } = require('../../utils/quests');
 
 
@@ -36,6 +36,7 @@ module.exports = {
   async execute(interactionOrMessage, args) {
     // Works for both slash commands (/info luffy) and prefix commands (op info luffy)
     const user = interactionOrMessage.user || interactionOrMessage.author;
+    const isSlash = interactionOrMessage.isChatInputCommand?.();
 
     // --- STEP 1: Figure out what the user searched for ---
     let query = '';
@@ -71,6 +72,8 @@ module.exports = {
     if (!foundCard) {
       return interactionOrMessage.reply({ content: `**${query}** is not a valid card`, allowedMentions: { repliedUser: false } });
     }
+
+    if (isSlash) await interactionOrMessage.deferReply();
 
     const userData = await User.findOne({ userId: user.id });
     if (userData) {
@@ -151,35 +154,20 @@ module.exports = {
     // --- STEP 7: Send the initial embed (M1) ---
     // fetchReply: true lets us save the sent message so we can attach a button collector
     const initial = await generateEmbed(currentMastery);
+    const initialImage = await getCardImagePayload(initial.image.url);
     const payload = {
-      embeds: [initial],
-      files: [],
+      embeds: [{ ...initial, image: { url: initialImage.imageUrl } }],
+      files: initialImage.files,
       components: [generateButtons(currentMastery)],
       fetchReply: true
     };
 
     let response;
-    if (interactionOrMessage.isChatInputCommand?.()) {
-      response = await interactionOrMessage.reply(payload);
+    if (isSlash) {
+      response = await interactionOrMessage.editReply(payload);
     } else {
       response = await interactionOrMessage.channel.send(payload);
     }
-
-    const initialSource = initial.image.url;
-    (async () => {
-      try {
-        const imageResult = await getCardImageResult(initialSource);
-        if (!imageResult.normalized) return;
-        const latest = await response.fetch();
-        if (latest.embeds[0]?.image?.url !== initialSource) return;
-        await response.edit({
-          embeds: [{ ...initial, image: { url: 'attachment://card_image.jpg' } }],
-          files: [{ attachment: imageResult.source, name: 'card_image.jpg' }]
-        });
-      } catch (error) {
-        console.warn(`[Info] Background card image processing failed: ${error.message}`);
-      }
-    })();
 
     // --- STEP 8: Listen for button clicks ---
     // A "collector" watches for button interactions on this message for 60 seconds.
@@ -199,29 +187,17 @@ module.exports = {
       if (interaction.customId === 'next_mastery') currentMastery++;
       if (interaction.customId === 'prev_mastery') currentMastery--;
 
+      // Image processing happens before the single final update.
+      await interaction.deferUpdate();
+
       // Update the message with the new mastery's embed and buttons
       const next = await generateEmbed(currentMastery);
-      await interaction.update({
-        embeds: [next],
-        files: [],
+      const nextImage = await getCardImagePayload(next.image.url);
+      await interaction.editReply({
+        embeds: [{ ...next, image: { url: nextImage.imageUrl } }],
+        files: nextImage.files,
         components: [generateButtons(currentMastery)]
       });
-
-      const nextSource = next.image.url;
-      (async () => {
-        try {
-          const imageResult = await getCardImageResult(nextSource);
-          if (!imageResult.normalized) return;
-          const latest = await response.fetch();
-          if (latest.embeds[0]?.image?.url !== nextSource) return;
-          await response.edit({
-            embeds: [{ ...next, image: { url: 'attachment://card_image.jpg' } }],
-            files: [{ attachment: imageResult.source, name: 'card_image.jpg' }]
-          });
-        } catch (error) {
-          console.warn(`[Info] Background mastery image processing failed: ${error.message}`);
-        }
-      })();
     });
 
     // After 60 seconds, remove the buttons so the message stays clean
