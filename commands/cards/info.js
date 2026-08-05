@@ -5,7 +5,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
-const { getNormalizedImageBuffer } = require('../../utils/cardImage');
+const { getCardImageResult } = require('../../utils/cardImage');
 const { updateQuestProgress } = require('../../utils/quests');
 
 
@@ -168,12 +168,13 @@ module.exports = {
     const initialSource = initial.image.url;
     (async () => {
       try {
-        const normalized = await getNormalizedImageBuffer(initialSource);
+        const imageResult = await getCardImageResult(initialSource);
+        if (!imageResult.normalized) return;
         const latest = await response.fetch();
         if (latest.embeds[0]?.image?.url !== initialSource) return;
         await response.edit({
           embeds: [{ ...initial, image: { url: 'attachment://card_image.jpg' } }],
-          files: [{ attachment: normalized, name: 'card_image.jpg' }]
+          files: [{ attachment: imageResult.source, name: 'card_image.jpg' }]
         });
       } catch (error) {
         console.warn(`[Info] Background card image processing failed: ${error.message}`);
@@ -209,12 +210,13 @@ module.exports = {
       const nextSource = next.image.url;
       (async () => {
         try {
-          const normalized = await getNormalizedImageBuffer(nextSource);
+          const imageResult = await getCardImageResult(nextSource);
+          if (!imageResult.normalized) return;
           const latest = await response.fetch();
           if (latest.embeds[0]?.image?.url !== nextSource) return;
           await response.edit({
             embeds: [{ ...next, image: { url: 'attachment://card_image.jpg' } }],
-            files: [{ attachment: normalized, name: 'card_image.jpg' }]
+            files: [{ attachment: imageResult.source, name: 'card_image.jpg' }]
           });
         } catch (error) {
           console.warn(`[Info] Background mastery image processing failed: ${error.message}`);

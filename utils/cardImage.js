@@ -1,8 +1,10 @@
 // ─────────────────────────────────────────────
 // FAST CARD IMAGE NORMALIZER
 // ─────────────────────────────────────────────
-// Every card image is rendered on the same fixed 573×800 canvas. Sharp keeps
-// the original aspect ratio and crops only the excess so there is no padding.
+// Card images that are already visually close to the target dimensions are
+// kept as-is. Other images are rendered on a fixed 573×800 canvas. Sharp keeps
+// the original aspect ratio and crops only the minimum excess so there is no
+// padding.
 
 const sharp = require('sharp');
 
@@ -10,6 +12,7 @@ const imageCache = new Map();
 const IMAGE_FETCH_TIMEOUT_MS = 10_000;
 const CARD_WIDTH = 573;
 const CARD_HEIGHT = 800;
+const NEAR_TARGET_TOLERANCE = 0.03;
 
 async function fetchImageBuffer(imageUrl) {
   const controller = new AbortController();
@@ -46,6 +49,35 @@ async function normalizeImageBuffer(input) {
     .toBuffer();
 }
 
+function isNearTargetDimensions(width, height) {
+  if (!width || !height) return false;
+
+  return (
+    Math.abs(width - CARD_WIDTH) / CARD_WIDTH <= NEAR_TARGET_TOLERANCE &&
+    Math.abs(height - CARD_HEIGHT) / CARD_HEIGHT <= NEAR_TARGET_TOLERANCE
+  );
+}
+
+async function processCardImageBuffer(input, imageUrl) {
+  const metadata = await sharp(input, { sequentialRead: true }).metadata();
+
+  if (isNearTargetDimensions(metadata.width, metadata.height)) {
+    return {
+      source: imageUrl,
+      normalized: false,
+      width: metadata.width,
+      height: metadata.height
+    };
+  }
+
+  return {
+    source: await normalizeImageBuffer(input),
+    normalized: true,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT
+  };
+}
+
 async function getNormalizedBuffer(input, cacheKey) {
   if (!cacheKey) return normalizeImageBuffer(input);
   if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
@@ -73,17 +105,29 @@ async function getNormalizedImageBuffer(imageUrl) {
   return promise;
 }
 
-async function getCardImageSource(cardData, baseCard = null) {
-  const imageUrl = cardData?.image || baseCard?.image;
+async function getCardImageResult(imageUrl) {
   if (!imageUrl) {
     return { source: imageUrl, normalized: false };
   }
 
+  const cacheKey = `smart-url:${imageUrl}`;
+  if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
+
+  const promise = fetchImageBuffer(imageUrl)
+    .then(input => processCardImageBuffer(input, imageUrl))
+    .catch(error => {
+      imageCache.delete(cacheKey);
+      throw error;
+    });
+  imageCache.set(cacheKey, promise);
+  return promise;
+}
+
+async function getCardImageSource(cardData, baseCard = null) {
+  const imageUrl = cardData?.image || baseCard?.image;
+
   try {
-    return {
-      source: await getNormalizedImageBuffer(imageUrl),
-      normalized: true
-    };
+    return await getCardImageResult(imageUrl);
   } catch (error) {
     console.warn(`[Card image] Failed for ${imageUrl}: ${error.message}`);
     return { source: imageUrl, normalized: false };
@@ -93,8 +137,11 @@ async function getCardImageSource(cardData, baseCard = null) {
 module.exports = {
   CARD_WIDTH,
   CARD_HEIGHT,
+  NEAR_TARGET_TOLERANCE,
+  isNearTargetDimensions,
   normalizeImageBuffer,
   getNormalizedBuffer,
   getNormalizedImageBuffer,
+  getCardImageResult,
   getCardImageSource
 };

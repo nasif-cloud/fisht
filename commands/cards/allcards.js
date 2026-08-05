@@ -34,7 +34,7 @@ const {
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
-const { getNormalizedImageBuffer } = require('../../utils/cardImage');
+const { getCardImageResult } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -159,7 +159,8 @@ async function renderCardUpdate({ editFn, card, mastery, footerText, user, compo
 
   void (async () => {
     try {
-      const normalized = await getNormalizedImageBuffer(source);
+      const imageResult = await getCardImageResult(source);
+      if (!imageResult.normalized) return;
       await editFn({
         embeds: [buildCardEmbed(
           card,
@@ -168,7 +169,7 @@ async function renderCardUpdate({ editFn, card, mastery, footerText, user, compo
           user,
           'attachment://card_image.jpg'
         )],
-        files: [{ attachment: normalized, name: 'card_image.jpg' }],
+        files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
         components
       });
     } catch (error) {
@@ -497,7 +498,8 @@ module.exports = {
     // command stays responsive while later renders reuse the shared cache.
     (async () => {
       try {
-        const normalized = await getNormalizedImageBuffer(initialImage.source);
+        const imageResult = await getCardImageResult(initialImage.source);
+        if (!imageResult.normalized) return;
         const latest = await response.fetch();
         if (latest.embeds[0]?.image?.url !== initialImage.source) return;
         await response.edit({
@@ -505,7 +507,7 @@ module.exports = {
             ...embed,
             image: { url: 'attachment://card_image.jpg' }
           }],
-          files: [{ attachment: normalized, name: 'card_image.jpg' }],
+          files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
           components
         });
       } catch (error) {

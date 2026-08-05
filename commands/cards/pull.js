@@ -15,7 +15,7 @@ const { previewPityPull, applyPityPull } = require('../../utils/pity');
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getNormalizedImageBuffer,
+  getCardImageResult,
   getNormalizedBuffer
 } = require('../../utils/cardImage');
 
@@ -389,11 +389,12 @@ module.exports = {
             ]
           });
         } else {
-          const normalizedBuffer = await getNormalizedImageBuffer(pulledCard.image);
+          const imageResult = await getCardImageResult(pulledCard.image);
+          if (!imageResult.normalized) return;
           await resultMessage.edit({
             embeds: [{ ...embed, image: { url: 'attachment://card_image.jpg' } }],
             files: [
-              new AttachmentBuilder(normalizedBuffer, { name: 'card_image.jpg' })
+              new AttachmentBuilder(imageResult.source, { name: 'card_image.jpg' })
             ]
           });
         }

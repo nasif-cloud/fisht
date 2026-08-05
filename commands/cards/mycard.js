@@ -21,7 +21,7 @@ const { computeBoosts } = require('../../utils/boosts');
 // Shiny image generators — produce the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getNormalizedImageBuffer,
+  getCardImageResult,
   getNormalizedBuffer
 } = require('../../utils/cardImage');
 
@@ -250,11 +250,12 @@ module.exports = {
     } else {
       (async () => {
         try {
-          const normalizedBuffer = await getNormalizedImageBuffer(normalCardImage.source);
+          const imageResult = await getCardImageResult(normalCardImage.source);
+          if (!imageResult.normalized) return;
           await response.edit({
             embeds: [{ ...embed, image: { url: 'attachment://card_image.jpg' } }],
             files: [
-              new AttachmentBuilder(normalizedBuffer, { name: 'card_image.jpg' })
+              new AttachmentBuilder(imageResult.source, { name: 'card_image.jpg' })
             ]
           });
         } catch (error) {

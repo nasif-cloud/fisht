@@ -43,7 +43,7 @@ const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
   getNormalizedBuffer,
-  getNormalizedImageBuffer
+  getCardImageResult
 } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
@@ -290,7 +290,8 @@ async function renderCardUpdate({ editFn, entry, footerText, user, components, g
   } else {
     void (async () => {
       try {
-        const normalized = await getNormalizedImageBuffer(source);
+        const imageResult = await getCardImageResult(source);
+        if (!imageResult.normalized) return;
         if (getVersion() === myVersion) {
           await editFn({
             embeds: [buildCardEmbed(
@@ -299,7 +300,7 @@ async function renderCardUpdate({ editFn, entry, footerText, user, components, g
               user,
               'attachment://card_image.jpg'
             )],
-            files: [{ attachment: normalized, name: 'card_image.jpg' }],
+            files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
             components
           });
         }
@@ -624,14 +625,15 @@ module.exports = {
       const initialVersion = getVersion();
       (async () => {
         try {
-          const normalized = await getNormalizedImageBuffer(initialImage.source);
+          const imageResult = await getCardImageResult(initialImage.source);
+          if (!imageResult.normalized) return;
           if (getVersion() === initialVersion) {
             await response.edit({
               embeds: [{
                 ...fastInitial.embeds[0],
                 image: { url: 'attachment://card_image.jpg' }
               }],
-              files: [{ attachment: normalized, name: 'card_image.jpg' }],
+              files: [{ attachment: imageResult.source, name: 'card_image.jpg' }],
               components: initialComponents
             });
           }
