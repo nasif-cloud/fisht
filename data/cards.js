@@ -2686,13 +2686,15 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/q65k6vV.png', 
+  isUpscale: true,
+
     M2: {
     title: 'Biscut Knight',
     rank: 'S',
     health: '+',
     power: '+',
     speed: '+',
-    image: 'https://i.imgur.com/X6l01ko.png', 
+    image: 'https://i.imgur.com/6s2CNFu.png', 
     }, 
 
     M3: {

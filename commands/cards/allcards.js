@@ -679,15 +679,20 @@ module.exports = {
     // After 2 minutes of inactivity, remove all buttons so old messages stay clean
     collector.on('end', async () => {
       // Keep the card visible, but clearly mark the controls as expired.
-      // Building a new footer with only text removes the user's avatar icon.
+      // Attachment-backed images must not be rewritten or Discord can detach
+      // the uploaded file from the embed and show it below the message.
       try {
         // Fetch the latest version so navigation changes are not overwritten.
         const latestResponse = await response.fetch();
-        const expiredEmbed = EmbedBuilder
-          .from(latestResponse.embeds[0])
-          .setFooter({ text: `expired` });
-
-        await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+        const imageUrl = latestResponse.embeds[0]?.image?.url ?? '';
+        if (imageUrl.includes('/attachments/')) {
+          await latestResponse.edit({ components: [] });
+        } else {
+          const expiredEmbed = EmbedBuilder
+            .from(latestResponse.embeds[0])
+            .setFooter({ text: `expired` });
+          await latestResponse.edit({ embeds: [expiredEmbed], components: [] });
+        }
       } catch {
         // The message may have been deleted while the collector was ending.
       }

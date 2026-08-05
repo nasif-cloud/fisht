@@ -13,3 +13,4 @@
 - [Duel rewards](duel-rewards.md) — daily duel reward readiness and opt-in DM notifications share the daily reset boundary
 - [Team image decoding](team-image-decoding.md) — await canvas image decoding and use mastery/base URL fallbacks so op team renders cannot reject on image failures
 - [Universal card image sizing](flagged-image-upscaling.md) — all card art uses cached Sharp normalization on one fixed 573×800 canvas
+- [Attachment embed preservation](attachment-embed-preservation.md) — expiry edits must remove controls only when an embed image comes from a Discord attachment
