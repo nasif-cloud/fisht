@@ -2395,7 +2395,7 @@ const cards = [
     health: 580,
     power: 113,
     speed: 52,
-    image: 'https://files.catbox.moe/pk08dt.png',
+    image: 'https://i.imgur.com/ANyXJmI.png',
 
     M2: {
       title: 'Warlord of the Sea',
@@ -2403,7 +2403,7 @@ const cards = [
       health: 590,
       power: 115,
       speed: 54,
-      image: 'https://files.catbox.moe/r12lw2.png'
+      image: 'https://i.imgur.com/cW6Uaov.png'
     },
 
     M3: {
@@ -2412,7 +2412,7 @@ const cards = [
       health: 600,
       power: 118,
       speed: 56,
-      image: 'https://files.catbox.moe/o9v79y.png'
+      image: 'https://i.imgur.com/QUNu2wL.png'
     }
   },
   {
