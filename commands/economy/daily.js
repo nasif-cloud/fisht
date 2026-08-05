@@ -9,7 +9,7 @@ const {
 } = require('../../utils/levels');
 
 // How many Berries the player earns per daily claim
-const DAILY_REWARD = 1000;
+const DAILY_REWARD = 2500;
 
 // ─────────────────────────────────────────────
 // DAILY RESET HELPERS
@@ -134,12 +134,16 @@ module.exports = {
 
     const successEmbed = new EmbedBuilder()
       .setColor(0xFFFFFF)
-      .setTitle('Daily Claimed!')
+      .setTitle('Daily Claimed')
       .setDescription(
-        `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:money:1532532493578928178> Berries!\n` +
-        `${formatXpReward(xpResult)}\n` +
-        `Next claim resets at **10:30 PM ET**`
-      );
+        `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:money:1532532493578928178> Berries\n` +
+        `${formatXpReward(xpResult)}`
+      )
+      // Discord renders this timestamp in each viewer's local timezone and
+      // includes the actual reset date instead of hard-coding an ET label.
+      .setFooter({
+        text: `Next claim resets <t:${Math.floor(nextReset.getTime() / 1000)}:F>`
+      });
 
     if (interactionOrMessage.isChatInputCommand?.()) {
       if (interactionOrMessage.replied || interactionOrMessage.deferred) {

@@ -109,7 +109,10 @@ async function tryDM(client, userId, content) {
 
 async function tryGroupedDM(client, userId, messages) {
   if (!messages.length) return;
-  await tryDM(client, userId, messages.join('\n\n'));
+  const content = messages.length > 1
+    ? `**More than 1 reminders ready:**\n${messages.map(message => `• ${message}`).join('\n')}`
+    : messages[0];
+  await tryDM(client, userId, content);
 }
 
 // ─────────────────────────────────────────────
