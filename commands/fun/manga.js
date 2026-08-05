@@ -322,7 +322,7 @@ module.exports = {
         if (userData && xpResult) {
           resultDesc += `\n${formatXpReward(xpResult)}`;
           await userData.save();
-          await sendLevelUpNotifications(user, userData, xpResult);
+          await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
         } else if (userData && reward > 0) {
           await userData.save();
         }

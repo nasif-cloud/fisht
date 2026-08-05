@@ -96,7 +96,7 @@ const userSchema = new mongoose.Schema({
   teamCards: { type: [String], default: [] },
 
   // ── NOTIFICATION SETTINGS ──
-  // Both default to true so new players get DMs out of the box.
+  // Reset notifications default to true so new players get ready reminders.
   // The /settings command lets each player flip these on or off.
 
   // If true, the bot will DM this user when their daily resets (10:30 PM ET).
@@ -106,8 +106,9 @@ const userSchema = new mongoose.Schema({
   // (6:30 AM, 2:30 PM, and 10:30 PM ET).
   dmPullsReady: { type: Boolean, default: true },
 
-  // If true, the bot will DM this user whenever they reach a new level.
-  dmLevelUp: { type: Boolean, default: true },
+  // If true, level-up messages are sent by DM; false sends them in the
+  // channel where the player leveled up.
+  dmLevelUp: { type: Boolean, default: false },
 
   // If true, the bot will DM this user when their daily quests refresh.
   dmQuestsReady: { type: Boolean, default: true },

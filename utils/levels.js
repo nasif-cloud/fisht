@@ -64,16 +64,22 @@ function addXp(userData, amount) {
   };
 }
 
-// Send one clear DM for each new level. Failed DMs are ignored because a
-// player's level and rewards must still save when their DMs are closed.
-async function sendLevelUpNotifications(discordUser, userData, xpResult) {
-  if (!discordUser || userData.dmLevelUp === false || xpResult.levelsGained < 1) {
+// Send one clear level-up message for each new level. The setting controls
+// whether the message goes to DMs or the channel where the reward happened.
+async function sendLevelUpNotifications(discordUser, userData, xpResult, channel) {
+  if (!discordUser || xpResult?.levelsGained < 1) {
     return;
   }
 
   for (let level = xpResult.before.level + 1; level <= xpResult.after.level; level += 1) {
     try {
-      await discordUser.send(
+      const destination = userData.dmLevelUp ? discordUser : channel;
+      if (!destination?.send) {
+        console.warn(`[Levels] No notification destination for level ${level}`);
+        continue;
+      }
+
+      await destination.send(
         `**You leveled up to ${level} and received:**\n` +
         `**${LEVEL_UP_BELI.toLocaleString('en-US')}**<:money:1532532493578928178>\n` +
         `**${LEVEL_UP_RESET_TOKENS}**<:meatrbg:1532524176701657248>`

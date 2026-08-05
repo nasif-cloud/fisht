@@ -127,7 +127,7 @@ module.exports = {
     userData.lastDailyClaim  = now;
     const xpResult = addXp(userData, 30);
     await userData.save();
-    await sendLevelUpNotifications(user, userData, xpResult);
+    await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
 
     // Format the new balance with commas for display (e.g. 2500 → "2,500")
     const newBalance = userData.balance.toLocaleString('en-US');

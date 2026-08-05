@@ -180,7 +180,7 @@ module.exports = {
           updateQuestProgress(userData, 'trivia_correct', 1);
           xpResult = addXp(userData, 10);
           await userData.save();
-          await sendLevelUpNotifications(user, userData, xpResult);
+          await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
         }
       }
 

@@ -159,7 +159,7 @@ module.exports = {
         userData.balance = (Number(userData.balance) || 0) + QUEST_REWARD_BELI;
         const xpResult = addXp(userData, QUEST_REWARD_XP);
         await userData.save();
-        await sendLevelUpNotifications(user, userData, xpResult);
+        await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
 
         const rewardLines = [
           `You claimed **${result.quest.label}**!`,

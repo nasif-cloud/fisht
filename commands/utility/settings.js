@@ -7,8 +7,8 @@
 // (rather than in a separate embed).
 //
 // Settings are split across two pages so the message stays compact:
-//   Page 1 — daily, pulls, level-up, and quest notifications
-//   Page 2 — duel reward notifications
+//   Page 1 — daily, pulls, and quest notifications
+//   Page 2 — duel reward and level-up delivery settings
 //
 // Prefix aliases: setting, config
 
@@ -42,6 +42,23 @@ function settingRow(customId, content, enabled, disabled = false) {
   };
 }
 
+function levelUpSettingRow(dmLevelUp, disabled = false) {
+  return {
+    type: 9,
+    components: [{
+      type: 10,
+      content: '# Level Up Messages\nSend level-up rewards in chat, or toggle this to receive them in DMs.'
+    }],
+    accessory: {
+      type: 2,
+      custom_id: 'settings_level_up_dm',
+      style: dmLevelUp && !disabled ? 3 : 2,
+      label: dmLevelUp ? 'Send in DMs' : 'Send in chat',
+      disabled
+    }
+  };
+}
+
 function divider() {
   return { type: 14, divider: true, spacing: 1 };
 }
@@ -65,7 +82,9 @@ function buildComponents(
           '# DM When Duel Reward\nReceive a DM when your daily duel reward is ready every `24 Hours`.',
           dmDuelReward,
           disabled
-        )
+        ),
+        divider(),
+        levelUpSettingRow(dmLevelUp, disabled)
       ]
     : [
         settingRow(
@@ -79,13 +98,6 @@ function buildComponents(
           'settings_pull_dm',
           '# DM When Pulls Ready\nEvery `8 hours`.',
           dmPullsReady,
-          disabled
-        ),
-        divider(),
-        settingRow(
-          'settings_level_up_dm',
-          '# DM When Level Up\nReceive a DM with your level-up rewards.',
-          dmLevelUp,
           disabled
         ),
         divider(),
@@ -156,7 +168,7 @@ module.exports = {
 
     let dmDailyReady = userData.dmDailyReady ?? true;
     let dmPullsReady = userData.dmPullsReady ?? true;
-    let dmLevelUp = userData.dmLevelUp ?? true;
+    let dmLevelUp = userData.dmLevelUp ?? false;
     let dmQuestsReady = userData.dmQuestsReady ?? true;
     let dmDuelReward = userData.dmDuelReward ?? true;
     let page = 1;

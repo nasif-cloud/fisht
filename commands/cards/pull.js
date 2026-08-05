@@ -308,7 +308,7 @@ module.exports = {
     updateQuestProgress(userData, 'pull', 1);
     const xpResult = addXp(userData, 1);
     await userData.save(); // Writes all the changes above to MongoDB
-    await sendLevelUpNotifications(user, userData, xpResult);
+    await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
 
     // ── STEP 9: Build the shiny image files (if this pull is shiny) ──
     // Generates a holographic rainbow overlay on both the card image and the rank icon.

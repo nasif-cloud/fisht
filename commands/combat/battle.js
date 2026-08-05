@@ -118,14 +118,14 @@ async function findOpponent(guild, playerId, playerLevel) {
   return null;
 }
 
-async function awardBattleReward(playerId, discordUser) {
+async function awardBattleReward(playerId, discordUser, channel) {
   const userData = await User.findOne({ userId: playerId });
   if (!userData) return null;
 
   const xpResult = addXp(userData, BATTLE_REWARD_XP);
   userData.balance = (Number(userData.balance) || 0) + BATTLE_REWARD_BELI;
   await userData.save();
-  await sendLevelUpNotifications(discordUser, userData, xpResult);
+  await sendLevelUpNotifications(discordUser, userData, xpResult, channel);
   return xpResult;
 }
 
@@ -240,7 +240,11 @@ module.exports = {
 
       const finishBattle = async result => {
         if (result.winner?.id === state.challenger.id) {
-          const xpResult = await awardBattleReward(player.id, player);
+          const xpResult = await awardBattleReward(
+            player.id,
+            player,
+            interactionOrMessage.channel
+          );
           let content =
             `**${state.challenger.username} wins**\n` +
             `Reward: **${BATTLE_REWARD_XP} XP** and **${BATTLE_REWARD_BELI.toLocaleString('en-US')}**<:money:1532532493578928178> Beli`;

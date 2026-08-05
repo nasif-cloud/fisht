@@ -188,6 +188,12 @@ async function awardDuelReward(state, winner) {
     winnerData.balance = (Number(winnerData.balance) || 0) + DUEL_REWARD_BELI;
     winnerData.lastDuelRewardAt = now;
     await winnerData.save();
+    await require('../../utils/levels').sendLevelUpNotifications(
+      winner.discordUser,
+      winnerData,
+      xpResult,
+      state.channel
+    );
 
     return { awarded: true, xpResult };
   } catch (error) {
@@ -665,12 +671,14 @@ module.exports = {
           id: challenger.id,
           username: challenger.username,
           avatarUrl: getAvatarUrl(challenger),
+          discordUser: challenger,
           team: challengerTeam
         },
         target: {
           id: target.id,
           username: target.username,
           avatarUrl: getAvatarUrl(target),
+          discordUser: target,
           team: targetTeam
         },
         selections: {},
@@ -679,6 +687,7 @@ module.exports = {
         participationRecorded: false,
         monthlyCountRecorded
       };
+      state.channel = interactionOrMessage.channel;
 
       await recordDuelParticipation(state);
       await response.edit(buildBattlePayload(state));
