@@ -97,10 +97,10 @@ function buildRequestPayload(challenger, target) {
   };
 }
 
-function buildCardSection(card) {
+function buildCardSection(card, barSegments) {
   return {
     type: 10,
-    content: formatCardLine(card)
+    content: formatCardLine(card, barSegments)
   };
 }
 
@@ -130,7 +130,7 @@ function buildButtonRow(duelId, playerId, team, selected) {
   };
 }
 
-function buildPlayerComponents(duelId, player, selected) {
+function buildPlayerComponents(duelId, player, selected, barSegments) {
   const components = [];
 
   // A type-9 section is used only when the avatar accessory exists.
@@ -153,11 +153,8 @@ function buildPlayerComponents(duelId, player, selected) {
     });
   }
 
-  // Keep exactly one blank space between the player's name and first card.
-  components.push(buildBlankSpace());
-
   for (const card of player.team) {
-    components.push(buildCardSection(card));
+    components.push(buildCardSection(card, barSegments));
   }
 
   // Keep the cards visually separate from their selection buttons.
@@ -183,7 +180,7 @@ function getDisplayableTextLength(component) {
   return length;
 }
 
-function buildBattleComponents(state, logText) {
+function buildBattleComponents(state, logText, barSegments = 5) {
   return [
     {
       type: 17,
@@ -200,13 +197,15 @@ function buildBattleComponents(state, logText) {
         ...buildPlayerComponents(
           state.id,
           state.challenger,
-          state.selections[state.challenger.id]
+          state.selections[state.challenger.id],
+          barSegments
         ),
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
           state.id,
           state.target,
-          state.selections[state.target.id]
+          state.selections[state.target.id],
+          barSegments
         ),
         { type: 14, divider: true, spacing: 1 },
         // One blank space between the final separator and the newest battle log.
@@ -221,8 +220,20 @@ function buildBattlePayload(state) {
   // Only the newest round log is kept. Apart from matching the requested UI,
   // this prevents old combat history from making the Components V2 message
   // exceed Discord's 4,000-character display limit.
-  const latestLog = state.latestLog;
-  const components = buildBattleComponents(state, latestLog);
+  const latestLog = state.latestLog || 'Pick the card you want to attack with';
+  // Start with readable five-segment bars. If custom emoji text still pushes
+  // the message near Discord's 4,000-character limit, progressively compact
+  // only the bars, then trim the log as a final safety net.
+  let components = buildBattleComponents(state, latestLog, 5);
+  if (getDisplayableTextLength(components) > 3900) {
+    components = buildBattleComponents(state, latestLog, 3);
+  }
+  if (getDisplayableTextLength(components) > 3900) {
+    components = buildBattleComponents(state, latestLog.slice(-500), 3);
+  }
+  if (getDisplayableTextLength(components) > 3900) {
+    components = buildBattleComponents(state, latestLog.slice(-250), 0);
+  }
 
   return {
     flags: MessageFlags.IsComponentsV2,

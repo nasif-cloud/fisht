@@ -2,7 +2,7 @@
 // DUEL TEAM AND COMBAT HELPERS
 // ─────────────────────────────────────────────
 
-const { cards, resolveStat, safeRank, safeStat } = require('../data/cards');
+const { cards, rankEmojis, resolveStat, safeRank, safeStat } = require('../data/cards');
 const { computeBoosts } = require('./boosts');
 const { buildProgressBar } = require('./quests');
 
@@ -165,11 +165,20 @@ function formatRole(card) {
   return `${ROLE_EMOJIS[card.role] || ''} ${card.role}`;
 }
 
-function formatCardLine(card) {
+function formatCardLine(card, barSegments = 5) {
   const health = Math.max(0, Math.round(card.health));
+  const rankEmoji = rankEmojis[card.rank] || '';
+  const cardLabel = rankEmoji
+    ? `${rankEmoji} **${card.name}**`
+    : `**${card.name}**`;
+  const level = Math.floor(Math.max(0, Number(card.copies) || 0) / 10);
+  const progress = barSegments > 0
+    ? `${buildProgressBar(health, card.maxHealth, barSegments)} `
+    : '';
+
   return [
-    `${formatRole(card)} **${card.name}** · Lv. ${card.mastery} M${card.mastery}`,
-    `${buildProgressBar(health, card.maxHealth)} \`${health}/${card.maxHealth}\``,
+    `${cardLabel} · Lv. ${level}`,
+    `${progress}\`${health}/${card.maxHealth}\``,
     `<:Health:1534326743459037244> ${health}/${card.maxHealth}  |  <:Power:1534326742678769684> ${card.power}  |  <:Speed:1534326741693104168> ${card.speed}`
   ].join('\n');
 }
