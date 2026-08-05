@@ -43,8 +43,8 @@ const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
   getCardImageSource,
-  getUpscaledBuffer
-} = require('../../utils/upscale');
+  getNormalizedBuffer
+} = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -222,7 +222,7 @@ async function buildShinyPayload(entry, footerText, user) {
     generateShinyImage(cardData.image, card.name),
     generateShinyIcon(visual.icon)
   ]);
-  const finalCardBuffer = await getUpscaledBuffer(cardBuf, `shiny:${cardData.image}`);
+  const finalCardBuffer = await getNormalizedBuffer(cardBuf, `shiny:${cardData.image}`);
 
   const files = [
     new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
@@ -266,10 +266,10 @@ async function renderCardUpdate({ editFn, entry, footerText, user, components, g
       entry,
       footerText,
       user,
-      image.upscaled ? 'attachment://upscaled_card.png' : image.source
+      image.normalized ? 'attachment://card_image.png' : image.source
     )],
-    files: image.upscaled
-      ? [{ attachment: image.source, name: 'upscaled_card.png' }]
+    files: image.normalized
+      ? [{ attachment: image.source, name: 'card_image.png' }]
       : [],
     components
   });
@@ -569,10 +569,10 @@ module.exports = {
         initialEntry,
         initialFooter,
         user,
-        initialImage.upscaled ? 'attachment://upscaled_card.png' : initialImage.source
+        initialImage.normalized ? 'attachment://card_image.png' : initialImage.source
       )],
-      files: initialImage.upscaled
-        ? [{ attachment: initialImage.source, name: 'upscaled_card.png' }]
+      files: initialImage.normalized
+        ? [{ attachment: initialImage.source, name: 'card_image.png' }]
         : [],
       components: initialComponents
     };

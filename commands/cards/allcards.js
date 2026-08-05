@@ -34,7 +34,7 @@ const {
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
-const { getCardImageSource } = require('../../utils/upscale');
+const { getCardImageSource } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -151,10 +151,10 @@ async function renderCardUpdate({ editFn, card, mastery, footerText, user, compo
       mastery,
       footerText,
       user,
-      image.upscaled ? 'attachment://upscaled_card.png' : image.source
+      image.normalized ? 'attachment://card_image.png' : image.source
     )],
-    files: image.upscaled
-      ? [{ attachment: image.source, name: 'upscaled_card.png' }]
+    files: image.normalized
+      ? [{ attachment: image.source, name: 'card_image.png' }]
       : [],
     components
   });
@@ -439,7 +439,7 @@ module.exports = {
         searchMastery,
         searchFooter(searchMastery),
         user,
-        initialImage.upscaled ? 'attachment://upscaled_card.png' : initialImage.source
+        initialImage.normalized ? 'attachment://card_image.png' : initialImage.source
       );
       components = buildSearchComponents(searchMastery);
     } else {
@@ -453,7 +453,7 @@ module.exports = {
         mastery,
         normalFooter(currentPage, sortedCards.length, sortMode, mastery),
         user,
-        initialImage.upscaled ? 'attachment://upscaled_card.png' : initialImage.source
+        initialImage.normalized ? 'attachment://card_image.png' : initialImage.source
       );
       components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending);
     }
@@ -462,8 +462,8 @@ module.exports = {
     // fetchReply: true gives us back the sent message object so we can attach a collector to it
     const payload = {
       embeds: [embed],
-      files: initialImage.upscaled
-        ? [{ attachment: initialImage.source, name: 'upscaled_card.png' }]
+      files: initialImage.normalized
+        ? [{ attachment: initialImage.source, name: 'card_image.png' }]
         : [],
       components,
       fetchReply: true

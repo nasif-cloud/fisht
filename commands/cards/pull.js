@@ -15,9 +15,9 @@ const { previewPityPull, applyPityPull } = require('../../utils/pity');
 // Shiny image generators — create the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getUpscaledImageBuffer,
-  getUpscaledBuffer
-} = require('../../utils/upscale');
+  getNormalizedImageBuffer,
+  getNormalizedBuffer
+} = require('../../utils/cardImage');
 
 // Boost calculator — applies copies boost and shiny boost to base stats
 const { computeBoosts } = require('../../utils/boosts');
@@ -329,7 +329,7 @@ module.exports = {
         generateShinyImage(pulledCard.image, pulledCard.name),
         generateShinyIcon(visualSettings.icon)
       ]);
-      const finalCardBuffer = await getUpscaledBuffer(
+      const finalCardBuffer = await getNormalizedBuffer(
         cardBuf,
         `shiny:${pulledCard.image}`
       );
@@ -340,9 +340,9 @@ module.exports = {
       imageUrl = `attachment://shiny_card.png`;
       iconUrl  = `attachment://shiny_icon.png`;
     } else {
-      const upscaledBuffer = await getUpscaledImageBuffer(pulledCard.image);
-      files = [new AttachmentBuilder(upscaledBuffer, { name: 'upscaled_card.png' })];
-      imageUrl = 'attachment://upscaled_card.png';
+      const normalizedBuffer = await getNormalizedImageBuffer(pulledCard.image);
+      files = [new AttachmentBuilder(normalizedBuffer, { name: 'card_image.png' })];
+      imageUrl = 'attachment://card_image.png';
     }
 
     // ── STEP 10: Build and send the pull embed ──

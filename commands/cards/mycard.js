@@ -22,8 +22,8 @@ const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
   getCardImageSource,
-  getUpscaledBuffer
-} = require('../../utils/upscale');
+  getNormalizedBuffer
+} = require('../../utils/cardImage');
 
 // ─── EMOJI CONSTANTS ───
 // SHINY_EMOJI appears before the card name when the card is shiny.
@@ -153,8 +153,8 @@ module.exports = {
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
     const normalCardImage = await getCardImageSource(cardData, foundCard);
-    const normalCardImageUrl = normalCardImage.upscaled
-      ? 'attachment://upscaled_card.png'
+    const normalCardImageUrl = normalCardImage.normalized
+      ? 'attachment://card_image.png'
       : normalCardImage.source;
 
     // --- STEP 9: Build the embed with plain image URLs ---
@@ -201,8 +201,8 @@ module.exports = {
     const payload = {
       embeds: [embed],
       components: [boostsRow],
-      files: normalCardImage.upscaled
-        ? [new AttachmentBuilder(normalCardImage.source, { name: 'upscaled_card.png' })]
+      files: normalCardImage.normalized
+        ? [new AttachmentBuilder(normalCardImage.source, { name: 'card_image.png' })]
         : []
     };
 
@@ -224,12 +224,12 @@ module.exports = {
             generateShinyImage(cardData.image, foundCard.name),
             generateShinyIcon(visual.icon)
           ]);
-          const finalCardBuffer = await getUpscaledBuffer(
+          const finalCardBuffer = await getNormalizedBuffer(
             cardBuf,
             `shiny:${cardData.image}`
           );
           const shinyFiles = [
-            new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
+            new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.png' }),
             new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
           ];
           // Same embed object, but now pointing at the uploaded shiny files

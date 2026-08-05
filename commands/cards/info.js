@@ -5,7 +5,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
-const { getCardImageSource } = require('../../utils/upscale');
+const { getCardImageSource } = require('../../utils/cardImage');
 const { updateQuestProgress } = require('../../utils/quests');
 
 
@@ -110,7 +110,7 @@ module.exports = {
       // Grab the colour and thumbnail icon for this rank + mastery level from rankConfig
       const visual = rankConfig[rank][`M${masteryLevel}`];
       const image = await getCardImageSource(cardData, foundCard);
-      const imageUrl = image.upscaled ? 'attachment://upscaled_card.png' : image.source;
+      const imageUrl = image.normalized ? 'attachment://card_image.png' : image.source;
 
       return {
         imageSource: image,
@@ -155,8 +155,8 @@ module.exports = {
     const initial = await generateEmbed(currentMastery);
     const payload = {
       embeds: [initial],
-      files: initial.imageSource.upscaled
-        ? [{ attachment: initial.imageSource.source, name: 'upscaled_card.png' }]
+      files: initial.imageSource.normalized
+        ? [{ attachment: initial.imageSource.source, name: 'card_image.png' }]
         : [],
       components: [generateButtons(currentMastery)],
       fetchReply: true
@@ -194,8 +194,8 @@ module.exports = {
       delete nextEmbed.imageSource;
       await interaction.update({
         embeds: [nextEmbed],
-        files: next.imageSource.upscaled
-          ? [{ attachment: next.imageSource.source, name: 'upscaled_card.png' }]
+        files: next.imageSource.normalized
+          ? [{ attachment: next.imageSource.source, name: 'card_image.png' }]
           : [],
         components: [generateButtons(currentMastery)]
       });

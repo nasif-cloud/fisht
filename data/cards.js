@@ -2620,7 +2620,7 @@ const cards = [
   },
   {
     name: 'Donquixote Doflamingo',
-    aliases: ['',],
+    aliases: ['Doffy',],
 
     title: 'Heavenly Demon',
     rank: 'S',

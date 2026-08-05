@@ -5,7 +5,7 @@ const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../da
 const User = require('../../models/user');
 const { computeBoosts } = require('../../utils/boosts');
 const { generateShinyImage } = require('../../utils/shinyImage');
-const { getUpscaledBuffer } = require('../../utils/upscale');
+const { getNormalizedBuffer } = require('../../utils/cardImage');
 const { assignRoles } = require('../../utils/duel');
 
 const CANVAS_WIDTH = 860;
@@ -236,7 +236,7 @@ async function loadCardImage(entry) {
     const buffer = entry.isShiny
       ? await generateShinyImage(imageUrl, entry.card.name)
       : await fetchImageBuffer(imageUrl);
-    const finalBuffer = await getUpscaledBuffer(
+    const finalBuffer = await getNormalizedBuffer(
       buffer,
       `${entry.isShiny ? 'shiny' : 'normal'}:${imageUrl}`
     );

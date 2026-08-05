@@ -12,4 +12,4 @@
 - [AI battle combat](battle-combat.md) — solo battles use a random in-range saved opponent, human-only card controls, and a rolling cooldown
 - [Duel rewards](duel-rewards.md) — daily duel reward readiness and opt-in DM notifications share the daily reset boundary
 - [Team image decoding](team-image-decoding.md) — await canvas image decoding and use mastery/base URL fallbacks so op team renders cannot reject on image failures
-- [Universal card image sizing](flagged-image-upscaling.md) — all card art uses cached 2× Sharp/Lanczos processing on one fixed canvas
+- [Universal card image sizing](flagged-image-upscaling.md) — all card art uses cached Sharp normalization on one fixed 573×800 canvas
