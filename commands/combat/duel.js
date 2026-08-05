@@ -247,12 +247,12 @@ function buildBlankSpace() {
   };
 }
 
-function buildButtonRow(duelId, playerId, team, selected) {
+function buildButtonRow(duelId, playerId, team, selected, commandPrefix = 'duel') {
   return {
     type: 1,
     components: team.map((card, index) => ({
       type: 2,
-      custom_id: `duel_pick_${duelId}_${playerId}_${index}`,
+      custom_id: `${commandPrefix}_pick_${duelId}_${playerId}_${index}`,
       style: 2,
       // The role emoji makes the card's HP, PWR, or SPD role visible
       // before the player chooses a card
@@ -263,7 +263,7 @@ function buildButtonRow(duelId, playerId, team, selected) {
   };
 }
 
-function buildPlayerComponents(duelId, player, selected, barSegments) {
+function buildPlayerComponents(duelId, player, selected, barSegments, options = {}) {
   const components = [];
 
   // A type-9 section is used only when the avatar accessory exists.
@@ -290,9 +290,19 @@ function buildPlayerComponents(duelId, player, selected, barSegments) {
     components.push(buildCardSection(card, barSegments));
   }
 
-  // Keep the cards visually separate from their selection buttons.
-  components.push(buildBlankSpace());
-  components.push(buildButtonRow(duelId, player.id, player.team, selected));
+  if (options.showButtons !== false) {
+    // Keep the cards visually separate from their selection buttons.
+    components.push(buildBlankSpace());
+    components.push(
+      buildButtonRow(
+        duelId,
+        player.id,
+        player.team,
+        selected,
+        options.commandPrefix || 'duel'
+      )
+    );
+  }
   return components;
 }
 
@@ -313,7 +323,12 @@ function getDisplayableTextLength(component) {
   return length;
 }
 
-function buildBattleComponents(state, logText, barSegments = 5) {
+function buildBattleComponents(state, logText, barSegments = 5, options = {}) {
+  const playerOptions = player => ({
+    showButtons: player.id !== options.botPlayerId,
+    commandPrefix: options.commandPrefix || 'duel'
+  });
+
   return [
     {
       type: 17,
@@ -331,14 +346,16 @@ function buildBattleComponents(state, logText, barSegments = 5) {
           state.id,
           state.challenger,
           state.selections[state.challenger.id],
-          barSegments
+          barSegments,
+          playerOptions(state.challenger)
         ),
         { type: 14, divider: true, spacing: 1 },
         ...buildPlayerComponents(
           state.id,
           state.target,
           state.selections[state.target.id],
-          barSegments
+          barSegments,
+          playerOptions(state.target)
         ),
         { type: 14, divider: true, spacing: 1 },
         // One blank space between the final separator and the newest battle log.
@@ -349,7 +366,7 @@ function buildBattleComponents(state, logText, barSegments = 5) {
   ];
 }
 
-function buildBattlePayload(state) {
+function buildBattlePayload(state, options = {}) {
   // Only the newest round log is kept. Apart from matching the requested UI,
   // this prevents old combat history from making the Components V2 message
   // exceed Discord's 4,000-character display limit.
@@ -357,15 +374,15 @@ function buildBattlePayload(state) {
   // Start with readable five-segment bars. If custom emoji text still pushes
   // the message near Discord's 4,000-character limit, progressively compact
   // only the bars, then trim the log as a final safety net.
-  let components = buildBattleComponents(state, latestLog, 5);
+  let components = buildBattleComponents(state, latestLog, 5, options);
   if (getDisplayableTextLength(components) > 3900) {
-    components = buildBattleComponents(state, latestLog, 3);
+    components = buildBattleComponents(state, latestLog, 3, options);
   }
   if (getDisplayableTextLength(components) > 3900) {
-    components = buildBattleComponents(state, latestLog.slice(-500), 3);
+    components = buildBattleComponents(state, latestLog.slice(-500), 3, options);
   }
   if (getDisplayableTextLength(components) > 3900) {
-    components = buildBattleComponents(state, latestLog.slice(-250), 0);
+    components = buildBattleComponents(state, latestLog.slice(-250), 0, options);
   }
 
   return {
@@ -521,6 +538,17 @@ module.exports = {
 
   name: 'duel',
   aliases: [],
+  activeUsers,
+  buildBattlePayload,
+  buildEndPayload,
+  calculateDamage,
+  getAvatarUrl,
+  getSelectedCard,
+  getFirstLivingCard,
+  parsePickId,
+  resolveRound,
+  isKnockedOut,
+  isTeamDefeated,
 
   async execute(interactionOrMessage, args = []) {
     const challenger = getUser(interactionOrMessage);

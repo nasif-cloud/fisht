@@ -119,6 +119,7 @@ function formatMinSec(ms) {
 
 // The manga command has a 20-minute rolling cooldown (not a global reset time)
 const MANGA_COOLDOWN_MS = 20 * 60 * 1000;
+const BATTLE_COOLDOWN_MS = 30 * 60 * 1000;
 
 module.exports = {
   // --- SLASH COMMAND DEFINITION ---
@@ -206,6 +207,16 @@ module.exports = {
       triviaDisplay = formatMinSec(remaining); // Returns "Ready" if remaining <= 0
     }
 
+    // ── AI BATTLE COOLDOWN ──
+    // Rolling 30-minute personal timer. "Ready" if never played or expired.
+    let battleDisplay;
+    if (!userData?.lastBattleTime) {
+      battleDisplay = 'Ready';
+    } else {
+      const elapsed = now - userData.lastBattleTime;
+      battleDisplay = formatMinSec(BATTLE_COOLDOWN_MS - elapsed);
+    }
+
     // ── BUILD AND SEND THE MESSAGE ──
     // Plain text, no embed. Each timer is on its own line.
     const content = [
@@ -214,6 +225,7 @@ module.exports = {
       `**Next Duel**: \`${duelDisplay}\``,
       `**Next Manga**: \`${mangaDisplay}\``,
       `**Next Trivia**: \`${triviaDisplay}\``,
+      `**Next Battle**: \`${battleDisplay}\``,
     ].join('\n');
 
     if (interactionOrMessage.isChatInputCommand?.()) {

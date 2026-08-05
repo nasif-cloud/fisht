@@ -63,6 +63,10 @@ const userSchema = new mongoose.Schema({
   // Used to enforce the 20-minute rolling cooldown on the trivia command.
   lastTriviaClaim: { type: Date, default: null },
 
+  // The timestamp of the user's most recent AI battle.
+  // Used to enforce the 30-minute rolling cooldown on /battle and op battle.
+  lastBattleTime: { type: Date, default: null },
+
   // Total experience earned from pulls, manga, trivia, and daily rewards.
   // The profile command calculates the current level from this total.
   xp: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
