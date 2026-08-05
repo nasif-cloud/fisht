@@ -28,7 +28,9 @@ const QUEST_POOL = [
   { id: 'eat_1', label: '`Eat` 1 meat to reset your pulls', progressType: 'eat', target: 1 },
   { id: 'info_3', label: 'Check the `info` of 3 cards', progressType: 'info', target: 3 },
   { id: 'xp_50', label: 'Earn 50 XP', progressType: 'xp', target: 50 },
-  { id: 'leaderboard', label: 'Check the `leaderboard`', progressType: 'leaderboard', target: 1 }
+  { id: 'leaderboard', label: 'Check the `leaderboard`', progressType: 'leaderboard', target: 1 },
+  { id: 'duel_win_1', label: 'Win 1 `duel`', progressType: 'duel_win', target: 1 },
+  { id: 'duel_participate_1', label: 'Participate in 1 `duel`', progressType: 'duel_participate', target: 1 }
 ];
 
 function getETDateParts(date) {

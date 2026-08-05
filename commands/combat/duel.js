@@ -18,6 +18,7 @@ const {
   isKnockedOut,
   isTeamDefeated
 } = require('../../utils/duel');
+const { updateQuestProgress } = require('../../utils/quests');
 
 const ACCEPT_TIMEOUT_MS = 60000;
 const ROUND_TIMEOUT_MS = 30000;
@@ -62,6 +63,37 @@ function getAvatarUrl(user) {
     return user.avatarURL({ extension: 'png', size: 64 });
   }
   return null;
+}
+
+// Duel quests are updated only after the request is accepted or the duel has
+// a winner. Reloading each user here avoids saving stale card/team data from
+// the in-memory duel state over newer changes made elsewhere.
+async function updateDuelQuest(userId, progressType) {
+  try {
+    let userData = await User.findOne({ userId });
+    if (!userData) userData = new User({ userId });
+    const changed = updateQuestProgress(userData, progressType, 1);
+    // Save even when this particular quest is not currently assigned so a
+    // newly-created daily quest set from ensureDailyQuests is persisted.
+    await userData.save();
+    return changed;
+  } catch (error) {
+    console.error(`[Duel] Failed to update ${progressType} quest for ${userId}:`, error.message);
+    return false;
+  }
+}
+
+async function recordDuelParticipation(state) {
+  if (state.participationRecorded) return;
+  state.participationRecorded = true;
+  await Promise.all([
+    updateDuelQuest(state.challenger.id, 'duel_participate'),
+    updateDuelQuest(state.target.id, 'duel_participate')
+  ]);
+}
+
+async function recordDuelWin(userId) {
+  await updateDuelQuest(userId, 'duel_win');
 }
 
 function buildRequestPayload(challenger, target) {
@@ -505,9 +537,11 @@ module.exports = {
         },
         selections: {},
         latestLog: '',
-        roundLogs: []
+        roundLogs: [],
+        participationRecorded: false
       };
 
+      await recordDuelParticipation(state);
       await response.edit(buildBattlePayload(state));
       let roundCollector;
 
@@ -589,6 +623,9 @@ module.exports = {
           // Replace the previous round's display with this round's newest log.
           state.latestLog = state.roundLogs.join('\n');
           if (result.ended) {
+              if (result.winner) {
+                await recordDuelWin(result.winner.id);
+              }
             const content = result.reason === 'no-actions'
               ? 'Duel ended with no winners'
               : result.reason === 'draw'
