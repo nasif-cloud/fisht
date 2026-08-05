@@ -60,7 +60,7 @@ module.exports = [
   },
   {
     question: 'Among Chaka, Igaram, and Pell — who did NOT eat a Devil Fruit?',
-    options:  ['Igaram', 'Chaka', 'Pell', 'All three ate one'],
+    options:  ['Igaram', 'Chaka', 'Pell', 'All three'],
     answer:   'Igaram'
   },
   {
@@ -75,8 +75,8 @@ module.exports = [
   },
   {
     question: 'Which seat of the Donquixote Pirates was intended for Trafalgar Law?',
-    options:  ['The heart seat', 'The spade seat', 'The club seat', 'The diamond seat'],
-    answer:   'The heart seat'
+    options:  ['Heart seat', 'Spade seat', 'Club seat', 'Diamond seat'],
+    answer:   'Heart seat'
   },
   {
     question: 'Among Hatchan, Kaku, Onigumo, and Zoro — who uses the most swords?',
@@ -104,25 +104,17 @@ module.exports = [
     answer:   'Nine snakes'
   },
   {
-    question: 'What do Zoro, Laffitte, Shiryu, CP9, X Drake, and Gasparde have in common?',
+    question: 'What do Zoro and X Drake have in common?',
     options:  ['Former anti-pirates', 'Former kings', 'Sky Island natives', 'Revolutionary leaders'],
     answer:   'Former anti-pirates'
   },
-  {
-    question: 'What do Nami\'s tattoo symbols represent, who do they honor, and what did they replace?',
-    options:  ['Mikan/pinwheel; Bell-mère/Genzo; Jolly Roger', 'Sun/moon; Nami/Nojiko; tattoo', 'Orange/bell; Arlong/Shanks; scar', 'Stars/cross; Luffy/Zoro; bracelet'],
-    answer:   'Mikan/pinwheel; Bell-mère/Genzo; Jolly Roger'
-  },
+  
   {
     question: 'Who battled three of Enel\'s priests?',
     options:  ['Chopper', 'Usopp', 'Sanji', 'Nami'],
     answer:   'Chopper'
   },
-  {
-    question: 'In the Boss Luffy episode, who does Zoro break in on, and who chases him out?',
-    options:  ['Terracotta/Amazon/Maria; Monday', 'Nami/Robin/Nojiko; Zoro', 'Sanji/Usopp/Chopper; Luffy', 'Tashigi/Kuina/Hiyori; Genzo'],
-    answer:   'Terracotta/Amazon/Maria; Monday'
-  },
+
   {
     question: 'Which Baroque Works agent had a frog theme?',
     options:  ['Miss Father\'s Day', 'Mr. 5', 'Miss Goldenweek', 'Mr. 4'],
@@ -133,20 +125,16 @@ module.exports = [
     options:  ['Rice Rice', 'Woop Slap', 'Banban', 'Tom'],
     answer:   'Rice Rice'
   },
-  {
-    question: 'Why did Noland cut down Shandora\'s sacred trees?',
-    options:  ['They spread a plague', 'They hid gold', 'They blocked the sea', 'They were cursed'],
-    answer:   'They spread a plague'
-  },
+  
   {
     question: 'What did Zoro cut in the Warship Island filler arc?',
     options:  ['Steel chains', 'Sea stone', 'A cannon', 'A mast'],
     answer:   'Steel chains'
   },
   {
-    question: 'Who were the first Zoan and Logia users shown?',
-    options:  ['Dalton and Smoker', 'Chopper and Ace', 'Pell and Crocodile', 'Lucci and Enel'],
-    answer:   'Dalton and Smoker'
+    question: 'Who was the first Zoan and Logia users shown?',
+    options:  ['Smoker', 'Ace', 'Crocodile', 'Enel'],
+    answer:   'Smoker'
   },
   {
     question: 'True or False: Jaguar D. Saul was born in Elbaf.',
@@ -154,9 +142,9 @@ module.exports = [
     answer:   'False'
   },
   {
-    question: 'Which Supernova had a higher bounty than Luffy, and why?',
-    options:  ['Kid; attacked civilians', 'Law; defeated Marines', 'Hawkins; used divination', 'Apoo; joined Kaido'],
-    answer:   'Kid; attacked civilians'
+    question: 'Which Supernova had a higher bounty?',
+    options:  ['Kidd', 'Law', 'Hawkins', 'Apoo'],
+    answer:   'Kidd'
   },
   {
     question: 'Which Straw Hat was first seen in the anime?',
@@ -170,48 +158,35 @@ module.exports = [
   },
   {
     question: 'Who first witnessed Luffy use Gear Third?',
-    options:  ['Chimney and Gonbe', 'Nami and Usopp', 'Robin and Franky', 'Momo and Kinemon'],
-    answer:   'Chimney and Gonbe'
+    options:  ['Chimney', 'Nami', 'Robin', 'Momo'],
+    answer:   'Chimney'
   },
+  
   {
-    question: 'What was Ace\'s goal in life?',
-    options:  ['Know if he deserved birth', 'Become Pirate King', 'Find One Piece', 'Defeat Blackbeard'],
-    answer:   'Know if he deserved birth'
-  },
-  {
-    question: 'Who was the first person Luffy fought, and why?',
-    options:  ['Higuma; insulted Shanks', 'Alvida; stole his hat', 'Koby; challenged him', 'Shanks; took his food'],
-    answer:   'Higuma; insulted Shanks'
+    question: 'Who was the first person Luffy fought?',
+    options:  ['Higuma', 'Alvida', 'Koby', 'Shanks'],
+    answer:   'Higuma'
   },
   {
     question: 'Why was Sanji\'s first bounty photo completely black?',
-    options:  ['The lens cap was on', 'It was censored', 'The film was damaged', 'It was a drawing'],
-    answer:   'The lens cap was on'
+    options:  ['Lens cap was on', 'It was censored', 'Film was damaged', 'It was a drawing'],
+    answer:   'Lens cap was on'
   },
   {
-    question: 'When does Zoro cry, and what links both events?',
-    options:  ['Kuina/Mihawk; both defeats', 'Luffy/Sanji; both rescues', 'Shanks/Mihawk; both wins', 'Tashigi/Hiyori; both promises'],
-    answer:   'Kuina/Mihawk; both defeats'
-  },
-  {
-    question: 'Why is Nami\'s bounty photo inappropriate, and who says so?',
-    options:  ['Photo mix-up; Genzo', 'Bad pose; Nojiko', 'Fake photo; Robin', 'Censored photo; Garp'],
-    answer:   'Photo mix-up; Genzo'
+    question: 'Who says Nami\'s bounty photo is inappropriate?',
+    options:  ['Genzo', 'Nojiko', 'Robin', 'Garp'],
+    answer:   'Genzo'
   },
   {
     question: 'What food is Garp extremely fond of?',
     options:  ['Doughnuts', 'Crackers', 'Rice balls', 'Meat'],
     answer:   'Doughnuts'
   },
+  
   {
-    question: 'Name four of Chopper\'s forms.',
-    options:  ['Arm, Brain, Guard, Heavy', 'Horn, Walk, Fish, Flame', 'Monster, Sky, Dark, Ice', 'Jump, Sword, Fish, Wolf'],
-    answer:   'Arm, Brain, Guard, Heavy'
-  },
-  {
-    question: 'Why did Lucci kick Nero off, and what did he yell?',
-    options:  ['Attacked Franky; master six forms', 'Stole money; run faster', 'Insulted Robin; stay quiet', 'Failed a mission; try again'],
-    answer:   'Attacked Franky; master six forms'
+    question: 'Why did Lucci kick Nero off?',
+    options:  ['Attacked Franky', 'Stole money', 'Insulted Robin', 'Failed a mission'],
+    answer:   'Attacked Franky'
   },
   {
     question: 'Which Donquixote Pirates seat was intended for Law?',
@@ -239,15 +214,11 @@ module.exports = [
     answer:   'They lack destruction'
   },
   {
-    question: 'Which Baroque Works agents both fight with baseball bats?',
-    options:  ['Mr. 4 and Mr. 9', 'Mr. 1 and Mr. 2', 'Miss Doublefinger and Mr. 3', 'Mr. 5 and Mr. 7'],
-    answer:   'Mr. 4 and Mr. 9'
+    question: 'Which Baroque Works agent fights with a baseball bat?',
+    options:  ['Mr. 4', 'Mr. 2', 'Miss Doublefinger', 'Mr. 5'],
+    answer:   'Mr. 4'
   },
-  {
-    question: 'Which Straw Hat\'s loved one was shot through the chest?',
-    options:  ['Bell-mère', 'Kuina', 'Toko', 'Clover'],
-    answer:   'Bell-mère'
-  },
+  
   {
     question: 'Who did Yasopp defeat in a duel before that person beat Usopp?',
     options:  ['Daddy "The Father"', 'Van Augur', 'Lucky Roux', 'Duval'],
@@ -255,18 +226,13 @@ module.exports = [
   },
   {
     question: 'Are any Supernovas from outside the four Blues?',
-    options:  ['Yes: Apoo and Urouge', 'No, none', 'Yes: Law and Kid', 'Yes: Zoro and Killer'],
-    answer:   'Yes: Apoo and Urouge'
+    options:  ['Yes', 'No'],
+    answer:   'Yes'
   },
   {
     question: 'How old was Luffy before the timeskip?',
     options:  ['17', '19', '15', '21'],
     answer:   '17'
-  },
-  {
-    question: 'Who uses the most swords: Hatchan, Kaku, Onigumo, or Zoro?',
-    options:  ['Onigumo: eight', 'Hatchan: six', 'Kaku: four', 'Zoro: three'],
-    answer:   'Onigumo: eight'
   },
   {
     question: 'What was the name of the man who gave Sanji salt in Water 7?',
@@ -319,18 +285,8 @@ module.exports = [
     answer:   'Ten'
   },
   {
-    question: 'What happens if someone eats a second Devil Fruit?',
-    options:  ['They die', 'They get stronger', 'They lose memory', 'They become a giant'],
-    answer:   'They die'
-  },
-  {
-    question: 'What are the names of Señor Pink\'s deceased wife and son?',
-    options:  ['Russian and Gimlet', 'Cora and Law', 'Belle and Tom', 'Nojiko and Genzo'],
-    answer:   'Russian and Gimlet'
-  },
-  {
-    question: 'Which Revolutionary Army members appear in Dressrosa?',
-    options:  ['Sabo, Hack, Karasu, Koala', 'Dragon, Ivankov, Kuma, Sabo', 'Koala, Robin, Hack, Luffy', 'Sabo, Ace, Hack, Dragon'],
-    answer:   'Sabo, Hack, Karasu, Koala'
+    question: 'What are the names of Señor Pink\'s deceased wife?',
+    options:  ['Russian', 'Cora', 'Belle', 'Nojiko'],
+    answer:   'Russian'
   },
 ];
