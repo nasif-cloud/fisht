@@ -216,20 +216,27 @@ function formatRole(card) {
 }
 
 function formatCardLine(card, barSegments = 5) {
-  const health = Math.max(0, Math.round(card.health));
+  const maxHealth = Math.max(1, Math.round(Number(card.maxHealth) || 1));
+  const health = Math.min(maxHealth, Math.max(0, Math.round(Number(card.health) || 0)));
   const rankEmoji = rankEmojis[card.rank] || '';
   const cardLabel = rankEmoji
     ? `${rankEmoji} **${card.name}**`
     : `**${card.name}**`;
   const level = Math.floor(Math.max(0, Number(card.copies) || 0) / 10);
+  // Keep one colored tick for every living card. Without this, a card with
+  // only a small amount of HP can look defeated because Math.floor rounds its
+  // progress down to zero segments. A card at exactly 0 HP stays blank.
+  const visibleHealth = health > 0
+    ? Math.max(health, Math.ceil(maxHealth / Math.max(1, barSegments)))
+    : 0;
   const progress = barSegments > 0
-    ? `${buildProgressBar(health, card.maxHealth, barSegments)} `
+    ? `${buildProgressBar(visibleHealth, maxHealth, barSegments)} `
     : '';
 
   return [
     `${cardLabel} · Lv. ${level}`,
-    `${progress}\`${health}/${card.maxHealth}\``,
-    `<:Health:1534326743459037244> ${health}/${card.maxHealth}  |  <:Power:1534326742678769684> ${card.power}  |  <:Speed:1534326741693104168> ${card.speed}`
+    `${progress}\`${health}/${maxHealth}\``,
+    `<:Health:1534326743459037244> ${health}/${maxHealth}  |  <:Power:1534326742678769684> ${card.power}  |  <:Speed:1534326741693104168> ${card.speed}`
   ].join('\n');
 }
 
