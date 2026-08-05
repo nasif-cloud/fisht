@@ -6,31 +6,51 @@
 // text sections and buttons are laid out inside the message itself
 // (rather than in a separate embed).
 //
-// Current settings:
-//   • DM When Daily Ready   — bot DMs you at 10:30 PM ET every day
-//   • DM When Pulls Ready   — bot DMs you at each pull window reset
-//   • DM When Level Up      — bot DMs you when you reach a new level
-//   • DM When Quests Ready  — bot DMs you when daily quests refresh
-//   • DM When Duel Reward   — bot DMs you when the daily duel reward is ready
+// Settings are split across two pages so the message stays compact:
+//   Page 1 — daily, pulls, level-up, and quest notifications
+//   Page 2 — duel reward notifications
 //
 // Prefix aliases: setting, config
 
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const User = require('../../models/user');
 
+const SETTINGS_PAGE_COUNT = 2;
+
 // ─────────────────────────────────────────────
-// HELPER — build the Components V2 component array
+// COMPONENT HELPERS
 // ─────────────────────────────────────────────
-// Components V2 uses raw type numbers instead of builder classes:
-//   type 17 = Container  (the outer card that holds all the settings content)
-//   type  9 = Section    (a row with text on the left, button on the right)
-//   type 10 = TextDisplay (plain text that can use markdown like # headings)
-//   type 14 = Separator  (a horizontal divider line between sections)
-//   type  2 = Button     (inside a Section's "accessory" field)
-//
-// disabled = true locks all buttons (used when the session expires).
-// Expired settings keep the same text; only their buttons are disabled.
+
+// Creates the Enabled/Disabled button shown beside a setting.
+function settingButton(customId, enabled, disabled = false) {
+  return {
+    type: 2,
+    custom_id: customId,
+    style: enabled && !disabled ? 3 : 2,
+    label: enabled ? 'Enabled' : 'Disabled',
+    emoji: enabled ? { name: '✅', id: null } : null,
+    disabled
+  };
+}
+
+// Creates one setting row with its description and toggle button.
+function settingRow(customId, content, enabled, disabled = false) {
+  return {
+    type: 9,
+    components: [{ type: 10, content }],
+    accessory: settingButton(customId, enabled, disabled)
+  };
+}
+
+function divider() {
+  return { type: 14, divider: true, spacing: 1 };
+}
+
+// Components V2 uses raw type numbers:
+//   type 17 = Container, type 9 = Section, type 10 = TextDisplay,
+//   type 14 = Separator, and type 2 = Button.
 function buildComponents(
+  page,
   dmDailyReady,
   dmPullsReady,
   dmLevelUp,
@@ -38,134 +58,74 @@ function buildComponents(
   dmDuelReward,
   disabled = false
 ) {
+  const pageComponents = page === 2
+    ? [
+        settingRow(
+          'settings_duel_reward_dm',
+          '# DM When Duel Reward\nReceive a DM when your daily duel reward is ready at `10:30PM ET`.',
+          dmDuelReward,
+          disabled
+        )
+      ]
+    : [
+        settingRow(
+          'settings_daily_dm',
+          '# DM When Daily Ready\nEvery `24 hours` at **10:30PM ET**.',
+          dmDailyReady,
+          disabled
+        ),
+        divider(),
+        settingRow(
+          'settings_pull_dm',
+          '# DM When Pulls Ready\nEvery `8 hours`.',
+          dmPullsReady,
+          disabled
+        ),
+        divider(),
+        settingRow(
+          'settings_level_up_dm',
+          '# DM When Level Up\nReceive a DM with your level-up rewards.',
+          dmLevelUp,
+          disabled
+        ),
+        divider(),
+        settingRow(
+          'settings_quests_dm',
+          '# DM When Quests Ready\nReceive a DM when your daily quests refresh.',
+          dmQuestsReady,
+          disabled
+        )
+      ];
+
   return [
     {
-      // A Container makes the entire settings page appear as one card,
-      // like the example image the user provided.
       type: 17,
       components: [
-        // ── HEADER ──
         {
           type: 10,
-          content: '# Your settings\nManage your user settings.\npage **1** of **1**'
-        }
-        ,
-
-        // ── DIVIDER ──
-        { type: 14, divider: true, spacing: 1 },
-
-        // ── SETTING 1: DM When Daily Ready ──
-        // The "accessory" is the button shown on the right side of the section.
-        {
-          type: 9,
-          components: [
-            {
-              type: 10,
-              // Backtick around "24 hours" renders it as inline code in Discord
-              content: '# DM When Daily Ready\nEvery `24 hours` at **10:30PM ET**.'
-            }
-          ],
-          accessory: {
-            type:      2,                          // Button
-            custom_id: 'settings_daily_dm',        // ID the collector listens for
-            // Enabled is green. A setting marked Disabled is always grey.
-            // Expiring the page also forces the button to grey.
-            style:      dmDailyReady && !disabled ? 3 : 2,
-            label:      dmDailyReady ? 'Enabled' : 'Disabled',
-            emoji:      dmDailyReady ? { name: '✅', id: null } : null,
-            disabled
-          }
+          content: `# Your settings\nManage your user settings.\npage **${page}** of **${SETTINGS_PAGE_COUNT}**`
         },
-
-        // ── DIVIDER ──
-        { type: 14, divider: true, spacing: 1 },
-
-        // ── SETTING 2: DM When Pulls Ready ──
+        divider(),
+        ...pageComponents,
+        divider(),
         {
-          type: 9,
+          type: 1,
           components: [
             {
-              type: 10,
-              content: '# DM When Pulls Ready\nEvery `8 hours`.'
-            }
-          ],
-          accessory: {
-            type:      2,
-            custom_id: 'settings_pull_dm',
-            // Enabled is green. A setting marked Disabled is always grey.
-            // Expiring the page also forces the button to grey.
-            style:      dmPullsReady && !disabled ? 3 : 2,
-            label:      dmPullsReady ? 'Enabled' : 'Disabled',
-            emoji:      dmPullsReady ? { name: '✅', id: null } : null,
-            disabled
-          }
-        },
-
-        // ── DIVIDER ──
-        { type: 14, divider: true, spacing: 1 },
-
-        // ── SETTING 3: DM When Level Up ──
-        {
-          type: 9,
-          components: [
+              type: 2,
+              custom_id: 'settings_previous',
+              style: 2,
+              label: 'Previous',
+              disabled: disabled || page === 1
+            },
             {
-              type: 10,
-              content: '# DM When Level Up\nReceive a DM with your level-up rewards.'
+              type: 2,
+              custom_id: 'settings_next',
+              style: 2,
+              label: 'Next',
+              disabled: disabled || page === SETTINGS_PAGE_COUNT
             }
-          ],
-          accessory: {
-            type: 2,
-            custom_id: 'settings_level_up_dm',
-            style:      dmLevelUp && !disabled ? 3 : 2,
-            label:      dmLevelUp ? 'Enabled' : 'Disabled',
-            emoji:      dmLevelUp ? { name: '✅', id: null } : null,
-            disabled
-          }
-        },
-
-        // ── DIVIDER ──
-        { type: 14, divider: true, spacing: 1 },
-
-        // ── SETTING 5: DM When Duel Reward ──
-        {
-          type: 9,
-          components: [
-            {
-              type: 10,
-              content: '# DM When Duel Reward\nReceive a DM when your daily duel reward is ready at `10:30PM ET`.'
-            }
-          ],
-          accessory: {
-            type: 2,
-            custom_id: 'settings_duel_reward_dm',
-            style:      dmDuelReward && !disabled ? 3 : 2,
-            label:      dmDuelReward ? 'Enabled' : 'Disabled',
-            emoji:      dmDuelReward ? { name: '✅', id: null } : null,
-            disabled
-          }
-        }
-        ,
-
-        // ── DIVIDER ──
-        { type: 14, divider: true, spacing: 1 },
-
-        // ── SETTING 4: DM When Quests Ready ──
-        {
-          type: 9,
-          components: [
-            {
-              type: 10,
-              content: '# DM When Quests Ready\nReceive a DM when your daily quests refresh.'
-            }
-          ],
-          accessory: {
-            type:      2,
-            custom_id: 'settings_quests_dm',
-            style:      dmQuestsReady && !disabled ? 3 : 2,
-            label:      dmQuestsReady ? 'Enabled' : 'Disabled',
-            emoji:      dmQuestsReady ? { name: '✅', id: null } : null,
-            disabled
-          }
+          ]
         }
       ]
     }
@@ -176,131 +136,101 @@ function buildComponents(
 // COMMAND EXPORT
 // ─────────────────────────────────────────────
 module.exports = {
-  // Slash command definition (/settings)
   data: new SlashCommandBuilder()
     .setName('settings')
     .setDescription('Manage your personal notification settings'),
 
-  // Prefix command definition (op settings / op setting / op config)
   name: 'settings',
   aliases: ['setting', 'config'],
 
   async execute(interactionOrMessage) {
-    const user    = interactionOrMessage.user || interactionOrMessage.author;
+    const user = interactionOrMessage.user || interactionOrMessage.author;
     const isSlash = interactionOrMessage.isChatInputCommand?.();
 
-    // ── STEP 1: Load current settings from the database ──
-    // findOne returns null if the user has no save file yet — that shouldn't
-    // happen (registerAccount runs before every command), but we handle it anyway.
+    // Load the current settings from the database.
     let userData = await User.findOne({ userId: user.id });
     if (!userData) {
       userData = new User({ userId: user.id });
       await userData.save();
     }
 
-    // Read the current toggle values — both default to true for new players
     let dmDailyReady = userData.dmDailyReady ?? true;
     let dmPullsReady = userData.dmPullsReady ?? true;
     let dmLevelUp = userData.dmLevelUp ?? true;
     let dmQuestsReady = userData.dmQuestsReady ?? true;
     let dmDuelReward = userData.dmDuelReward ?? true;
+    let page = 1;
 
-    // ── STEP 2: Build and send the Components V2 message ──
-    // MessageFlags.IsComponentsV2 (= 32768) tells Discord to render
-    // the "components" array in V2 mode (with sections, text displays, etc.)
-    // instead of the classic button row format.
+    function buildPayload(expired = false) {
+      return {
+        flags: MessageFlags.IsComponentsV2,
+        components: buildComponents(
+          page,
+          dmDailyReady,
+          dmPullsReady,
+          dmLevelUp,
+          dmQuestsReady,
+          dmDuelReward,
+          expired
+        )
+      };
+    }
+
     const payload = {
-      flags:      MessageFlags.IsComponentsV2,
-      components: buildComponents(
-        dmDailyReady,
-        dmPullsReady,
-        dmLevelUp,
-        dmQuestsReady,
-        dmDuelReward
-      ),
-      fetchReply: true  // fetchReply gives us back the message object to attach a collector
+      ...buildPayload(),
+      fetchReply: true
     };
 
     let response;
     if (isSlash) {
       response = await interactionOrMessage.reply(payload);
     } else {
-      // For prefix commands, channel.send() returns the message directly
-      // so fetchReply isn't needed — but we destructure it out to keep the payload clean
       const { fetchReply: _, ...sendPayload } = payload;
       response = await interactionOrMessage.channel.send(sendPayload);
     }
 
-    // ── STEP 3: Listen for button clicks ──
-    // The collector watches for any component interaction on this specific message.
-    // 5-minute timeout — after that, buttons are locked so stale messages don't confuse people.
+    // Buttons remain active for five minutes and the timer resets after use.
     const collector = response.createMessageComponentCollector({ time: 300000 });
 
-    collector.on('collect', async (interaction) => {
-      // Only the person who opened settings can click the buttons
+    collector.on('collect', async interaction => {
       if (interaction.user.id !== user.id) {
-        return interaction.reply({ content: `These aren't yours`, flags: MessageFlags.Ephemeral });
+        return interaction.reply({
+          content: `These aren't yours`,
+          flags: MessageFlags.Ephemeral
+        });
       }
 
-      // Reset the 5-minute inactivity timer on every click
       collector.resetTimer();
 
-      // ── TOGGLE THE CLICKED SETTING ──
-      if (interaction.customId === 'settings_daily_dm') {
-        // Flip the daily DM toggle and save immediately
+      if (interaction.customId === 'settings_previous') {
+        page = Math.max(1, page - 1);
+      } else if (interaction.customId === 'settings_next') {
+        page = Math.min(SETTINGS_PAGE_COUNT, page + 1);
+      } else if (interaction.customId === 'settings_daily_dm') {
         dmDailyReady = !dmDailyReady;
         await User.updateOne({ userId: user.id }, { dmDailyReady });
-
       } else if (interaction.customId === 'settings_pull_dm') {
-        // Flip the pulls DM toggle and save immediately
         dmPullsReady = !dmPullsReady;
         await User.updateOne({ userId: user.id }, { dmPullsReady });
-
       } else if (interaction.customId === 'settings_level_up_dm') {
-        // Flip the level-up DM toggle and save immediately
         dmLevelUp = !dmLevelUp;
         await User.updateOne({ userId: user.id }, { dmLevelUp });
-
       } else if (interaction.customId === 'settings_quests_dm') {
         dmQuestsReady = !dmQuestsReady;
         await User.updateOne({ userId: user.id }, { dmQuestsReady });
-
       } else if (interaction.customId === 'settings_duel_reward_dm') {
         dmDuelReward = !dmDuelReward;
         await User.updateOne({ userId: user.id }, { dmDuelReward });
+      } else {
+        return;
       }
 
-      // ── REBUILD AND UPDATE THE MESSAGE ──
-      // We include the flag again so Discord knows to keep rendering in V2 mode
-      await interaction.update({
-        flags:      MessageFlags.IsComponentsV2,
-        components: buildComponents(
-          dmDailyReady,
-          dmPullsReady,
-          dmLevelUp,
-          dmQuestsReady,
-          dmDuelReward
-        )
-      });
+      await interaction.update(buildPayload());
     });
 
-    // ── STEP 4: Lock buttons when the session expires ──
-    // When the 5-minute timer runs out, we rebuild the components with all
-    // buttons set to disabled: true so clicking them does nothing.
-    // This makes it obvious the session is over without deleting the message.
+    // Lock all buttons when the session expires.
     collector.on('end', () => {
-      response.edit({
-        flags:      MessageFlags.IsComponentsV2,
-        components: buildComponents(
-          dmDailyReady,
-          dmPullsReady,
-          dmLevelUp,
-          dmQuestsReady,
-          dmDuelReward,
-          true
-        ) // true = disabled
-      }).catch(() => {});
-      // .catch() silently handles the case where the message was deleted
+      response.edit(buildPayload(true)).catch(() => {});
     });
   }
 };
