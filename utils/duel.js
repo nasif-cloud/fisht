@@ -101,14 +101,39 @@ function buildDuelTeam(userData) {
   return assignRoles(team);
 }
 
-// Assign HP/ATK/SPD exactly once each. The best assignment is selected by
-// comparing each card's share of the strongest value for each stat, so a card
-// that leads two stats receives the role where its advantage is strongest.
+// The three stats use different numeric scales: health can reach 700, power
+// can reach 125, and speed can reach 60. Comparing raw values or comparing
+// each stat only to the team's maximum makes a card such as 71 power / 29
+// speed look equally strong in both categories.
+const ROLE_STAT_CEILINGS = {
+  health: 700,
+  power: 125,
+  speed: 60
+};
+
+// Assign HP/ATK/SPD exactly once each. Each card's role affinity is first
+// normalized against the shared stat scale, then the best one-to-one
+// assignment is selected. This keeps a card with clearly stronger power from
+// being labelled SPD simply because its speed happens to lead its team.
 function assignRoles(team) {
   const result = team.map(card => ({ ...card }));
   if (result.length === 0) return result;
 
   const roles = ROLE_ORDER.slice(0, result.length);
+  const affinity = result.map(card => {
+    const values = {};
+    for (const role of roles) {
+      const stat = ROLE_STATS[role];
+      const ceiling = ROLE_STAT_CEILINGS[stat];
+      values[role] = Math.max(0, Number(card[stat]) || 0) / ceiling;
+    }
+
+    const preferredRole = roles.reduce((bestRole, role) =>
+      values[role] > values[bestRole] ? role : bestRole
+    , roles[0]);
+
+    return { values, preferredRole };
+  });
   let best = null;
 
   function visit(index, usedRoles, assignment, score) {
@@ -121,12 +146,11 @@ function assignRoles(team) {
 
     for (const role of roles) {
       if (usedRoles.has(role)) continue;
-      const stat = ROLE_STATS[role];
-      const maximum = Math.max(...result.map(card => card[stat]), 1);
-      const isStatLeader = result[index][stat] === maximum;
-      // Prefer the actual stat leader for each role. The normalized value
-      // breaks conflicts when one card leads multiple stats.
-      const roleScore = (isStatLeader ? 1000 : 0) + result[index][stat] / maximum;
+      // The preference bonus keeps each card on its naturally strongest role.
+      // The normalized value breaks conflicts when multiple cards prefer the
+      // same role, while still letting a clearly stronger card keep it.
+      const roleScore = affinity[index].values[role] +
+        (affinity[index].preferredRole === role ? 2 : 0);
       usedRoles.add(role);
       assignment.push(role);
       visit(index + 1, usedRoles, assignment, score + roleScore);
@@ -148,9 +172,9 @@ function getDamageMultiplier(attackerRole, defenderRole) {
 
 function getAttackType(attackerRole, defenderRole) {
   const multiplier = getDamageMultiplier(attackerRole, defenderRole);
-  if (multiplier > 1) return '+';
-  if (multiplier < 1) return '-';
-  return '=';
+  if (multiplier > 1) return '`+`';
+  if (multiplier < 1) return '`-`';
+  return '`=`';
 }
 
 function calculateDamage(attacker, defender) {
