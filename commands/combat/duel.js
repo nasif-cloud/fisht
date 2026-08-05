@@ -188,14 +188,8 @@ async function awardDuelReward(state, winner) {
     winnerData.balance = (Number(winnerData.balance) || 0) + DUEL_REWARD_BELI;
     winnerData.lastDuelRewardAt = now;
     await winnerData.save();
-    await require('../../utils/levels').sendLevelUpNotifications(
-      winner.discordUser,
-      winnerData,
-      xpResult,
-      state.channel
-    );
 
-    return { awarded: true, xpResult };
+    return { awarded: true, xpResult, winnerData };
   } catch (error) {
     console.error('[Duel] Reward failed:', error.message);
     return { awarded: false, reason: 'error' };
@@ -784,7 +778,16 @@ module.exports = {
               if (rewardResult?.awarded) {
                 content += `\nReward: **${DUEL_REWARD_XP} XP** and **${DUEL_REWARD_BELI.toLocaleString('en-US')}**<:money:1532532493578928178> Beli`;
               }
-            await response.edit(buildEndPayload(content, state));
+            const resultMessage = await response.edit(buildEndPayload(content, state));
+            if (rewardResult?.awarded) {
+              await require('../../utils/levels').sendLevelUpNotifications(
+                result.winner.discordUser,
+                rewardResult.winnerData,
+                rewardResult.xpResult,
+                state.channel,
+                resultMessage
+              );
+            }
             releaseUsers();
             return;
           }

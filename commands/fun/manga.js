@@ -322,7 +322,6 @@ module.exports = {
         if (userData && xpResult) {
           resultDesc += `\n${formatXpReward(xpResult)}`;
           await userData.save();
-          await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
         } else if (userData && reward > 0) {
           await userData.save();
         }
@@ -334,11 +333,20 @@ module.exports = {
           .setImage(`attachment://${MASKED_COVER_FILENAME}`)
           .setColor(embedColor);
 
-        await submit.editReply({
+        const resultMessage = await submit.editReply({
           embeds: [resultEmbed],
           components: [],
           files: [cleanCoverAttachment]
         });
+        if (userData && xpResult) {
+          await sendLevelUpNotifications(
+            user,
+            userData,
+            xpResult,
+            interactionOrMessage.channel,
+            resultMessage
+          );
+        }
 
       } catch {
         // awaitModalSubmit timed out — user dismissed the modal or ran out of time.

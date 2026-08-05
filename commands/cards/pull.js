@@ -308,7 +308,6 @@ module.exports = {
     updateQuestProgress(userData, 'pull', 1);
     const xpResult = addXp(userData, 1);
     await userData.save(); // Writes all the changes above to MongoDB
-    await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
 
     // ── STEP 9: Build the shiny image files (if this pull is shiny) ──
     // Generates a holographic rainbow overlay on both the card image and the rank icon.
@@ -359,15 +358,28 @@ module.exports = {
       image: { url: imageUrl }
     };
 
+    let resultMessage;
     if (interactionOrMessage.isChatInputCommand?.()) {
       if (interactionOrMessage.replied || interactionOrMessage.deferred) {
-        await interactionOrMessage.followUp({ embeds: [embed], files });
+        resultMessage = await interactionOrMessage.followUp({
+          embeds: [embed],
+          files,
+          fetchReply: true
+        });
       } else {
-        await interactionOrMessage.reply({ embeds: [embed], files });
+        resultMessage = await interactionOrMessage.reply({ embeds: [embed], files, fetchReply: true });
       }
     } else {
-      await interactionOrMessage.channel.send({ embeds: [embed], files });
+      resultMessage = await interactionOrMessage.channel.send({ embeds: [embed], files });
     }
+
+    await sendLevelUpNotifications(
+      user,
+      userData,
+      xpResult,
+      interactionOrMessage.channel,
+      resultMessage
+    );
 
     if (appliedGuaranteedRank) {
       const guaranteeMessage = `This was a guaranteed ${rankEmojis[appliedGuaranteedRank] || appliedGuaranteedRank} rank pull\n-# Pity has been reset`;

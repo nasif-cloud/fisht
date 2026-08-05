@@ -118,15 +118,14 @@ async function findOpponent(guild, playerId, playerLevel) {
   return null;
 }
 
-async function awardBattleReward(playerId, discordUser, channel) {
+async function awardBattleReward(playerId) {
   const userData = await User.findOne({ userId: playerId });
   if (!userData) return null;
 
   const xpResult = addXp(userData, BATTLE_REWARD_XP);
   userData.balance = (Number(userData.balance) || 0) + BATTLE_REWARD_BELI;
   await userData.save();
-  await sendLevelUpNotifications(discordUser, userData, xpResult, channel);
-  return xpResult;
+  return { userData, xpResult };
 }
 
 function getPlayerSelection(state) {
@@ -240,18 +239,24 @@ module.exports = {
 
       const finishBattle = async result => {
         if (result.winner?.id === state.challenger.id) {
-          const xpResult = await awardBattleReward(
-            player.id,
-            player,
-            interactionOrMessage.channel
-          );
+          const reward = await awardBattleReward(player.id);
+          const xpResult = reward?.xpResult;
           let content =
             `**${state.challenger.username} wins**\n` +
             `Reward: **${BATTLE_REWARD_XP} XP** and **${BATTLE_REWARD_BELI.toLocaleString('en-US')}**<:money:1532532493578928178> Beli`;
           if (xpResult?.levelsGained > 0) {
             content += `\nYou reached level **${xpResult.after.level}**`;
           }
-          await response.edit(buildEndPayload(content, state));
+          const resultMessage = await response.edit(buildEndPayload(content, state));
+          if (reward) {
+            await sendLevelUpNotifications(
+              player,
+              reward.userData,
+              reward.xpResult,
+              interactionOrMessage.channel,
+              resultMessage
+            );
+          }
         } else if (result.reason === 'draw') {
           await response.edit(buildEndPayload('The battle ended in a draw', state));
         } else {

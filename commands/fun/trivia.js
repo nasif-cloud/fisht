@@ -180,7 +180,6 @@ module.exports = {
           updateQuestProgress(userData, 'trivia_correct', 1);
           xpResult = addXp(userData, 10);
           await userData.save();
-          await sendLevelUpNotifications(user, userData, xpResult, interactionOrMessage.channel);
         }
       }
 
@@ -198,7 +197,14 @@ module.exports = {
         .setThumbnail(THUMBNAIL_URL)
         .setColor(isCorrect ? COLOR_CORRECT : COLOR_WRONG);
 
-      await interaction.editReply({ embeds: [resultEmbed], components: [] });
+      const resultMessage = await interaction.editReply({ embeds: [resultEmbed], components: [] });
+      await sendLevelUpNotifications(
+        user,
+        userData,
+        xpResult,
+        interactionOrMessage.channel,
+        resultMessage
+      );
     });
 
     collector.on('end', async (collected, reason) => {

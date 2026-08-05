@@ -17,6 +17,8 @@ module.exports = {
       'op nobeli @user [amount]        — remove Berries from a user',
       'op omeat @user [amount]         — give Meat to a user',
       'op nomeat @user [amount]        — remove Meat from a user',
+      'op oxp @user [amount]            — give XP to a user',
+      'op noxp @user [amount]           — remove XP from a user',
       'op ocard @user [cardname] [amount]   — give card copies (name/alias search)',
       'op nocard @user [cardname] [amount]  — remove card copies (name/alias search)',
       'op oshinify @user [cardname]       — make all copies of a card shiny',

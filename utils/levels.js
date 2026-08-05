@@ -7,7 +7,7 @@
 const XP_PER_LEVEL_BASE = 150;
 const XP_PER_LEVEL_INCREMENT = 5;
 const LEVEL_UP_BELI = 10_000;
-const LEVEL_UP_RESET_TOKENS = 3;
+const LEVEL_UP_MEAT = 3;
 const { updateQuestProgress } = require('./quests');
 
 function getXpForNextLevel(level) {
@@ -52,8 +52,7 @@ function addXp(userData, amount) {
 
   if (levelsGained > 0) {
     userData.balance = (Number(userData.balance) || 0) + levelsGained * LEVEL_UP_BELI;
-    userData.resetTokens =
-      (Number(userData.resetTokens) || 0) + levelsGained * LEVEL_UP_RESET_TOKENS;
+    userData.meat = (Number(userData.meat) || 0) + levelsGained * LEVEL_UP_MEAT;
   }
 
   return {
@@ -66,24 +65,40 @@ function addXp(userData, amount) {
 
 // Send one clear level-up message for each new level. The setting controls
 // whether the message goes to DMs or the channel where the reward happened.
-async function sendLevelUpNotifications(discordUser, userData, xpResult, channel) {
+// When a result message is supplied, channel notifications reply to it.
+async function sendLevelUpNotifications(discordUser, userData, xpResult, channel, replyTo = null) {
   if (!discordUser || xpResult?.levelsGained < 1) {
     return;
   }
 
   for (let level = xpResult.before.level + 1; level <= xpResult.after.level; level += 1) {
     try {
-      const destination = userData.dmLevelUp ? discordUser : channel;
+      const isDm = Boolean(userData.dmLevelUp);
+      const destination = isDm ? discordUser : channel;
       if (!destination?.send) {
         console.warn(`[Levels] No notification destination for level ${level}`);
         continue;
       }
 
-      await destination.send(
-        `**You leveled up to ${level} and received:**\n` +
-        `**${LEVEL_UP_BELI.toLocaleString('en-US')}**<:money:1532532493578928178>\n` +
-        `**${LEVEL_UP_RESET_TOKENS}**<:meatrbg:1532524176701657248>`
-      );
+      const content =
+        `${isDm ? 'You' : `<@${discordUser.id}>`} leveled up to **level ${level}** and received:\n` +
+        `${LEVEL_UP_BELI.toLocaleString('en-US')}<:money:1532532493578928178>\n` +
+        `${LEVEL_UP_MEAT} <:meatrbg:1532524176701657248>`;
+      const payload = {
+        content,
+        allowedMentions: isDm
+          ? { parse: [] }
+          : { users: [discordUser.id], repliedUser: false }
+      };
+
+      if (!isDm && replyTo?.id) {
+        payload.reply = {
+          messageReference: replyTo.id,
+          failIfNotExists: false
+        };
+      }
+
+      await destination.send(payload);
     } catch {
       // DMs may be closed; the saved rewards should not be rolled back.
     }
@@ -96,7 +111,7 @@ function formatXpReward(xpResult) {
 
 module.exports = {
   LEVEL_UP_BELI,
-  LEVEL_UP_RESET_TOKENS,
+  LEVEL_UP_MEAT,
   getXpForNextLevel,
   getLevelProgress,
   addXp,
