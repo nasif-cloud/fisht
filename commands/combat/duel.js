@@ -147,9 +147,6 @@ function buildPlayerComponents(duelId, player, selected) {
     components.push(buildCardSection(card));
   }
 
-  // This blank text component creates the requested line break between the
-  // card details and the card buttons
-  components.push({ type: 10, content: '\n' });
   components.push(buildButtonRow(duelId, player.id, player.team, selected));
   return components;
 }
@@ -195,8 +192,8 @@ function buildBattleComponents(state, logText) {
           state.selections[state.target.id]
         ),
         { type: 14, divider: true, spacing: 1 },
-        // Keep a blank line between the separator and the battle logs
-        { type: 10, content: `\n${logText || 'Pick the card you want to attack with'}` }
+        // Battle log text — the divider above already provides visual separation
+        { type: 10, content: logText || 'Pick the card you want to attack with' }
       ]
     }
   ];
