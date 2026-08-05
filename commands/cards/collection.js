@@ -42,8 +42,8 @@ const { computeBoosts } = require('../../utils/boosts');
 // Shiny image generators — holographic overlay for card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getCardImageSource,
-  getNormalizedBuffer
+  getNormalizedBuffer,
+  getNormalizedImageBuffer
 } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
@@ -260,32 +260,53 @@ async function renderCardUpdate({ editFn, entry, footerText, user, components, g
 
   // Step 1 — send the plain embed right away (no image generation needed)
   const cardData = getCardData(entry.card, entry.mastery ?? 1);
-  const image = await getCardImageSource(cardData, entry.card);
+  const source = cardData.image || entry.card.image;
   await editFn({
     embeds:     [buildCardEmbed(
       entry,
       footerText,
       user,
-      image.normalized ? 'attachment://card_image.png' : image.source
+      source
     )],
-    files: image.normalized
-      ? [{ attachment: image.source, name: 'card_image.png' }]
-      : [],
+    files: [],
     components
   });
 
-  // Step 2 — if shiny, generate and apply the shimmer
+  // Step 2 — replace the source image in the background. Shiny processing
+  // remains separate because it also applies the holographic overlay.
   if (entry.isShiny) {
-    try {
-      const shiny = await buildShinyPayload(entry, footerText, user);
-      // Only apply if we haven't navigated to a different card since this render started
-      if (getVersion() === myVersion) {
-        await editFn({ ...shiny, components });
+    void (async () => {
+      try {
+        const shiny = await buildShinyPayload(entry, footerText, user);
+        // Only apply if we haven't navigated to a different card since this render started
+        if (getVersion() === myVersion) {
+          await editFn({ ...shiny, components });
+        }
+      } catch (err) {
+        // Shimmer failed silently — the plain card is already showing
+        console.error(`[Collection] Shiny shimmer failed:`, err.message);
       }
-    } catch (err) {
-      // Shimmer failed silently — the plain card is already showing
-      console.error(`[Collection] Shiny shimmer failed:`, err.message);
-    }
+    })();
+  } else {
+    void (async () => {
+      try {
+        const normalized = await getNormalizedImageBuffer(source);
+        if (getVersion() === myVersion) {
+          await editFn({
+            embeds: [buildCardEmbed(
+              entry,
+              footerText,
+              user,
+              'attachment://card_image.jpg'
+            )],
+            files: [{ attachment: normalized, name: 'card_image.jpg' }],
+            components
+          });
+        }
+      } catch (error) {
+        console.warn(`[Collection] Background card image processing failed: ${error.message}`);
+      }
+    })();
   }
 }
 
@@ -563,17 +584,18 @@ module.exports = {
     // then renderCardUpdate applies the holographic shimmer in a second edit.
     let response;
     const initialCardData = getCardData(initialEntry.card, initialEntry.mastery ?? 1);
-    const initialImage = await getCardImageSource(initialCardData, initialEntry.card);
+    const initialImage = {
+      source: initialCardData.image || initialEntry.card.image,
+      normalized: false
+    };
     const fastInitial = {
       embeds:     [buildCardEmbed(
         initialEntry,
         initialFooter,
         user,
-        initialImage.normalized ? 'attachment://card_image.png' : initialImage.source
+        initialImage.source
       )],
-      files: initialImage.normalized
-        ? [{ attachment: initialImage.source, name: 'card_image.png' }]
-        : [],
+      files: [],
       components: initialComponents
     };
 
@@ -596,6 +618,25 @@ module.exports = {
           }
         } catch (err) {
           console.error(`[Collection] Initial shiny shimmer failed:`, err.message);
+        }
+      })();
+    } else {
+      const initialVersion = getVersion();
+      (async () => {
+        try {
+          const normalized = await getNormalizedImageBuffer(initialImage.source);
+          if (getVersion() === initialVersion) {
+            await response.edit({
+              embeds: [{
+                ...fastInitial.embeds[0],
+                image: { url: 'attachment://card_image.jpg' }
+              }],
+              files: [{ attachment: normalized, name: 'card_image.jpg' }],
+              components: initialComponents
+            });
+          }
+        } catch (error) {
+          console.warn(`[Collection] Initial card image processing failed: ${error.message}`);
         }
       })();
     }

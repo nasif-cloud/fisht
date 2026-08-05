@@ -21,7 +21,7 @@ const { computeBoosts } = require('../../utils/boosts');
 // Shiny image generators — produce the holographic card image and rank icon
 const { generateShinyImage, generateShinyIcon } = require('../../utils/shinyImage');
 const {
-  getCardImageSource,
+  getNormalizedImageBuffer,
   getNormalizedBuffer
 } = require('../../utils/cardImage');
 
@@ -152,10 +152,11 @@ module.exports = {
 
     const visual = rankConfig[rank][`M${masteryLevel}`];
 
-    const normalCardImage = await getCardImageSource(cardData, foundCard);
-    const normalCardImageUrl = normalCardImage.normalized
-      ? 'attachment://card_image.png'
-      : normalCardImage.source;
+    const normalCardImage = {
+      source: cardData.image || foundCard.image,
+      normalized: false
+    };
+    const normalCardImageUrl = normalCardImage.source;
 
     // --- STEP 9: Build the embed with plain image URLs ---
     // We always send with plain URLs first so the embed appears instantly.
@@ -201,9 +202,7 @@ module.exports = {
     const payload = {
       embeds: [embed],
       components: [boostsRow],
-      files: normalCardImage.normalized
-        ? [new AttachmentBuilder(normalCardImage.source, { name: 'card_image.png' })]
-        : []
+      files: []
     };
 
     if (isSlash) {
@@ -229,14 +228,14 @@ module.exports = {
             `shiny:${cardData.image}`
           );
           const shinyFiles = [
-            new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.png' }),
+            new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.jpg' }),
             new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
           ];
           // Same embed object, but now pointing at the uploaded shiny files
           const shinyEmbed = {
             ...embed,
             thumbnail: { url: `attachment://shiny_icon.png` },
-            image:     { url: `attachment://shiny_card.png` }
+            image:     { url: `attachment://shiny_card.jpg` }
           };
           await response.edit({
             embeds:     [shinyEmbed],
@@ -246,6 +245,20 @@ module.exports = {
         } catch (err) {
           // Shimmer failed silently — the plain card is already showing, no action needed
           console.error(`[MyCard] Shiny shimmer failed:`, err.message);
+        }
+      })();
+    } else {
+      (async () => {
+        try {
+          const normalizedBuffer = await getNormalizedImageBuffer(normalCardImage.source);
+          await response.edit({
+            embeds: [{ ...embed, image: { url: 'attachment://card_image.jpg' } }],
+            files: [
+              new AttachmentBuilder(normalizedBuffer, { name: 'card_image.jpg' })
+            ]
+          });
+        } catch (error) {
+          console.warn(`[MyCard] Background card image processing failed: ${error.message}`);
         }
       })();
     }

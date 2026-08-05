@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-// CARD IMAGE NORMALIZER
+// FAST CARD IMAGE NORMALIZER
 // ─────────────────────────────────────────────
 // Every card image is rendered on the same fixed 573×800 canvas. Sharp keeps
 // the original aspect ratio and crops only the excess so there is no padding.
@@ -35,9 +35,13 @@ async function normalizeImageBuffer(input) {
       position: 'center',
       kernel: sharp.kernel.cubic
     })
-    .png({
-      compressionLevel: 1,
-      adaptiveFiltering: false
+    .jpeg({
+      quality: 82,
+      chromaSubsampling: '4:2:0',
+      trellisQuantisation: false,
+      overshootDeringing: false,
+      optimiseScans: false,
+      progressive: false
     })
     .toBuffer();
 }

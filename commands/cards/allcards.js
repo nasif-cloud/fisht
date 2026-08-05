@@ -34,7 +34,7 @@ const {
 
 const { cards, rankConfig, resolveStat, safeRank, safeStat } = require('../../data/cards');
 const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
-const { getCardImageSource } = require('../../utils/cardImage');
+const { getNormalizedImageBuffer } = require('../../utils/cardImage');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -144,20 +144,37 @@ function buildCardEmbed(card, mastery, footerText, user, imageUrl = null) {
 
 async function renderCardUpdate({ editFn, card, mastery, footerText, user, components }) {
   const cardData = getCardData(card, mastery);
-  const image = await getCardImageSource(cardData, card);
-  return editFn({
+  const source = cardData.image || card.image;
+  await editFn({
     embeds: [buildCardEmbed(
       card,
       mastery,
       footerText,
       user,
-      image.normalized ? 'attachment://card_image.png' : image.source
+      source
     )],
-    files: image.normalized
-      ? [{ attachment: image.source, name: 'card_image.png' }]
-      : [],
+    files: [],
     components
   });
+
+  void (async () => {
+    try {
+      const normalized = await getNormalizedImageBuffer(source);
+      await editFn({
+        embeds: [buildCardEmbed(
+          card,
+          mastery,
+          footerText,
+          user,
+          'attachment://card_image.jpg'
+        )],
+        files: [{ attachment: normalized, name: 'card_image.jpg' }],
+        components
+      });
+    } catch (error) {
+      console.warn(`[AllCards] Background card image processing failed: ${error.message}`);
+    }
+  })();
 }
 
 // ─────────────────────────────────────────────
@@ -429,31 +446,33 @@ module.exports = {
 
     let initialImage;
     if (isSearchMode) {
-      initialImage = await getCardImageSource(
-        getCardData(searchCard, searchMastery),
-        searchCard
-      );
+      const searchData = getCardData(searchCard, searchMastery);
+      initialImage = {
+        source: searchData.image || searchCard.image,
+        normalized: false
+      };
       // Search mode: single card, no direction button
       embed      = buildCardEmbed(
         searchCard,
         searchMastery,
         searchFooter(searchMastery),
         user,
-        initialImage.normalized ? 'attachment://card_image.png' : initialImage.source
+        initialImage.source
       );
       components = buildSearchComponents(searchMastery);
     } else {
-      initialImage = await getCardImageSource(
-        getCardData(sortedCards[currentPage], mastery),
-        sortedCards[currentPage]
-      );
+      const currentData = getCardData(sortedCards[currentPage], mastery);
+      initialImage = {
+        source: currentData.image || sortedCards[currentPage].image,
+        normalized: false
+      };
       // Normal browse mode: full nav with direction button
       embed      = buildCardEmbed(
         sortedCards[currentPage],
         mastery,
         normalFooter(currentPage, sortedCards.length, sortMode, mastery),
         user,
-        initialImage.normalized ? 'attachment://card_image.png' : initialImage.source
+        initialImage.source
       );
       components = buildNormalComponents(sortedCards.length, currentPage, sortMode, mastery, isSlash, isAscending);
     }
@@ -462,9 +481,7 @@ module.exports = {
     // fetchReply: true gives us back the sent message object so we can attach a collector to it
     const payload = {
       embeds: [embed],
-      files: initialImage.normalized
-        ? [{ attachment: initialImage.source, name: 'card_image.png' }]
-        : [],
+      files: [],
       components,
       fetchReply: true
     };
@@ -475,6 +492,26 @@ module.exports = {
     } else {
       response = await interactionOrMessage.channel.send(payload);
     }
+
+    // Send the original URL immediately. Normalize in the background so the
+    // command stays responsive while later renders reuse the shared cache.
+    (async () => {
+      try {
+        const normalized = await getNormalizedImageBuffer(initialImage.source);
+        const latest = await response.fetch();
+        if (latest.embeds[0]?.image?.url !== initialImage.source) return;
+        await response.edit({
+          embeds: [{
+            ...embed,
+            image: { url: 'attachment://card_image.jpg' }
+          }],
+          files: [{ attachment: normalized, name: 'card_image.jpg' }],
+          components
+        });
+      } catch (error) {
+        console.warn(`[AllCards] Initial card image processing failed: ${error.message}`);
+      }
+    })();
 
     // ── STEP 7: Set up the interaction collector ──
     // A "collector" listens for button clicks and dropdown changes on this specific message.

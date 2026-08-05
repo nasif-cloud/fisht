@@ -323,28 +323,6 @@ module.exports = {
       ? `${SHINY_EMOJI} ${pulledCard.name}` // Shiny prefix emoji before the name
       : pulledCard.name;
 
-    if (isShinyPull) {
-      // Generate both images in parallel so we don't wait for one before starting the other
-      const [cardBuf, iconBuf] = await Promise.all([
-        generateShinyImage(pulledCard.image, pulledCard.name),
-        generateShinyIcon(visualSettings.icon)
-      ]);
-      const finalCardBuffer = await getNormalizedBuffer(
-        cardBuf,
-        `shiny:${pulledCard.image}`
-      );
-      files    = [
-        new AttachmentBuilder(finalCardBuffer, { name: `shiny_card.png` }),
-        new AttachmentBuilder(iconBuf, { name: `shiny_icon.png` })
-      ];
-      imageUrl = `attachment://shiny_card.png`;
-      iconUrl  = `attachment://shiny_icon.png`;
-    } else {
-      const normalizedBuffer = await getNormalizedImageBuffer(pulledCard.image);
-      files = [new AttachmentBuilder(normalizedBuffer, { name: 'card_image.png' })];
-      imageUrl = 'attachment://card_image.png';
-    }
-
     // ── STEP 10: Build and send the pull embed ──
     // Apply copies + shiny boosts so the stats shown match what the player actually has.
     // On a shiny pull the 30% shiny bonus is real and should be visible right away.
@@ -384,6 +362,45 @@ module.exports = {
     } else {
       resultMessage = await interactionOrMessage.channel.send({ embeds: [embed], files });
     }
+
+    // Keep the pull response as fast as it was before fixed-size processing.
+    // The original image is sent immediately; normalization is applied in the
+    // background and cached for future commands.
+    (async () => {
+      try {
+        if (isShinyPull) {
+          const [cardBuf, iconBuf] = await Promise.all([
+            generateShinyImage(pulledCard.image, pulledCard.name),
+            generateShinyIcon(visualSettings.icon)
+          ]);
+          const finalCardBuffer = await getNormalizedBuffer(
+            cardBuf,
+            `shiny:${pulledCard.image}`
+          );
+          await resultMessage.edit({
+            embeds: [{
+              ...embed,
+              thumbnail: { url: 'attachment://shiny_icon.png' },
+              image: { url: 'attachment://shiny_card.jpg' }
+            }],
+            files: [
+              new AttachmentBuilder(finalCardBuffer, { name: 'shiny_card.jpg' }),
+              new AttachmentBuilder(iconBuf, { name: 'shiny_icon.png' })
+            ]
+          });
+        } else {
+          const normalizedBuffer = await getNormalizedImageBuffer(pulledCard.image);
+          await resultMessage.edit({
+            embeds: [{ ...embed, image: { url: 'attachment://card_image.jpg' } }],
+            files: [
+              new AttachmentBuilder(normalizedBuffer, { name: 'card_image.jpg' })
+            ]
+          });
+        }
+      } catch (error) {
+        console.warn(`[Pull] Background card image processing failed: ${error.message}`);
+      }
+    })();
 
     await sendLevelUpNotifications(
       user,
