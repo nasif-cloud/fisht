@@ -18,4 +18,10 @@ module.exports = {
 
   // op oreset @user trivia → clears lastTriviaClaim
   trivia: { lastTriviaClaim: null },
+
+  // op oreset @user battle → clears the 30-minute battle cooldown
+  battle: { lastBattleTime: null },
+
+  // op oreset @user duel → clears the daily duel reward timer
+  duel: { lastDuelRewardAt: null },
 };
