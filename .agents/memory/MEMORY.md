@@ -17,3 +17,4 @@
 - [Portable npm lockfiles](portable-npm-lockfiles.md) — deployment lockfiles must use public registry tarball URLs, not Replit package-firewall hosts
 - [Card image command latency](card-image-command-latency.md) — send original card URLs first; normalize to 573×800 asynchronously and reuse the shared cache
 - [GitHub sync state](github-sync-state.md) — verify ancestry and working-tree state when the managed pull reports a conflict
+- [Persistent channel drops](card-drops.md) — teaser/claim states, restart recovery, and atomic MongoDB reservation/claim rules

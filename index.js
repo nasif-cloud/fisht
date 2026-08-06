@@ -45,6 +45,11 @@ const ServiceLease = require('./models/serviceLease');
 // Importing the same module object means all files see the same flags in memory.
 const maintenance = require('./data/maintenance');
 const { getCommandRestriction } = require('./utils/channelRestrictions');
+const {
+  handleDropInteraction,
+  recordChannelActivity,
+  startCardDropScheduler
+} = require('./utils/cardDrops');
 
 // The bot owner's Discord user ID — used to allow owner through normal maintenance.
 const OWNER_ID = '1257718161298690119';
@@ -293,6 +298,7 @@ client.once('ready', () => {
   // Start the background DM notifier now that the Discord client is live
   // and can fetch users and send messages
   startNotifier(client);
+  startCardDropScheduler(client);
 });
 
 // ─────────────────────────────────────────────
@@ -332,8 +338,35 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  // Ignore anything that isn't a slash command (e.g. buttons, dropdowns)
-  // — those are handled inside their own command files via collectors.
+  // Card drop claim buttons are handled globally because their messages can
+  // outlive the command execution that created them.
+  if (interaction.isButton?.() && interaction.customId.startsWith('card_drop_claim:')) {
+    if (!(await hasServiceLease())) return;
+    try {
+      await handleDropInteraction(interaction);
+    } catch (error) {
+      console.error('[CardDrops] Claim failed:', error);
+      try {
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: 'The card could not be claimed right now.',
+            flags: 64
+          });
+        } else if (interaction.deferred && !interaction.replied) {
+          await interaction.followUp({
+            content: 'The card could not be claimed right now.',
+            flags: 64
+          });
+        }
+      } catch {
+        // The interaction may have expired while the database was processing.
+      }
+    }
+    return;
+  }
+
+  // Ignore anything else that isn't a slash command (e.g. other buttons,
+  // dropdowns, and modals handled inside their command files).
   if (!interaction.isChatInputCommand()) return;
 
   // Only the current lease holder is allowed to process commands.
@@ -443,6 +476,10 @@ client.on('messageCreate', async (message) => {
   // Only the current lease holder is allowed to process commands.
   // If a newer deployment took over, older services stop here.
   if (!(await hasServiceLease())) return;
+
+  // Track ordinary human conversation for enabled drop channels. This runs
+  // before prefix parsing so command messages count as chat activity too.
+  void recordChannelActivity(message);
 
   const prefix = 'op'; // The prefix the bot listens for
 
