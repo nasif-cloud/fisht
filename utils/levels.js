@@ -7,7 +7,7 @@
 const XP_PER_LEVEL_BASE = 150;
 const XP_PER_LEVEL_INCREMENT = 5;
 const LEVEL_UP_BELI = 10_000;
-const LEVEL_UP_MEAT = 3;
+const LEVEL_UP_CHEST = 3;
 const { updateQuestProgress } = require('./quests');
 
 function getXpForNextLevel(level) {
@@ -44,16 +44,19 @@ function addXp(userData, amount) {
   const before = getLevelProgress(userData.xp);
   const safeAmount = Math.max(0, Math.floor(Number(amount) || 0));
 
-  // Older accounts may have reached levels before Meat rewards were saved.
-  // Reconcile those levels once, then track the highest rewarded level so
-  // future XP grants cannot award the same Meat twice.
-  const storedMeatLevel = Number(userData.levelUpMeatAwardedThrough);
-  const awardedThrough = Number.isFinite(storedMeatLevel) && storedMeatLevel >= 1
-    ? Math.floor(storedMeatLevel)
-    : 1;
+  // Older accounts may have reached levels before Chest rewards were saved.
+  // Reuse the old reward tracker when present so those users do not receive
+  // a second reward for levels that were already processed.
+  const storedChestLevel = Number(userData.levelUpChestAwardedThrough);
+  const storedLegacyLevel = Number(userData.levelUpMeatAwardedThrough);
+  const awardedThrough = Number.isFinite(storedChestLevel) && storedChestLevel >= 1
+    ? Math.floor(storedChestLevel)
+    : Number.isFinite(storedLegacyLevel) && storedLegacyLevel >= 1
+      ? Math.floor(storedLegacyLevel)
+      : 1;
   const missedLevels = Math.max(0, before.level - awardedThrough);
   if (missedLevels > 0) {
-    userData.meat = (Number(userData.meat) || 0) + missedLevels * LEVEL_UP_MEAT;
+    userData.chests = (Number(userData.chests) || 0) + missedLevels * LEVEL_UP_CHEST;
   }
 
   userData.xp = Math.max(0, Number(userData.xp) || 0) + safeAmount;
@@ -64,9 +67,9 @@ function addXp(userData, amount) {
 
   if (levelsGained > 0) {
     userData.balance = (Number(userData.balance) || 0) + levelsGained * LEVEL_UP_BELI;
-    userData.meat = (Number(userData.meat) || 0) + levelsGained * LEVEL_UP_MEAT;
+    userData.chests = (Number(userData.chests) || 0) + levelsGained * LEVEL_UP_CHEST;
   }
-  userData.levelUpMeatAwardedThrough = Math.max(before.level, after.level);
+  userData.levelUpChestAwardedThrough = Math.max(awardedThrough, before.level, after.level);
 
   return {
     amount: safeAmount,
@@ -96,7 +99,7 @@ async function sendLevelUpNotifications(discordUser, userData, xpResult, channel
       const content =
         `${isDm ? 'You' : `<@${discordUser.id}>`} leveled up to **level ${level}** and received:\n` +
         `<:whitearrow:1532531439445344547> ${LEVEL_UP_BELI.toLocaleString('en-US')}<:SilverCoin:1534757841867374782>\n` +
-        `<:whitearrow:1532531439445344547> ${LEVEL_UP_MEAT} <:Ham:1534995152605548585>`;
+        `<:whitearrow:1532531439445344547> ${LEVEL_UP_CHEST} <:Chest:1534758406944985302> Chest`;
       const payload = {
         content,
         allowedMentions: isDm
@@ -124,7 +127,7 @@ function formatXpReward(xpResult) {
 
 module.exports = {
   LEVEL_UP_BELI,
-  LEVEL_UP_MEAT,
+  LEVEL_UP_CHEST,
   getXpForNextLevel,
   getLevelProgress,
   addXp,

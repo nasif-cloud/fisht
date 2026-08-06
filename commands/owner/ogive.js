@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 // OGIVE — owner item grant
 // ─────────────────────────────────────────────
-// Usage: op ogive @user [beli|meat|wine|beer] [amount]
+// Usage: op ogive @user [beli|meat|wine|beer|chest] [amount]
 
 const User = require('../../models/user');
 const { findInventoryItem } = require('../../data/inventoryItems');
@@ -40,7 +40,7 @@ module.exports = {
     }
     if (!item) {
       return message.reply({
-        content: 'Please choose an item: `beli`, `meat`, `wine`, or `beer`.',
+        content: 'Please choose an item: `beli`, `meat`, `wine`, `beer`, or `chest`.',
         allowedMentions: { repliedUser: false }
       });
     }

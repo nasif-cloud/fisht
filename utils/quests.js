@@ -7,7 +7,7 @@
 const QUEST_COUNT = 3;
 const QUEST_REWARD_BELI = 1_000;
 const QUEST_REWARD_XP = 30;
-const ALL_QUESTS_REWARD_MEAT = 1;
+const ALL_QUESTS_REWARD_CHEST = 1;
 
 const PROGRESS_EMOJIS = {
   greyLeft: '<:grey_left_bar_argenx:1534060730683232398>',
@@ -168,7 +168,7 @@ function claimQuest(userData, questIndex) {
   quest.claimed = true;
   const allClaimed = userData.dailyQuests.every(item => item.claimed);
   if (allClaimed) {
-    userData.meat = (Number(userData.meat) || 0) + ALL_QUESTS_REWARD_MEAT;
+    userData.chests = (Number(userData.chests) || 0) + ALL_QUESTS_REWARD_CHEST;
   }
 
   return { ok: true, quest, allClaimed };
@@ -205,7 +205,7 @@ module.exports = {
   QUEST_COUNT,
   QUEST_REWARD_BELI,
   QUEST_REWARD_XP,
-  ALL_QUESTS_REWARD_MEAT,
+  ALL_QUESTS_REWARD_CHEST,
   QUEST_POOL,
   getLastDailyReset,
   getNextDailyReset,

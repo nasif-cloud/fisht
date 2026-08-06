@@ -32,8 +32,30 @@ const INVENTORY_ITEMS = {
     name: 'Beer',
     aliases: [],
     emoji: '<:Beer:1534994802385485896>'
+  },
+  chest: {
+    id: 'chest',
+    field: 'chests',
+    name: 'Chest',
+    aliases: ['chests'],
+    emoji: '<:Chest:1534758406944985302>'
   }
 };
+
+// Clone ranks are stored separately because each rank is its own collectible
+// item for now. They do not affect cards, teams, or combat yet.
+const CLONE_RANKS = ['D', 'C', 'B', 'A', 'S', 'SS', 'UR'];
+for (const rank of CLONE_RANKS) {
+  const id = `clone${rank}`;
+  INVENTORY_ITEMS[id] = {
+    id,
+    field: id,
+    name: `${rank} Clone`,
+    aliases: [`${rank.toLowerCase()} clone`, `${rank.toLowerCase()} clones`],
+    emoji: null,
+    rank
+  };
+}
 
 function normalizeItemName(value) {
   return String(value || '').trim().toLowerCase();
@@ -50,6 +72,7 @@ function findInventoryItem(value) {
 
 module.exports = {
   INVENTORY_ITEMS,
+  CLONE_RANKS,
   findInventoryItem,
   normalizeItemName
 };

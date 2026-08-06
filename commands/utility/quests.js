@@ -9,7 +9,7 @@ const User = require('../../models/user');
 const {
   QUEST_REWARD_BELI,
   QUEST_REWARD_XP,
-  ALL_QUESTS_REWARD_MEAT,
+  ALL_QUESTS_REWARD_CHEST,
   ensureDailyQuests,
   claimQuest,
   buildProgressBar,
@@ -78,7 +78,7 @@ function buildComponents(userData, disabled = false) {
       type: 10,
       content:
         `Each quest gives **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:SilverCoin:1534757841867374782> and **${QUEST_REWARD_XP} XP**.` +
-        ` Claim all ${quests.length} for **${ALL_QUESTS_REWARD_MEAT}** <:Ham:1534995152605548585> Meat.`
+        ` Claim all ${quests.length} for **${ALL_QUESTS_REWARD_CHEST}** <:Chest:1534758406944985302> Chest.`
     }
   );
 
@@ -167,7 +167,7 @@ module.exports = {
         ];
         if (result.allClaimed) {
           rewardLines.push(
-            `You claimed all three quests and received **${ALL_QUESTS_REWARD_MEAT}** <:Ham:1534995152605548585> Meat`
+            `You claimed all three quests and received **${ALL_QUESTS_REWARD_CHEST}** <:Chest:1534758406944985302> Chest`
           );
         }
         if (xpResult.levelsGained > 0) {

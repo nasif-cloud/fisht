@@ -1,17 +1,23 @@
 // ─────────────────────────────────────────────
 // INVENTORY COMMAND
 // ─────────────────────────────────────────────
-// Shows the player's current item counts in one simple list. Categories are
-// intentionally not included yet, so there is no dropdown on this message.
+// Shows the player's current item counts in one simple list. Chests stay first
+// whenever the player owns them, followed by usable items and Clone ranks.
 
 const { SlashCommandBuilder } = require('discord.js');
 const User = require('../../models/user');
-const { INVENTORY_ITEMS } = require('../../data/inventoryItems');
+const { INVENTORY_ITEMS, CLONE_RANKS } = require('../../data/inventoryItems');
+const { rankEmojis } = require('../../data/cards');
 
 const DISPLAYED_ITEMS = [
+  INVENTORY_ITEMS.chest,
   INVENTORY_ITEMS.meat,
   INVENTORY_ITEMS.wine,
-  INVENTORY_ITEMS.beer
+  INVENTORY_ITEMS.beer,
+  ...CLONE_RANKS.map(rank => ({
+    ...INVENTORY_ITEMS[`clone${rank}`],
+    emoji: rankEmojis[rank]
+  }))
 ];
 
 module.exports = {

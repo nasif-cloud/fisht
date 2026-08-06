@@ -28,6 +28,14 @@ const userSchema = new mongoose.Schema({
   // Inventory items used by the battle and duel reset commands.
   wine: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   beer: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  chests: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneD: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneC: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneB: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneA: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneS: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneSS: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  cloneUR: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
 
   // Whether this user has already received their welcome DM and starter rewards.
   // Set to true the first time they run any command, so rewards are only given once.
@@ -78,9 +86,12 @@ const userSchema = new mongoose.Schema({
   // Reset tokens are awarded when a player reaches a new level.
   resetTokens: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
 
-  // Highest level whose level-up Meat reward has been applied. A null value
-  // lets the progression helper reconcile older accounts created before this
-  // reward was persisted correctly.
+  // Highest level whose level-up Chest reward has been applied. A null value
+  // lets the progression helper reconcile older accounts safely.
+  levelUpChestAwardedThrough: { type: Number, default: null, min: 1, set: nonNegativeNumber },
+
+  // Kept for compatibility with profiles that used the previous Meat reward
+  // tracker before level rewards changed to Chests.
   levelUpMeatAwardedThrough: { type: Number, default: null, min: 1, set: nonNegativeNumber },
 
   // A list of every card the user has collected, with how many copies they own.
