@@ -3803,6 +3803,1132 @@ const cards = [
     speed: '-',
     image: 'https://i.imgur.com/mzQ5gNV.png', 
   },
+  {
+    name: 'Igaram',
+    aliases: ['',],
+
+    title: 'Captain of the Royal Guard',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/jdIpu3d.png', 
+    
+    M2: {
+      title: 'Captain of the Royal Guard',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/ZSRU2uL.png', 
+},
+
+    M3: {
+    title: 'Captain of the Royal Guard',
+    rank: 'C',
+    health: '++',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/dwZjRmn.png', 
+}
+  },
+  {
+    name: 'Miss Monday',
+    aliases: ['',],
+
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/HcjotxR.png', 
+    
+    M2: {
+      title: 'Baroque Works',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/r0mxEjx.png', 
+},
+
+    M3: {
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/r0mxEjx.png', 
+}
+  },
+  {
+    name: 'Mr. Shimizu',
+    aliases: ['',],
+
+    title: 'Baroque Works Millions',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/kyN9I1i.png', 
+  
+  },
+  {
+    name: 'Nefertari Vivi',
+    aliases: ['',],
+
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/NwkrLOx.png', 
+    
+    M2: {
+      title: 'Princess of Arabasta',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/7d1LjnZ.png', 
+},
+
+    M3: {
+    title: 'Princess of Arabasta',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/6rp2oDm.png', 
+}
+  },
+  {
+    name: 'Miss Catherina',
+    aliases: ['',],
+
+    title: 'Baroque Works Millions',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/3/32/Miss_Catherina_Manga_Color_Scheme.png/revision/latest/scale-to-width-down/1000?cb=20240712024020', 
+  },
+  {
+    name: 'Karoo',
+    aliases: ['kalu',],
+
+    title: 'Arabasta Kingdom Guard Squad',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '+',
+    image: 'https://i.imgur.com/vdFKtN2.png', 
+    
+    M2: {
+      title: 'Arabasta Kingdom Guard Squad',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '++',
+    image: 'https://i.imgur.com/bRIBk87.png', 
+},
+
+    M3: {
+    title: 'Arabasta Kingdom Guard Squad',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '++',
+    image: 'https://i.imgur.com/5clOZiV.png', 
+}
+  },
+  {
+    name: 'Gem',
+    aliases: ['Mr. 5',],
+
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/mzSPJyc.png', 
+    
+    M2: {
+      title: 'Baroque Works',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/a/a3/Gem_Manga_Color_Scheme.png/revision/latest?cb=20230419220625', 
+},
+
+    M3: {
+    title: 'New Spiders Cafe',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/Z94fz67.png', 
+}
+  },
+  {
+    name: 'Mikita',
+    aliases: ['Miss Valentine',],
+
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/BCjatvd.png', 
+    
+    M2: {
+      title: 'Baroque Works',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/EIijPDa.png', 
+},
+
+    M3: {
+    title: 'New Spiders Cafe',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/YYTHkNH.png', 
+}
+  },
+  {
+    name: 'Nico Robin',
+    aliases: ['Miss all Sunday',],
+
+    title: 'Baroque Works Vice President',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/IxCp2og.jpeg', 
+    
+    M2: {
+      title: 'Light of the Revolution',
+    rank: 'A',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/poHjcZ4.png', 
+},
+
+    M3: {
+    title: 'Devil Child',
+    rank: 'SS',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/mTmsjKX.jpeg', 
+}
+  },
+  {
+    name: 'Banchi',
+    aliases: ['',],
+
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '=',
+    power: '-',
+    speed: '+',
+    image: 'https://i.imgur.com/nCt8vdi.jpeg', 
+    
+    M2: {
+      title: 'Baroque Works',
+    rank: 'C',
+    health: '+',
+    power: '=',
+    speed: '++',
+    image: 'https://i.imgur.com/OfooTwK.png', 
+},
+  },
+  {
+    name: 'Bogard',
+    aliases: ['',],
+
+    title: 'Commissioned Marine Officer',
+    rank: 'S',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/tttuE2k.png', 
+    
+    M2: {
+      title: 'Commissioned Marine Officer',
+    rank: 'S',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/WcGfpC6.png', 
+},
+
+    M3: {
+    title: 'Commissioned Marine Officer',
+    rank: 'S',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/QSIHJ86.jpeg', 
+}
+  },
+  {
+    name: 'News Coo',
+    aliases: ['',],
+
+    title: 'Animal Species',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '++',
+    image: 'https://i.imgur.com/i7itgRt.png', 
+    
+    
+  },
+  {
+    name: 'Galdino',
+    aliases: ['Mr. 3',],
+
+    title: '"Loan Shark" Galdino',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/yW9zIFX.png', 
+    
+    M2: {
+      title: 'Buggy Pirates',
+    rank: 'A',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/P7q6IVW.png', 
+},
+
+    M3: {
+    title: 'Cross Guild',
+    rank: 'A',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/MBqd1SC.png', 
+}
+  },
+  {
+    name: 'Marianne',
+    aliases: ['Miss Goldenweek',],
+
+    title: 'Baroque Works',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/M2bczWI.png', 
+    
+    M2: {
+      title: 'Baroque Works',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/tDDLRna.png', 
+},
+
+    M3: {
+    title: 'New Spiders Cafe',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/4iAkcf5.jpeg', 
+}
+  },
+  {
+    name: 'Samurai Batts',
+    aliases: ['',],
+
+    title: 'Kyuka Island',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/bDJzrsN.jpeg', 
+    
+  },
+  {
+    name: 'Brontosaurus',
+    aliases: ['',],
+
+    title: 'Little Garden',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/0/0d/Brontosaurus_in_the_Digitally_Colored_Manga.png/revision/latest?cb=20201005202953', 
+    
+  },
+  {
+    name: 'Brogy',
+    aliases: ['Broggy',],
+
+    title: 'The Red Ogre',
+    rank: 'S',
+    health: '+',
+    power: '+',
+    speed: '-',
+    image: 'https://i.imgur.com/tGcnrWP.png', 
+    
+    M2: {
+      title: 'Giant Warrior Pirates',
+    rank: 'S',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/SMM17lf.png', 
+},
+
+    M3: {
+    title: 'Giant Warrior Pirates',
+    rank: 'SS',
+    health: '+',
+    power: '+',
+    speed: '-',
+    image: 'https://i.imgur.com/3VwH7ye.png', 
+}
+  },
+  {
+    name: 'Dorry',
+    aliases: ['',],
+
+    title: 'The Blue Ogre',
+    rank: 'S',
+    health: '+',
+    power: '+',
+    speed: '-',
+    image: 'https://i.imgur.com/kfiCTzK.png', 
+    
+    M2: {
+      title: 'Giant Warrior Pirates',
+    rank: 'S',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/g1wZjJX.png', 
+},
+
+    M3: {
+    title: 'Giant Warrior Pirates',
+    rank: 'SS',
+    health: '+',
+    power: '+',
+    speed: '-',
+    image: 'https://i.imgur.com/ZcoPio0.png', 
+}
+  },
+
+  {
+    name: 'Crocodile',
+    aliases: ['Sir Crocodile', 'Mr. 0'],
+
+    title: 'Baroque Works President',
+    rank: 'A',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/J2htoZf.jpeg', 
+    
+    M2: {
+      title: 'Desert King',
+    rank: 'A',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/d/d5/Crocodile%27s_Manga_Color_Scheme.png/revision/latest/scale-to-width-down/1000?cb=20230323184555', 
+},
+
+    M3: {
+    title: 'Cross Guild',
+    rank: 'S',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/AzxbAwD.jpeg', 
+}
+  },
+  {
+    name: 'Smoker',
+    aliases: ['',],
+
+    title: '"White Chase" Smoker',
+    rank: 'A',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/UuqjH6c.png', 
+    
+    M2: {
+      title: 'Commodore',
+    rank: 'A',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/iof3QFm.png', 
+},
+
+    M3: {
+    title: 'Vice Admiral',
+    rank: 'S',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/ZvZKj31.png', 
+}
+  },
+  /*
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
+  {
+    name: '',
+    aliases: ['',],
+
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+    
+    M2: {
+      title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+},
+
+    M3: {
+    title: '',
+    rank: '',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: '', 
+}
+  },
   /*
   {
     name: '',
