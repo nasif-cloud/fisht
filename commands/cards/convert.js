@@ -12,7 +12,6 @@
 // database update checks the current balance first so a user cannot overspend
 // clones or Gems if two commands run at the same time.
 
-const mongoose = require('mongoose');
 const { SlashCommandBuilder } = require('discord.js');
 const User = require('../../models/user');
 const { cards, safeRank, rankEmojis } = require('../../data/cards');
@@ -78,59 +77,28 @@ function getGemAmount(args, owned) {
 }
 
 function cloneCardCopiesUpdate(card, amount, cloneField, now) {
-  // Use an update pipeline so an existing card entry is incremented, or a new
-  // entry is appended, as part of the same atomic MongoDB update.
+  // Use an update pipeline to increment the already-owned card entry as part
+  // of the same atomic MongoDB update that spends the Clones.
   const copies = { $ifNull: ['$cardCopies', []] };
-  const cardNames = {
+  const updatedCopies = {
     $map: {
       input: copies,
       as: 'copy',
-      in: '$$copy.cardName'
-    }
-  };
-
-  const updatedCopies = {
-    $let: {
-      vars: { copies },
       in: {
         $cond: [
-          { $in: [card.name, cardNames] },
+          { $eq: ['$$copy.cardName', card.name] },
           {
-            $map: {
-              input: '$$copies',
-              as: 'copy',
-              in: {
-                $cond: [
-                  { $eq: ['$$copy.cardName', card.name] },
-                  {
-                    $mergeObjects: [
-                      '$$copy',
-                      {
-                        amount: {
-                          $add: [{ $ifNull: ['$$copy.amount', 0] }, amount]
-                        },
-                        lastObtained: now
-                      }
-                    ]
-                  },
-                  '$$copy'
-                ]
+            $mergeObjects: [
+              '$$copy',
+              {
+                amount: {
+                  $add: [{ $ifNull: ['$$copy.amount', 0] }, amount]
+                },
+                lastObtained: now
               }
-            }
-          },
-          {
-            $concatArrays: [
-              '$$copies',
-              [{
-                _id: new mongoose.Types.ObjectId(),
-                cardName: card.name,
-                amount,
-                mastery: 1,
-                lastObtained: now,
-                shiny: false
-              }]
             ]
-          }
+          },
+          '$$copy'
         ]
       }
     }
@@ -291,8 +259,24 @@ module.exports = {
       );
     }
 
+    const ownedCard = userData.cardCopies?.some(copy =>
+      copy.cardName === card.name && Number(copy.amount) > 0
+    );
+    if (!ownedCard) {
+      return reply(interactionOrMessage, `You do not own **${card.name}** yet`);
+    }
+
     const result = await User.collection.updateOne(
-      { userId: user.id, [cloneField]: { $gte: amount } },
+      {
+        userId: user.id,
+        [cloneField]: { $gte: amount },
+        cardCopies: {
+          $elemMatch: {
+            cardName: card.name,
+            amount: { $gt: 0 }
+          }
+        }
+      },
       cloneCardCopiesUpdate(card, amount, cloneField, new Date())
     );
 
