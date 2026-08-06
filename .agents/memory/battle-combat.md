@@ -3,8 +3,8 @@ name: AI battle combat
 description: Solo battle opponent selection, controls, rewards, and cooldown behavior
 ---
 
-AI battles use a random real guild member's persisted team and avatar when that member's calculated level is within five levels of the player. The AI is displayed above the human player, selects a random living card each round, and only the human player receives card-selection buttons. Battle screens retain the latest duel-style round log while the next choices are shown.
+AI battles use a random real guild member's persisted team and avatar when that member's calculated level is within five levels of the player. The AI is displayed above the human player, selects a random living card each round, and only the human player receives card-selection buttons. Battle screens retain the latest duel-style round log while the next choices are shown. If the human does not choose before the turn timer expires, the battle ends immediately with an AI win.
 
 **Why:** Solo battles should feel like the existing duel without requiring another active player, and using a saved in-range opponent keeps the match recognizable and level-appropriate.
 
-**How to apply:** Keep the battle cooldown persisted on the player profile for 30 minutes, stamp it only after a valid opponent is found, use the shared duel combat math and renderer with the AI action row omitted, and award only a win with 10 XP and 200 Beli.
+**How to apply:** Keep the battle cooldown persisted on the player profile for 30 minutes, stamp it only after a valid opponent is found, use the shared duel combat math and renderer with the AI action row omitted, end timed-out human turns as forfeits, and award only a win with 10 XP and 200 Beli.

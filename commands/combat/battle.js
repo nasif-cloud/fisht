@@ -328,19 +328,16 @@ module.exports = {
           roundSettled = true;
           await selectionQueue.catch(() => {});
 
-          // A missing player selection means the player forfeited this turn.
-          // The AI still resolves its selected attack, but the human gets no
-          // attack of their own for this round.
-          const playerForfeited = reason !== 'selected' &&
-            getPlayerSelection(state) === undefined;
-          const result = resolveRound(state, {
-            idleMessage: playerForfeited
-              ? `◇ **${state.challenger.username}** forfeited this turn`
-              : null
-          });
-          if (!result.ended && reason !== 'selected') {
-            state.roundLogs.push('◇ The timer expired — the battle continues');
+          // In an AI battle, doing nothing is an immediate forfeit rather than
+          // a normal combat round. The opponent wins as soon as the timer ends.
+          if (reason !== 'selected' && getPlayerSelection(state) === undefined) {
+            state.roundLogs.push(`◇ **${state.challenger.username}** forfeited the battle`);
+            state.latestLog = state.roundLogs.join('\n');
+            await finishBattle({ ended: true, winner: state.target, reason: 'forfeit' });
+            return;
           }
+
+          const result = resolveRound(state);
           state.latestLog = state.roundLogs.join('\n');
 
           if (result.ended) {
