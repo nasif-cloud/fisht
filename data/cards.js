@@ -43,45 +43,45 @@ const statRanges = {
 
 const rankConfig = {
   D: {
-    M1: { color: 0xB4B4B4, icon: 'https://files.catbox.moe/idv9j1.png' }, // grey
-    M2: { color: 0xA6A6A6, icon: 'https://files.catbox.moe/de4kvq.png' },
-    M3: { color: 0x737373, icon: 'https://files.catbox.moe/4aawoa.png' }
+    M1: { color: 0xB4B4B4, icon: 'https://i.imgur.com/LOK7uyg.png' }, // grey
+    M2: { color: 0xA6A6A6, icon: 'https://i.imgur.com/cVZOqlS.png' },
+    M3: { color: 0x737373, icon: 'https://i.imgur.com/wqeN5Gr.png' }
   },
 
   C: {
-    M1: { color: 0xFFEB99, icon: 'https://files.catbox.moe/ae1xd0.png' }, // Yellow
-    M2: { color: 0xFFEB99, icon: 'https://files.catbox.moe/rp6v9b.png' },
-    M3: { color: 0xFFDE59, icon: 'https://files.catbox.moe/jv8krn.png' }
+    M1: { color: 0xFFEB99, icon: 'https://i.imgur.com/b3CMIFG.png' }, // Yellow
+    M2: { color: 0xFFEB99, icon: 'https://i.imgur.com/9suDw7k.png' },
+    M3: { color: 0xFFDE59, icon: 'https://i.imgur.com/ibwG542.png' }
   },
 
   B: {
-    M1: { color: 0x99ACFF, icon: 'https://files.catbox.moe/xdqege.png' }, // Blue
-    M2: { color: 0x5271FF, icon: 'https://files.catbox.moe/emlr0x.png' },
-    M3: { color: 0x2F55FF, icon: 'https://files.catbox.moe/cx05wu.png' }
+    M1: { color: 0x99ACFF, icon: 'https://i.imgur.com/JDcPLR4.png' }, // Blue
+    M2: { color: 0x5271FF, icon: 'https://i.imgur.com/ydhpQxJ.png' },
+    M3: { color: 0x2F55FF, icon: 'https://i.imgur.com/XRarnSo.png' }
   },
 
   A: {
-    M1: { color: 0xCEA8F0, icon: 'https://i.postimg.cc/bwFyWyj6/10.png' }, // Purple
-    M2: { color: 0xB174E7, icon: 'https://i.postimg.cc/NjPsSswC/11.png' },
-    M3: { color: 0x9440DD, icon: 'https://i.postimg.cc/Z5Db2bhw/12.png' }
+    M1: { color: 0xCEA8F0, icon: 'https://i.imgur.com/xf6h4lU.png' }, // Purple
+    M2: { color: 0xB174E7, icon: 'https://i.imgur.com/XAUcmii.png' },
+    M3: { color: 0x9440DD, icon: 'https://i.imgur.com/r75Cqao.png' }
   },
 
   S: {
-    M1: { color: 0xFFB6D4, icon: 'https://i.postimg.cc/rwqj3T9j/13.png' }, // Pink
-    M2: { color: 0xFF4090, icon: 'https://i.postimg.cc/qvpwSrGj/14.png' },
-    M3: { color: 0xFF2C97, icon: 'https://i.postimg.cc/mgVjGndC/15.png' }
+    M1: { color: 0xFFB6D4, icon: 'https://i.imgur.com/LSi16t5.png' }, // Pink
+    M2: { color: 0xFF4090, icon: 'https://i.imgur.com/ZzDTtiV.png' },
+    M3: { color: 0xFF2C97, icon: 'https://i.imgur.com/CsHdGxl.png' }
   },
 
   SS: {
-    M1: { color: 0xFA4538, icon: 'https://files.catbox.moe/5urgzt.png' }, // Orange
-    M2: { color: 0xF8210D, icon: 'https://files.catbox.moe/x26s4d.png' },
-    M3: { color: 0xFC3104, icon: 'https://files.catbox.moe/0irfa0.png' }
+    M1: { color: 0xFA4538, icon: 'https://i.imgur.com/6EusJOq.png' }, // Orange
+    M2: { color: 0xF8210D, icon: 'https://i.imgur.com/Pquq1Dv.png' },
+    M3: { color: 0xFC3104, icon: 'https://i.imgur.com/rZMC6cJ.png' }
   },
 
   UR: {
-    M1: { color: 0xFE5986, icon: 'https://files.catbox.moe/fr5wdg.png' }, // Rainbow
-    M2: { color: 0xE4442B, icon: 'https://files.catbox.moe/wwfwi3.png' },
-    M3: { color: 0xB560F5, icon: 'https://files.catbox.moe/ndi2le.png' }
+    M1: { color: 0xFE5986, icon: 'https://i.imgur.com/yx3OL8d.png' }, // Rainbow
+    M2: { color: 0xE4442B, icon: 'https://i.imgur.com/fkHvpGE.png' },
+    M3: { color: 0xB560F5, icon: 'https://i.imgur.com/TcerXlq.png' }
   }
 };
 
@@ -2395,7 +2395,7 @@ const cards = [
     health: 580,
     power: 113,
     speed: 52,
-    image: 'https://files.catbox.moe/pk08dt.png',
+    image: 'https://i.imgur.com/ANyXJmI.png',
 
     M2: {
       title: 'Warlord of the Sea',
@@ -2403,7 +2403,7 @@ const cards = [
       health: 590,
       power: 115,
       speed: 54,
-      image: 'https://files.catbox.moe/r12lw2.png'
+      image: 'https://i.imgur.com/cW6Uaov.png'
     },
 
     M3: {
@@ -2412,7 +2412,7 @@ const cards = [
       health: 600,
       power: 118,
       speed: 56,
-      image: 'https://files.catbox.moe/o9v79y.png'
+      image: 'https://i.imgur.com/QUNu2wL.png'
     }
   },
   {
@@ -2706,6 +2706,1103 @@ const cards = [
     image: 'https://i.imgur.com/5XV78zQ.png',
     }
   },
+  {
+    name: 'Pandaman',
+    aliases: ['',],
+
+    title: 'Wrestler',
+    rank: 'B',
+    health: '+',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/ckN36B0.png', 
+    
+    M2: {
+    title: 'Wrestler',
+    rank: 'A',
+    health: '+',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/PmxM0RQ.png', 
+    }, 
+  
+    M3: {
+    title: 'Wrestler',
+    rank: 'A',
+    health: '++',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/WBHfOUF.png', 
+    }
+  },
+  {
+    name: 'Usagihebi',
+    aliases: ['',],
+
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/jNBh9Th.png', 
+    
+    M2: {
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/dzdCMOZ.png', 
+    }, 
+  },
+  {
+    name: 'Cocox',
+    aliases: ['',],
+
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/FFjfnUO.png', 
+    
+    M2: {
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/3a6TQ58.png', 
+    }, 
+  
+     
+  },
+  {
+    name: 'Lionbuta',
+    aliases: ['',],
+
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/L0QuHq5.png', 
+    
+    M2: {
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/eyIatr7.png', 
+    }, 
+  
+     
+  },
+  {
+    name: 'Kirinikodanuki',
+    aliases: ['',],
+
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/6K4OfZL.png', 
+    
+  },
+  {
+    name: 'Duck-Poodle',
+    aliases: ['',],
+
+    title: 'Island of Rare Animals',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/kduJcP1.png', 
+     
+  },
+  {
+    name: 'Gaimon',
+    aliases: ['',],
+
+    title: 'Guardian of Island of Rare Animals',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/8ZzDuyo.png', 
+    
+    M2: {
+    title: 'Guardian of Island of Rare Animals',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/zPHOHps.png', 
+    }, 
+  
+    M3: {
+    title: 'Pirate',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/OYHCuUd.png', 
+    }
+  },
+  {
+    name: 'Shimotsuki Koushirou',
+    aliases: ['',],
+
+    title: 'Dojo Master',
+    rank: 'B',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/AK7Rry9.png', 
+    
+    M2: {
+    title: '',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/hhTp271.png', 
+    }, 
+  
+    M3: {
+    title: '',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/Gp8NNCo.png', 
+    }
+  },
+  {
+    name: 'Johnny',
+    aliases: ['',],
+
+    title: 'Bounty Hunter',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/9D0bH1B.png', 
+    
+    M2: {
+    title: 'Bounty Hunter',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/a5iG3pU.png', 
+    }, 
+  
+    M3: {
+    title: 'Fisherman',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/d4dzbt4.png', 
+    }
+  },
+  {
+    name: 'Yosaku',
+    aliases: ['',],
+
+    title: 'Bounty Hunter',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/AE1dmOk.png', 
+    
+    M2: {
+    title: 'Bounty Hunter',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/uXLW9n1.png', 
+    }, 
+  
+    M3: {
+    title: 'Fisherman',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/dJq01HP.png', 
+    }
+  },
+  {
+    name: 'Batchee',
+    aliases: ['',],
+
+    title: 'Random Fly that Oda gave a name',
+    rank: 'D',
+    health: '--',
+    power: '--',
+    speed: '--',
+    image: 'https://i.imgur.com/KtctZ3Z.png', 
+  },
+    {
+    name: 'Moodie',
+    aliases: ['moodie',],
+
+    title: 'Fullbody\'s girlfriend',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/aU6H524.png', 
+    
+    M2: {
+      title: 'Fullbody\'s girlfriend',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/kLqfgiU.png', 
+},
+
+    M3: {
+    title: 'Fullbody\'s girlfriend',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/CywWazg.png', 
+}
+  },
+    {
+    name: 'Fullbody',
+    aliases: ['',],
+
+    title: 'Marine Lieutenant',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/ZfSHm40.png', 
+    
+    M2: {
+      title: 'Seasman Recruit',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/gnvqAk4.png', 
+},
+
+    M3: {
+    title: 'Marine Lieutenant Commander',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/4/43/Fullbody_Manga_Infobox.png/revision/latest?cb=20220706130532', 
+}
+  },
+    {
+    name: 'Zeff',
+    aliases: ['',],
+
+    title: 'Head Chef of Baratie',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/qBdAE6J.png', 
+    
+    M2: {
+      title: 'Head Chef of Baratie',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/HlJ0tgl.png', 
+},
+
+    M3: {
+    title: 'Cook Pirates',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/rHFeNTI.png', 
+}
+  },
+    {
+    name: 'Vinsmoke Sanji',
+    aliases: ['',],
+
+    title: 'Sous Chef',
+    rank: 'B',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/3GemnCH.png', 
+    
+    M2: {
+      title: 'Black Leg',
+    rank: 'A',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/qdhORTP.jpeg', 
+},
+
+    M3: {
+    title: 'Soba Mask',
+    rank: 'S',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/Nf5Y5Oe.png', 
+}
+  },
+    {
+    name: 'Motzel',
+    aliases: ['',],
+
+    title: 'East blue',
+    rank: 'D',
+    health: '=',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/2cUsQeD.png', 
+  },
+    {
+    name: 'Patty',
+    aliases: ['',],
+
+    title: 'Patissier',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/PUDGdxZ.png', 
+    
+    M2: {
+      title: 'Patissier',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/IvG1wmB.png', 
+},
+
+    M3: {
+    title: 'Patissier',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/LAcAXLV.png', 
+}
+  },
+    {
+    name: 'Lines',
+    aliases: ['',],
+
+    title: 'Marine Seasman First Class',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/Tg0JDCB.png', 
+    
+    M2: {
+      title: 'Marine Seasman First Class',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/aLOczSp.png', 
+},
+
+    M3: {
+    title: 'Marine Seasman First Class',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/bHNuBgE.png', 
+}
+  },
+    {
+    name: 'Gin',
+    aliases: ['',],
+
+    title: 'The Man Demon',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/oFCk2ow.png', 
+    
+    M2: {
+      title: 'Krieg Pirates',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/bkjqzkp.png', 
+},
+
+    M3: {
+    title: 'Krieg Pirates',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/unn5seQ.png', 
+}
+  },
+    {
+    name: 'Carne',
+    aliases: ['',],
+
+    title: 'Charcutier',
+    rank: 'D',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/rO6mQcX.png', 
+    
+    M2: {
+      title: 'Charcutier',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/Q3AV6jt.png', 
+},
+
+    M3: {
+    title: 'Charcutier',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/E72Tq69.png', 
+}
+  },
+    {
+    name: 'Don Krieg',
+    aliases: ['',],
+
+    title: 'Ruler of the East Blue',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/iR8KqlU.png', 
+    
+    M2: {
+      title: 'Captain of the Kreig Pirates',
+    rank: 'B',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/2YtHRt1.png', 
+},
+
+    M3: {
+    title: 'Captain of the Kreig Pirates',
+    rank: 'B',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/agwlc9N.png', 
+}
+  },
+    {
+    name: 'Pearl',
+    aliases: ['',],
+
+    title: 'The Iron Wall',
+    rank: 'C',
+    health: '+',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/V5gB7Po.png', 
+    
+    M2: {
+      title: 'Krieg Pirates',
+    rank: 'C',
+    health: '++',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/zCSTmkz.png', 
+},
+
+    M3: {
+    title: 'Krieg Pirates',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/x9HOamw.png', 
+}
+  },
+  {
+    name: 'Nezumi',
+    aliases: ['',],
+
+    title: 'Marine Captain',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/IpgWS1P.png', 
+    
+    M2: {
+      title: 'Marine Captain',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/CqaDAHQ.png', 
+},
+
+    M3: {
+    title: 'Marine Captain',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/p5szFpm.png', 
+}
+  },
+  {
+    name: 'Arlong',
+    aliases: ['',],
+
+    title: 'Arlong "The Saw"',
+    rank: 'B',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/ZiGx6R1.png', 
+    
+    M2: {
+      title: 'Captain of the Arlong Pirates',
+    rank: 'B',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/tL9Thm4.png', 
+},
+
+    M3: {
+    title: 'Sun Pirates',
+    rank: 'A',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/OhNKWUE.png', 
+}
+  },
+  {
+    name: 'Chew',
+    aliases: ['Chuu', 'Choo',],
+
+    title: 'Arlong Pirates',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/gwVJg42.png', 
+    
+    M2: {
+      title: 'Arlong Pirates',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/NjvHXBl.png', 
+},
+
+    M3: {
+    title: 'Sun pirates',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/4j5KIat.png', 
+}
+  },
+  {
+    name: 'Kuroobi',
+    aliases: ['',],
+
+    title: 'Arlong Pirates',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/2D8868L.png', 
+    
+    M2: {
+      title: 'Arlong Pirates',
+    rank: 'C',
+    health: '+',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/MhKQQJj.png', 
+},
+
+    M3: {
+    title: 'Sun Pirates',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/yEvM47c.png', 
+}
+  },
+  {
+    name: 'Hatchan',
+    aliases: ['Hatchi',],
+
+    title: 'Six Sword Style Hatchi',
+    rank: 'C',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/3yTpPr5.png', 
+    
+    M2: {
+      title: 'Takoyaki Seller',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/34wnipx.pngg', 
+},
+
+    M3: {
+    title: 'Takoyaki Seller',
+    rank: 'B',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/NKEA9E0.png', 
+}
+  },
+  {
+    name: 'Chabo',
+    aliases: ['',],
+
+    title: 'Conomi Islands',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/BKeekqw.png', 
+    
+    M2: {
+      title: 'Conomi Islands',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/PaJpnzG.png', 
+},
+
+    M3: {
+    title: 'Laborer',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/F6vlQAk.png', 
+}
+  },
+  {
+    name: 'Nojiko',
+    aliases: ['',],
+
+    title: 'Mikan Farmer',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/0IchU9o.png', 
+    
+    M2: {
+      title: 'Mikan Farmer',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/ERVgn8y.png', 
+},
+
+    M3: {
+    title: 'Mikan Farmer',
+    rank: 'D',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/5jHzEhm.png', 
+}
+  },
+  {
+    name: 'Momoo',
+    aliases: ['Morm',],
+
+    title: 'The Sea Cow',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/qyHzVho.png', 
+    
+    M2: {
+      title: 'Arlong Pirates',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/qyHzVho.pnghttps://i.imgur.com/sQxEnbn.png', 
+},
+
+    M3: {
+    title: 'Caribou Pirates',
+    rank: 'B',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/fzVlzS5.png', 
+}
+  },
+  {
+    name: 'Bellemere',
+    aliases: ['Belle', 'Mere',],
+
+    title: 'Mikan Farmer',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/OeOoF7n.png', 
+    
+    M2: {
+      title: 'Mikan Farmer',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/HVQM6xF.png', 
+},
+
+    M3: {
+    title: 'Mikan Farmer',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/dIiFVAx.png', 
+}
+  },
+  {
+    name: 'Genzo',
+    aliases: ['',],
+
+    title: 'Sherrif',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/pREMBBv.png', 
+    
+    M2: {
+      title: 'Sherrif',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/Q69fplo.png', 
+},
+
+    M3: {
+    title: 'Sherrif',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/5I6hsaq.png', 
+}
+  },
+  {
+    name: 'Nako',
+    aliases: ['',],
+
+    title: 'Doctor',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/jG0CrJh.png', 
+    
+    M2: {
+      title: 'Doctor',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/pLM1Ici.png', 
+},
+
+    M3: {
+    title: 'Doctor',
+    rank: 'D',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/qIMHmA5.png', 
+}
+  },
+  {
+    name: 'Kaneshiro',
+    aliases: ['',],
+
+    title: 'Arlong Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/y4WG9sK.png', 
+  
+  },
+  {
+    name: 'Pisaro',
+    aliases: ['',],
+
+    title: 'Arlong Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/AS8G5bH.png', 
+    
+  },
+  {
+    name: 'Shioyaki',
+    aliases: ['',],
+
+    title: 'Arlong Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/4zzm6uD.png', 
+   
+  },
+  {
+    name: 'Take',
+    aliases: ['',],
+
+    title: 'Arlong Pirates',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/is4C1d4.png', 
+  },
+  {
+    name: 'Pudding Pudding',
+    aliases: ['',],
+
+    title: 'Marine Commodore',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/nlxN2pX.png', 
+    },
+    {
+    name: 'Brannew',
+    aliases: ['',],
+
+    title: 'Lieutenant Commander',
+    rank: 'C',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/cZaa9A2.png', 
+    
+    M2: {
+      title: 'Commodore',
+    rank: 'B',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/yOvth8e.png', 
+},
+
+    M3: {
+    title: 'Commodore',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/cprafP1.png', 
+}
+  },
+  {
+    name: 'John Giant',
+    aliases: ['',],
+
+    title: 'Vice Admiral',
+    rank: 'A',
+    health: '+',
+    power: '+',
+    speed: '-',
+    image: 'https://i.imgur.com/bEBU61x.png', 
+    
+    M2: {
+      title: 'Vice Admiral',
+    rank: 'A',
+    health: '++',
+    power: '++',
+    speed: '=',
+    image: 'https://i.imgur.com/kcxQI6z.png', 
+},
+
+    M3: {
+    title: 'Vice Admiral',
+    rank: 'S',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/HDuTOxv.png', 
+}
+  },
+  {
+    name: 'Hitokui',
+    aliases: ['',],
+
+    title: 'Monster (Ikki Yako)',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/gIQnWZ2.png', 
+    
+    M2: {
+      title: 'Monster (Ikki Yako)',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/97jxOJQ.png', 
+},
+
+    M3: {
+    title: 'Monster (Ikki Yako)',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/WG0rZKr.png', 
+}
+  },
+  {
+    name: 'Wild Joe',
+    aliases: ['',],
+
+    title: 'Bounty Hunter',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/hif7ECV.png', 
+    
+    M2: {
+      title: 'Bounty Hunter',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/jVVMPu3.png', 
+},
+
+    M3: {
+    title: 'Bounty Hunter',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/te2pNnL.png', 
+}
+  },
+  {
+    name: 'Gyoru',
+    aliases: ['',],
+
+    title: 'Fishmonger',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/VyIvnrv.png', 
+    
+  },
+  {
+    name: 'Kumate Tribe Member 1',
+    aliases: ['',],
+
+    title: 'Cannibal',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/A0JVTwG.png', 
+
+  },
+  {
+    name: 'Kumate Tribe Member 2',
+    aliases: ['',],
+
+    title: 'Cannibal',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/h7crdys.png', 
+
+  },
+  {
+    name: 'Kumate Tribe Member 3',
+    aliases: ['',],
+
+    title: 'Cannibal',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/8Wt3bm8.png', 
+
+  },
+  {
+    name: 'Hanger',
+    aliases: ['',],
+
+    title: 'Salesperson',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/mzQ5gNV.png', 
+  },
   /*
   {
     name: '',
@@ -2719,14 +3816,14 @@ const cards = [
     image: '', 
     
     M2: {
-    title: '',
+      title: '',
     rank: '',
     health: '=',
     power: '=',
     speed: '=',
     image: '', 
-    }, 
-  
+},
+
     M3: {
     title: '',
     rank: '',
@@ -2734,7 +3831,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    }
+}
   },
   {
     name: '',
@@ -2748,14 +3845,14 @@ const cards = [
     image: '', 
     
     M2: {
-    title: '',
+      title: '',
     rank: '',
     health: '=',
     power: '=',
     speed: '=',
     image: '', 
-    }, 
-  
+},
+
     M3: {
     title: '',
     rank: '',
@@ -2763,7 +3860,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    }
+}
   },
   {
     name: '',
@@ -2777,14 +3874,14 @@ const cards = [
     image: '', 
     
     M2: {
-    title: '',
+      title: '',
     rank: '',
     health: '=',
     power: '=',
     speed: '=',
     image: '', 
-    }, 
-  
+},
+
     M3: {
     title: '',
     rank: '',
@@ -2792,10 +3889,10 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    }
+}
   },
-
-  {
+  /* ex.
+    {
     name: '',
     aliases: ['',],
 
@@ -2807,43 +3904,14 @@ const cards = [
     image: '', 
     
     M2: {
-    title: '',
+      title: '',
     rank: '',
     health: '=',
     power: '=',
     speed: '=',
     image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  {
-    name: '',
-    aliases: ['',],
+},
 
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
     M3: {
     title: '',
     rank: '',
@@ -2851,39 +3919,11 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    }
+}
   },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }, 
-  
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    }
-  },
-  
   */
+ 
+  
 ];
 
 // Run validation once at startup — logs warnings for any bad card data
