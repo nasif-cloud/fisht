@@ -255,8 +255,9 @@ async function buildDropPayload(drop, card, rank, stats) {
 }
 
 // Discord removes button components only when the message is edited. For
-// attachment-backed shiny embeds, re-upload the existing attachments while
-// updating the footer so the image stays inside the embed.
+// attachment-backed shiny embeds, edit only the components field. Rebuilding
+// the embeds payload can detach the uploaded card image and thumbnail from the
+// embed and render them below the message.
 async function expireDropMessage(channel, messageId) {
   if (!channel || !messageId || !channel.messages?.fetch) return;
 
@@ -269,51 +270,23 @@ async function expireDropMessage(channel, messageId) {
     return;
   }
 
-  const expiredEmbed = EmbedBuilder.from(latestEmbed)
-    .setFooter({ text: 'expired' });
-  const files = [];
-  const attachmentByUrl = new Map();
+  const imageUrl = latestEmbed.image?.url ?? '';
+  const thumbnailUrl = latestEmbed.thumbnail?.url ?? '';
+  const hasAttachmentImage =
+    imageUrl.includes('/attachments/') ||
+    thumbnailUrl.includes('/attachments/');
 
-  for (const attachment of message.attachments.values()) {
-    attachmentByUrl.set(attachment.url, attachment);
+  // Shiny drops use uploaded Discord attachments for both the card image and
+  // rank icon. Leave the embed payload untouched so Discord keeps both files
+  // embedded instead of displaying them as standalone attachments.
+  if (hasAttachmentImage) {
+    await message.edit({ components: [] }).catch(() => {});
+    return;
   }
 
-  const preserveAttachment = async (url, setUrl) => {
-    if (!url || !url.includes('/attachments/')) return;
-    const attachment = [...attachmentByUrl.values()].find(item =>
-      url.includes(`/${item.name}`)
-    );
-    if (!attachment) return;
-
-    try {
-      const response = await fetch(attachment.url);
-      if (!response.ok) return;
-      const name = attachment.name || 'drop_asset';
-      files.push(new AttachmentBuilder(
-        Buffer.from(await response.arrayBuffer()),
-        { name }
-      ));
-      setUrl(`attachment://${name}`);
-    } catch {
-      // If Discord's CDN is temporarily unavailable, still remove buttons.
-    }
-  };
-
-  await preserveAttachment(
-    latestEmbed.image?.url,
-    url => expiredEmbed.setImage(url)
-  );
-  await preserveAttachment(
-    latestEmbed.thumbnail?.url,
-    url => expiredEmbed.setThumbnail(url)
-  );
-
-  const editPayload = { embeds: [expiredEmbed], components: [] };
-  if (files.length) editPayload.files = files;
-  await message.edit(editPayload).catch(async () => {
-    // The fallback guarantees that expired buttons do not remain active.
-    await message.edit({ components: [] }).catch(() => {});
-  });
+  const expiredEmbed = EmbedBuilder.from(latestEmbed)
+    .setFooter({ text: 'expired' });
+  await message.edit({ embeds: [expiredEmbed], components: [] }).catch(() => {});
 }
 
 async function clearPendingDrop(config, drop) {
