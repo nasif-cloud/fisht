@@ -95,8 +95,8 @@ async function sendLevelUpNotifications(discordUser, userData, xpResult, channel
 
       const content =
         `${isDm ? 'You' : `<@${discordUser.id}>`} leveled up to **level ${level}** and received:\n` +
-        `<:whitearrow:1532531439445344547> ${LEVEL_UP_BELI.toLocaleString('en-US')}<:money:1532532493578928178>\n` +
-        `<:whitearrow:1532531439445344547> ${LEVEL_UP_MEAT} <:meatrbg:1532524176701657248>`;
+        `<:whitearrow:1532531439445344547> ${LEVEL_UP_BELI.toLocaleString('en-US')}<:SilverCoin:1534757841867374782>\n` +
+        `<:whitearrow:1532531439445344547> ${LEVEL_UP_MEAT} <:Meat:1534757966119567501>`;
       const payload = {
         content,
         allowedMentions: isDm

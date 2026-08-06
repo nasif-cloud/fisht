@@ -31,9 +31,9 @@ const activeUsers = new Set();
 // Button emojis use Discord's structured emoji field so custom stat emojis
 // render correctly instead of appearing as raw text in the button label
 const ROLE_BUTTON_EMOJIS = {
-  HP: { id: '1534326743459037244', name: 'Health' },
-  ATK: { id: '1534326742678769684', name: 'Power' },
-  SPD: { id: '1534326741693104168', name: 'Speed' }
+  HP: { id: '1534757255231307926', name: 'Health' },
+  ATK: { id: '1534758222974550238', name: 'Power' },
+  SPD: { id: '1534758604609945693', name: 'Speed' }
 };
 
 function getUser(interactionOrMessage) {
@@ -457,7 +457,7 @@ function resolveRound(state) {
     fallbackDefender.health -= damage;
     addRoundLog(
       state,
-      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals ${getAttackType(activeCard.role, fallbackDefender.role)} **${damage}<:punch:1534337550137954376>** to **${fallbackDefender.name}**`
+      `${rankEmojis[activeCard.rank] || ''} **${activeCard.name}** deals ${getAttackType(activeCard.role, fallbackDefender.role)} **${damage}** to **${fallbackDefender.name}**`
     );
 
     if (isTeamDefeated(state.challenger.team) && isTeamDefeated(state.target.team)) {
@@ -482,11 +482,11 @@ function resolveRound(state) {
 
   addRoundLog(
     state,
-      `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals ${getAttackType(attacker.role, defender.role)} **${challengerDamage}<:punch:1534337550137954376>** to **${defender.name}**`
+      `${rankEmojis[attacker.rank] || ''} **${attacker.name}** deals ${getAttackType(attacker.role, defender.role)} **${challengerDamage} DMG** to **${defender.name}**`
   );
   addRoundLog(
     state,
-      `${rankEmojis[defender.rank] || ''} **${defender.name}** deals ${getAttackType(defender.role, attacker.role)} **${targetDamage}<:punch:1534337550137954376>** to **${attacker.name}**`
+      `${rankEmojis[defender.rank] || ''} **${defender.name}** deals ${getAttackType(defender.role, attacker.role)} **${targetDamage} DMG** to **${attacker.name}**`
   );
 
   // If both cards would be knocked out by the final exchange, the faster card
@@ -776,7 +776,7 @@ module.exports = {
                   ? 'The duel ended in a draw'
                   : `**${result.winner.username} wins**`;
               if (rewardResult?.awarded) {
-                content += `\nReward: **${DUEL_REWARD_XP} XP** and **${DUEL_REWARD_BELI.toLocaleString('en-US')}**<:money:1532532493578928178> Beli`;
+                content += `\nReward: **${DUEL_REWARD_XP} XP** and **${DUEL_REWARD_BELI.toLocaleString('en-US')}**<:SilverCoin:1534757841867374782> Beli`;
               }
             const resultMessage = await response.edit(buildEndPayload(content, state));
             if (rewardResult?.awarded) {

@@ -40,7 +40,7 @@ function buildComponents(userData, disabled = false) {
       type: 10,
       content:
         '# Daily Quests\n' +
-        `Complete quests for **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:money:1532532493578928178> and **${QUEST_REWARD_XP} XP** each.\n` +
+        `Complete quests for **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:SilverCoin:1534757841867374782> and **${QUEST_REWARD_XP} XP** each.\n` +
         `✦ Refreshes in **${resetText}**.\n` +
         `◇ Claimed **${claimedCount}/${quests.length}**`
     },
@@ -77,8 +77,8 @@ function buildComponents(userData, disabled = false) {
     {
       type: 10,
       content:
-        `Each quest gives **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:money:1532532493578928178> and **${QUEST_REWARD_XP} XP**.` +
-        ` Claim all ${quests.length} for **${ALL_QUESTS_REWARD_MEAT}** <:meatrbg:1532524176701657248> Meat.`
+        `Each quest gives **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:SilverCoin:1534757841867374782> and **${QUEST_REWARD_XP} XP**.` +
+        ` Claim all ${quests.length} for **${ALL_QUESTS_REWARD_MEAT}** <:Meat:1534757966119567501> Meat.`
     }
   );
 
@@ -163,11 +163,11 @@ module.exports = {
 
         const rewardLines = [
           `You claimed **${result.quest.label}**!`,
-          `You received **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:money:1532532493578928178> Beli and **${QUEST_REWARD_XP} XP**.`
+          `You received **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:SilverCoin:1534757841867374782> Beli and **${QUEST_REWARD_XP} XP**.`
         ];
         if (result.allClaimed) {
           rewardLines.push(
-            `You claimed all three quests and received **${ALL_QUESTS_REWARD_MEAT}** <:meatrbg:1532524176701657248> Meat!`
+            `You claimed all three quests and received **${ALL_QUESTS_REWARD_MEAT}** <:Meat:1534757966119567501> Meat!`
           );
         }
         if (xpResult.levelsGained > 0) {

@@ -243,7 +243,7 @@ module.exports = {
           const xpResult = reward?.xpResult;
           let content =
             `**${state.challenger.username} wins**\n` +
-            `Reward: **${BATTLE_REWARD_XP} XP** and **${BATTLE_REWARD_BELI.toLocaleString('en-US')}**<:money:1532532493578928178> Beli`;
+            `Reward: **${BATTLE_REWARD_XP} XP** and **${BATTLE_REWARD_BELI.toLocaleString('en-US')}**<:SilverCoin:1534757841867374782> Beli`;
           if (xpResult?.levelsGained > 0) {
             content += `\nYou reached level **${xpResult.after.level}**`;
           }

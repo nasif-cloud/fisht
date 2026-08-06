@@ -129,8 +129,8 @@ async function registerAccount(discordUser) {
         try {
           await discordUser.send(
             'Your account has been created. You received:\n' +
-            `<:money:1532532493578928178> **${STARTER_BERRIES.toLocaleString('en-US')}** Berries\n` +
-            `<:meatrbg:1532524176701657248> **${STARTER_MEAT}** Meat`
+            `<:SilverCoin:1534757841867374782> **${STARTER_BERRIES.toLocaleString('en-US')}** Berries\n` +
+            `<:Meat:1534757966119567501> **${STARTER_MEAT}** Meat`
           );
         } catch {
           // DMs are disabled for this user — skip silently

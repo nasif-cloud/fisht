@@ -113,7 +113,7 @@ module.exports = {
 
     // ── STEP 3: Check if the user has enough Meat ──
     if (!userData.meat || userData.meat < EAT_COST) {
-      const content = `You don't have any <:meatrbg:1532524176701657248> Meat`;
+      const content = `You don't have any <:Meat:1534757966119567501> Meat`;
       if (isSlash) {
         return interactionOrMessage.reply({ content, flags: 64 });
       }

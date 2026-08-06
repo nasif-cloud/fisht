@@ -186,7 +186,7 @@ module.exports = {
       // Build the result embed
       const resultDesc = isCorrect
         ? `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\n` +
-          `<:whitearrow:1532531439445344547> You received **${REWARD}** <:money:1532532493578928178>\n` +
+          `<:whitearrow:1532531439445344547> You received **${REWARD}** <:SilverCoin:1534757841867374782>\n` +
           formatXpReward(xpResult)
         : `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\n` +
           `Better luck next time.`;
