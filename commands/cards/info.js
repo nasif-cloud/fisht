@@ -163,7 +163,7 @@ module.exports = {
     const payload = {
       embeds: [{ ...initial, image: { url: initialImage.imageUrl } }],
       files: initialImage.files,
-      components: initialButtons.length ? [initialButtons] : [],
+      components: initialButtons ? [initialButtons] : [],
       fetchReply: true
     };
 
@@ -206,7 +206,7 @@ module.exports = {
       await interaction.editReply({
         embeds: [{ ...next, image: { url: nextImage.imageUrl } }],
         files: nextImage.files,
-        components: nextButtons.length ? [nextButtons] : []
+        components: nextButtons ? [nextButtons] : []
       });
     });
 
