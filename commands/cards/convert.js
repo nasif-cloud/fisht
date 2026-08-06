@@ -1,16 +1,19 @@
 // ─────────────────────────────────────────────
 // CONVERT COMMAND
 // ─────────────────────────────────────────────
-// This prefix-only command converts:
+// This command supports both prefix and slash usage:
 //   op convert D 10 Hanger  → D Clones into same-rank Hanger copies
 //   op convert D all Hanger → all owned D Clones into Hanger copies
 //   op convert 10            → Gems into Beli
+//   /convert source:clones rank:D amount:10 card:Hanger
+//   /convert source:gems amount:10
 //
 // Clone conversions require the clone rank and card rank to match. Every
 // database update checks the current balance first so a user cannot overspend
 // clones or Gems if two commands run at the same time.
 
 const mongoose = require('mongoose');
+const { SlashCommandBuilder } = require('discord.js');
 const User = require('../../models/user');
 const { cards, safeRank, rankEmojis } = require('../../data/cards');
 const { CLONE_RANKS, INVENTORY_ITEMS } = require('../../data/inventoryItems');
@@ -18,10 +21,15 @@ const { CLONE_RANKS, INVENTORY_ITEMS } = require('../../data/inventoryItems');
 const GEM = INVENTORY_ITEMS.gem;
 const BELI = INVENTORY_ITEMS.beli;
 
-function reply(message, content) {
-  return message.reply({
+function isSlash(interactionOrMessage) {
+  return interactionOrMessage.isChatInputCommand?.();
+}
+
+function reply(interactionOrMessage, content) {
+  return interactionOrMessage.reply({
     content,
-    allowedMentions: { repliedUser: false }
+    allowedMentions: { repliedUser: false },
+    ...(isSlash(interactionOrMessage) ? { flags: 64 } : {})
   });
 }
 
@@ -141,12 +149,69 @@ function cloneCardCopiesUpdate(card, amount, cloneField, now) {
 }
 
 module.exports = {
+  // Slash usage:
+  // /convert source:gems amount:10
+  // /convert source:clones rank:D amount:10 card:Hanger
+  data: new SlashCommandBuilder()
+    .setName('convert')
+    .setDescription('Convert Gems to Beli or Clones to card copies')
+    .addStringOption(option =>
+      option
+        .setName('source')
+        .setDescription('What you want to convert')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Gems to Beli', value: 'gems' },
+          { name: 'Clones to card copies', value: 'clones' }
+        )
+    )
+    .addStringOption(option =>
+      option
+        .setName('rank')
+        .setDescription('Clone rank, required when converting Clones')
+        .setRequired(false)
+        .addChoices(...CLONE_RANKS.map(rank => ({ name: rank, value: rank })))
+    )
+    .addStringOption(option =>
+      option
+        .setName('amount')
+        .setDescription('How many to convert, or all')
+        .setRequired(false)
+    )
+    .addStringOption(option =>
+      option
+        .setName('card')
+        .setDescription('Card name or alias, required when converting Clones')
+        .setRequired(false)
+    ),
+
   name: 'convert',
 
-  async execute(message, args) {
-    const userData = await User.findOne({ userId: message.author.id });
+  async execute(interactionOrMessage, args = []) {
+    const slash = isSlash(interactionOrMessage);
+    const user = slash ? interactionOrMessage.user : interactionOrMessage.author;
+
+    // Slash options are converted into the same small argument format used by
+    // the prefix command, so both command versions share all validation and
+    // reward logic below.
+    if (slash) {
+      const source = interactionOrMessage.options.getString('source');
+      const amount = interactionOrMessage.options.getString('amount');
+
+      if (source === 'gems') {
+        args = [amount || '1'];
+      } else {
+        args = [
+          interactionOrMessage.options.getString('rank') || '',
+          amount || '1',
+          interactionOrMessage.options.getString('card') || ''
+        ];
+      }
+    }
+
+    const userData = await User.findOne({ userId: user.id });
     if (!userData) {
-      return reply(message, 'You do not have an account yet');
+      return reply(interactionOrMessage, 'You do not have an account yet');
     }
 
     const firstArgument = String(args[0] || '').trim().toUpperCase();
@@ -157,27 +222,27 @@ module.exports = {
       const amount = getGemAmount(args, owned);
 
       if (amount === null) {
-        return reply(message, 'Please provide a positive whole number or `all`');
+        return reply(interactionOrMessage, 'Please provide a positive whole number or `all`');
       }
       if (amount < 1 || owned < amount) {
         if (amount === 0) {
-          return reply(message, `You do not have any ${GEM.emoji} Gems`);
+          return reply(interactionOrMessage, `You do not have any ${GEM.emoji} Gems`);
         }
-        return reply(message, `You do not have **${amount}** ${GEM.emoji} Gems`);
+        return reply(interactionOrMessage, `You do not have **${amount}** ${GEM.emoji} Gems`);
       }
 
       const beli = amount * 1000;
       const result = await User.collection.updateOne(
-        { userId: message.author.id, gems: { $gte: amount } },
+        { userId: user.id, gems: { $gte: amount } },
         { $inc: { gems: -amount, balance: beli } }
       );
 
       if (result.matchedCount !== 1) {
-        return reply(message, 'Your Gem count changed, please try again');
+        return reply(interactionOrMessage, 'Your Gem count changed, please try again');
       }
 
       return reply(
-        message,
+        interactionOrMessage,
         `Converted **${GEM.emoji} ${amount}x Gems** to **${beli.toLocaleString('en-US')} ${BELI.emoji}**`
       );
     }
@@ -185,7 +250,7 @@ module.exports = {
     const rank = firstArgument;
     if (!CLONE_RANKS.includes(rank)) {
       return reply(
-        message,
+        interactionOrMessage,
         'Use `op convert [rank] [amount|all] [card]` for Clones or `op convert [amount|all]` for Gems'
       );
     }
@@ -201,45 +266,45 @@ module.exports = {
     const cardQuery = args.slice(cardStartIndex).join(' ').trim();
 
     if (amount === null) {
-      return reply(message, 'Please provide a positive whole number or `all`');
+      return reply(interactionOrMessage, 'Please provide a positive whole number or `all`');
     }
     if (!cardQuery) {
-      return reply(message, `Please provide a ${rank}-rank card to convert into`);
+      return reply(interactionOrMessage, `Please provide a ${rank}-rank card to convert into`);
     }
     if (amount < 1 || owned < amount) {
       if (amount === 0) {
-        return reply(message, `You do not have any ${rank} Clones`);
+        return reply(interactionOrMessage, `You do not have any ${rank} Clones`);
       }
-      return reply(message, `You do not have **${amount}** ${rank} Clones`);
+      return reply(interactionOrMessage, `You do not have **${amount}** ${rank} Clones`);
     }
 
     const card = getCard(cardQuery);
     if (!card) {
-      return reply(message, `No card found matching **${cardQuery}**`);
+      return reply(interactionOrMessage, `No card found matching **${cardQuery}**`);
     }
 
     const cardRank = safeRank(card.rank);
     if (cardRank !== rank) {
       return reply(
-        message,
+        interactionOrMessage,
         `**${card.name}** is rank ${cardRank}, so it cannot receive ${rank} Clone conversions`
       );
     }
 
     const result = await User.collection.updateOne(
-      { userId: message.author.id, [cloneField]: { $gte: amount } },
+      { userId: user.id, [cloneField]: { $gte: amount } },
       cloneCardCopiesUpdate(card, amount, cloneField, new Date())
     );
 
     if (result.matchedCount !== 1) {
-      return reply(message, `Your ${rank} Clone count changed, please try again`);
+      return reply(interactionOrMessage, `Your ${rank} Clone count changed, please try again`);
     }
 
     const cloneLabel = amount === 1 ? `${rank} Clone` : `${rank} Clones`;
     const copyLabel = amount === 1 ? 'copy' : 'copies';
     return reply(
-      message,
-      `Converted **${amount}x ${cloneLabel}** to **${amount} ${rankEmojis[rank] || ''} ${card.name} ${copyLabel}**`
+      interactionOrMessage,
+      `Converted **${amount}x ${cloneLabel}** to **${amount}x ${rankEmojis[rank] || ''} ${card.name}** ${copyLabel}`
     );
   }
 };

@@ -35,22 +35,9 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
   try {
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-    // Clear global commands first. This removes stale commands accidentally
-    // deployed by another service; global command deletion can take time to
-    // disappear from Discord everywhere.
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: [] }
-    );
-    console.log('Cleared global application (/) commands.');
-
-    // Clear the guild commands too, then register only this project commands.
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: [] }
-    );
-    console.log('Cleared guild application (/) commands.');
-
+    // Replacing the guild command set in one request updates existing commands
+    // and adds new ones without repeatedly clearing and recreating everything.
+    // This avoids Discord's daily application-command creation limit.
     const data = await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
       { body: commands },
