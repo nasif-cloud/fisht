@@ -120,7 +120,7 @@ module.exports = {
       const currentUser = await User.findOne({ userId: user.id });
       const balance = Number(currentUser?.balance) || 0;
       const content =
-        `You need **${formatCost(totalCost)}** <:money:1532532493578928178> Berries, ` +
+        `You need **${formatCost(totalCost)}** <:SilverCoin:1534757841867374782> Berries, ` +
         `but you only have **${formatCost(balance)}**`;
       return isSlash
         ? interactionOrMessage.reply({ content, flags: 64 })
@@ -133,7 +133,7 @@ module.exports = {
       return interactionOrMessage.reply({
         content:
           `You bought **${amount}x ${item.name}** for **${formatCost(totalCost)}** ` +
-          `<:money:1532532493578928178> Berries.\n` +
+          `<:SilverCoin:1534757841867374782> Berries.\n` +
           `You now have **${formatCost(updatedUser.balance)}** Berries and ` +
           `**${updatedUser[item.inventoryField].toLocaleString('en-US')}** ${item.name}.`,
         flags: 64

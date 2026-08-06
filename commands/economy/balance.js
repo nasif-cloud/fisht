@@ -33,8 +33,8 @@ module.exports = {
     const embed = {
       title: `${user.username}'s Balance`,
       description:
-        `<:whitearrow:1532531439445344547> Berries: **${berriesFormatted}** <:money:1532532493578928178>\n` +
-        `<:whitearrow:1532531439445344547> Meat: **${meatFormatted}** <:meatrbg:1532524176701657248>`,
+        `<:whitearrow:1532531439445344547> Berries: **${berriesFormatted}** <:SilverCoin:1534757841867374782>\n` +
+        `<:whitearrow:1532531439445344547> Meat: **${meatFormatted}** <:Meat:1534757966119567501>`,
       thumbnail: { url: user.displayAvatarURL({ dynamic: true }) },
       color: 0xFFFFFF
     };

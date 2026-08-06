@@ -289,17 +289,17 @@ module.exports = {
           // Spot on!
           reward     = REWARD_EXACT;
           resultDesc =
-            `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
+            `<:whitearrow:1532531439445344547> You received **${reward}** <:SilverCoin:1534757841867374782>`;
         } else if (diff <= 5) {
           // 1–5 volumes off
           reward     = REWARD_CLOSE;
           resultDesc =
-            `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
+            `<:whitearrow:1532531439445344547> You received **${reward}** <:SilverCoin:1534757841867374782>`;
         } else if (diff <= 10) {
           // 6–10 volumes off
           reward     = REWARD_FAR;
           resultDesc =
-            `<:whitearrow:1532531439445344547> You received **${reward}** <:money:1532532493578928178>`;
+            `<:whitearrow:1532531439445344547> You received **${reward}** <:SilverCoin:1534757841867374782>`;
         } else {
           // More than 10 off — no reward
           resultDesc = 'Better luck next time.';

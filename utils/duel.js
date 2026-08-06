@@ -21,9 +21,9 @@ const ROLE_STATS = {
 };
 
 const ROLE_EMOJIS = {
-  HP: '<:Health:1534326743459037244>',
-  ATK: '<:Power:1534326742678769684>',
-  SPD: '<:Speed:1534326741693104168>'
+  HP: '<:Heart:1534757255231307926>',
+  ATK: '<:IronSword:1534758222974550238>',
+  SPD: '<:IronBoot:1534758604609945693>'
 };
 
 const DAMAGE_MULTIPLIERS = {
@@ -236,7 +236,7 @@ function formatCardLine(card, barSegments = 5) {
   return [
     `${cardLabel} · Lv. ${level}`,
     `${progress}\`${health}/${maxHealth}\``,
-    `<:Health:1534326743459037244> ${health}/${maxHealth}  |  <:Power:1534326742678769684> ${card.power}  |  <:Speed:1534326741693104168> ${card.speed}`
+    `<:Heart:1534757255231307926> ${health}/${maxHealth}  |  <:IronSword:1534758222974550238> ${card.power}  |  <:IronBoot:1534758604609945693> ${card.speed}`
   ].join('\n');
 }
 

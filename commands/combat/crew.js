@@ -15,9 +15,9 @@ const TEAM_COOLDOWN_MS = 5000;
 const IMAGE_FETCH_TIMEOUT_MS = 8000;
 const SHINY_EMOJI_URL = 'https://cdn.discordapp.com/emojis/1533666993637687466.png?size=32&quality=lossless';
 const ROLE_EMOJI_URLS = {
-  HP: 'https://cdn.discordapp.com/emojis/1534326743459037244.png?size=32&quality=lossless',
-  ATK: 'https://cdn.discordapp.com/emojis/1534326742678769684.png?size=32&quality=lossless',
-  SPD: 'https://cdn.discordapp.com/emojis/1534326741693104168.png?size=32&quality=lossless'
+  HP: 'https://cdn.discordapp.com/emojis/1534757255231307926.png?size=32&quality=lossless',
+  ATK: 'https://cdn.discordapp.com/emojis/1534758222974550238.png?size=32&quality=lossless',
+  SPD: 'https://cdn.discordapp.com/emojis/1534758604609945693.png?size=32&quality=lossless'
 };
 
 const imageBufferCache = new Map();

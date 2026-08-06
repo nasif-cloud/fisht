@@ -135,7 +135,7 @@ module.exports = {
       .setColor(0xFFFFFF)
       .setTitle('Daily Claimed')
       .setDescription(
-        `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:money:1532532493578928178> Berries\n` +
+        `<:whitearrow:1532531439445344547> You received **${DAILY_REWARD.toLocaleString('en-US')}** <:SilverCoin:1534757841867374782> Berries\n` +
         `${formatXpReward(xpResult)}`
       )
       // Discord renders this timestamp in each viewer's local timezone and
