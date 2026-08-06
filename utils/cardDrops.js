@@ -30,22 +30,29 @@ const DROP_CHARGE_WINDOW_MS = 60 * 1000;
 const DROP_CHECK_INTERVAL_MS = 15 * 1000;
 const MINIMUM_MESSAGES_FOR_SCHEDULED_DROP = 3;
 const DESERT_ACTIVITY_WINDOW_MS = 6 * 60 * 60 * 1000;
-const DROP_COOLDOWN_MS = 60 * 1000;
-const SHINY_DROP_CHANCE = 0.8;
+const SHINY_BASE_CHANCE = 0.5;
+const SHINY_CHANCE_PER_CHARGE = 0.05;
 const SHINY_EMOJI = '<:holo:1533666993637687466>';
 const CHARGE_EMOJI = '<:charge:1534734619516076140>';
 
-// Charge 0 is intentionally the slowest schedule. A channel with almost no
-// conversation is also blocked by the desert checks below, so it can go
-// indefinitely without filling the channel with unwanted drops.
-const CHARGE_INTERVALS_MS = {
-  0: 3 * 60 * 60 * 1000,
-  1: 2 * 60 * 60 * 1000,
-  2: 60 * 60 * 1000,
-  3: 60 * 60 * 1000,
-  4: 20 * 60 * 1000,
-  5: 20 * 60 * 1000
+// These are the target cooldown ranges for each activity level. The
+// scheduler uses the midpoint of each range so the same channel does not
+// randomly receive a drop early every time the scheduler checks it.
+const CHARGE_INTERVAL_RANGES_MS = {
+  0: { min: 5 * 60 * 60 * 1000, max: 8 * 60 * 60 * 1000 },
+  1: { min: 3.5 * 60 * 60 * 1000, max: 5 * 60 * 60 * 1000 },
+  2: { min: 3 * 60 * 60 * 1000, max: 3.5 * 60 * 60 * 1000 },
+  3: { min: 2 * 60 * 60 * 1000, max: 3 * 60 * 60 * 1000 }
 };
+
+// Keep the old export name available for any code that imports the schedule
+// table, while storing the new target ranges as the source of truth.
+const CHARGE_INTERVALS_MS = Object.fromEntries(
+  Object.entries(CHARGE_INTERVAL_RANGES_MS).map(([charge, range]) => [
+    charge,
+    Math.round((range.min + range.max) / 2)
+  ])
+);
 
 const RANK_WEIGHTS_BY_CHARGE = {
   0: { D: 100 },
@@ -69,7 +76,15 @@ function getCharge(config) {
 }
 
 function getScheduleIntervalMs(charge) {
-  return CHARGE_INTERVALS_MS[Math.min(5, charge)] || CHARGE_INTERVALS_MS[5];
+  const activityLevel = Math.min(3, Math.max(0, Number(charge) || 0));
+  return CHARGE_INTERVALS_MS[activityLevel];
+}
+
+function getShinyChance(charge) {
+  // Every charge adds five percentage points, but the chance cannot exceed
+  // 100% so extremely active channels still get a valid probability.
+  const safeCharge = Math.max(0, Number(charge) || 0);
+  return Math.min(1, SHINY_BASE_CHANCE + safeCharge * SHINY_CHANCE_PER_CHARGE);
 }
 
 function getRankWeights(charge) {
@@ -445,7 +460,7 @@ async function activateDrop(channel, drop) {
   const activationNow = new Date();
   const charge = Math.max(0, Number(drop.chargeCount) || 0);
   const { card, rank } = pickDropCard(charge);
-  const isShiny = Math.random() < SHINY_DROP_CHANCE;
+  const isShiny = Math.random() < getShinyChance(charge);
   const stats = getDropStats(card, rank);
   const claimedActivation = await CardDrop.findOneAndUpdate(
     {
@@ -613,7 +628,7 @@ async function evaluateChannel(config, client) {
   if (now - config.lastMessageAt > DESERT_ACTIVITY_WINDOW_MS) return;
 
   const charge = getCharge(config);
-  const interval = Math.max(DROP_COOLDOWN_MS, getScheduleIntervalMs(charge));
+  const interval = getScheduleIntervalMs(charge);
   if (now - config.lastDropAt < interval) return;
 
   const channel = await client.channels.fetch(config.channelId).catch(() => null);
