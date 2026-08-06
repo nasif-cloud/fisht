@@ -30,7 +30,12 @@ module.exports = {
     }
 
     let userData = await User.findOne({ userId: target.id });
-    if (!userData) userData = new User({ userId: target.id });
+    if (!userData) {
+      return message.reply({
+        content: `${target.username} has no account yet.`,
+        allowedMentions: { repliedUser: false }
+      });
+    }
 
     const xpResult = addXp(userData, amount);
     await userData.save();

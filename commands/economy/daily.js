@@ -141,7 +141,7 @@ module.exports = {
       // Discord renders this timestamp in each viewer's local timezone and
       // includes the actual reset date instead of hard-coding an ET label.
       .setFooter({
-        text: `Next claim resets <t:${Math.floor(nextReset.getTime() / 1000)}:F>`
+        text: `Next claim ready in 24 hours`
       });
 
     let resultMessage;

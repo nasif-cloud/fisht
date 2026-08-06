@@ -80,7 +80,7 @@ function addXp(userData, amount) {
 // whether the message goes to DMs or the channel where the reward happened.
 // When a result message is supplied, channel notifications reply to it.
 async function sendLevelUpNotifications(discordUser, userData, xpResult, channel, replyTo = null) {
-  if (!discordUser || xpResult?.levelsGained < 1) {
+  if (!discordUser || userData?.accountCreated !== true || xpResult?.levelsGained < 1) {
     return;
   }
 

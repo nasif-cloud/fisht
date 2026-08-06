@@ -28,9 +28,14 @@ module.exports = {
       return message.reply({ content: 'Please provide a valid positive amount.', allowedMentions: { repliedUser: false } });
     }
 
-    // Find or create the target user's save data
+    // Owner grants never create accounts for users who have not used the bot.
     let userData = await User.findOne({ userId: target.id });
-    if (!userData) userData = new User({ userId: target.id });
+    if (!userData) {
+      return message.reply({
+        content: `${target.username} has no account yet.`,
+        allowedMentions: { repliedUser: false }
+      });
+    }
 
     // Add the berries and save
     userData.balance += amount;

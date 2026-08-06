@@ -49,9 +49,14 @@ module.exports = {
       return message.reply({ content: `No card found matching **${cardQuery}**.`, allowedMentions: { repliedUser: false } });
     }
 
-    // Find or create the target user's save data
+    // Owner grants never create accounts for users who have not used the bot.
     let userData = await User.findOne({ userId: target.id });
-    if (!userData) userData = new User({ userId: target.id });
+    if (!userData) {
+      return message.reply({
+        content: `${target.username} has no account yet.`,
+        allowedMentions: { repliedUser: false }
+      });
+    }
 
     // Update or add the card copy entry
     const now      = new Date();

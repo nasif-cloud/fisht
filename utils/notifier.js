@@ -163,6 +163,7 @@ async function checkAndNotify(client) {
       notifiedPullResets.add(resetTime.toISOString());
       const previousReset = getPreviousReset(resetTime, PULL_RESET_TIMES);
       const users = await User.find({
+        accountCreated: true,
         dmPullsReady: true,
         lastPullTime: {
           $gte: previousReset,
@@ -188,7 +189,7 @@ async function checkAndNotify(client) {
 
       // Assign the same reset window's random quests before sending the
       // notification. This also makes the quest page ready after a restart.
-      const users = await User.find({});
+      const users = await User.find({ accountCreated: true });
 
       console.log(`[Notifier] Daily reset at ${resetTime.toISOString()} — DMing ${users.length} users`);
 
