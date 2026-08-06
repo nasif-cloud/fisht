@@ -241,7 +241,11 @@ module.exports = {
       };
 
       const finishBattle = async result => {
-        if (result.winner?.id === state.challenger.id) {
+        if (result.reason === 'forfeit') {
+          await response.edit(
+            buildEndPayload(`**${state.challenger.username}** didn't respond in time`, state)
+          );
+        } else if (result.winner?.id === state.challenger.id) {
           const reward = await awardBattleReward(player.id);
           const xpResult = reward?.xpResult;
           let content =
