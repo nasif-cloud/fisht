@@ -15,7 +15,6 @@ const { rankEmojis } = require('../../data/cards');
 
 const BASIC_ITEMS = [
   INVENTORY_ITEMS.chest,
-  INVENTORY_ITEMS.beli,
   INVENTORY_ITEMS.meat,
   INVENTORY_ITEMS.wine,
   INVENTORY_ITEMS.beer
@@ -115,6 +114,7 @@ module.exports = {
       : await interactionOrMessage.channel.send(payload);
 
     const collector = response.createMessageComponentCollector({
+      componentType: 3,
       time: VIEW_COLLECTOR_TIME_MS
     });
 
@@ -129,11 +129,22 @@ module.exports = {
 
       if (interaction.customId !== INVENTORY_VIEW_ID) return;
 
-      const selectedView = interaction.values?.[0] === CLONES_VIEW
-        ? CLONES_VIEW
-        : BASIC_VIEW;
-      const freshData = await User.findOne({ userId: user.id });
-      await interaction.update(buildPayload(user, freshData, selectedView));
+      try {
+        const selectedView = interaction.values?.[0] === CLONES_VIEW
+          ? CLONES_VIEW
+          : BASIC_VIEW;
+        const freshData = await User.findOne({ userId: user.id });
+        await interaction.update(buildPayload(user, freshData, selectedView));
+      } catch (error) {
+        console.error('[Inventory] Dropdown update failed:', error.message);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: 'I could not update your inventory right now',
+            flags: 64,
+            allowedMentions: { parse: [] }
+          }).catch(() => {});
+        }
+      }
     });
 
     collector.on('end', () => {

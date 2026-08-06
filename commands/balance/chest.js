@@ -101,7 +101,7 @@ function buildRewardLines(rewards) {
   for (const [field, emoji, name] of itemDetails) {
     if (rewards[field] > 0) {
       lines.push(
-        `<:whitearrow:1532531439445344547> ${emoji} **${rewards[field]}x** ${pluralize(rewards[field], name, name)}`
+        `<:whitearrow:1532531439445344547> ${emoji} **${rewards[field]}x** ${name}`
       );
     }
   }
@@ -109,7 +109,8 @@ function buildRewardLines(rewards) {
     const amount = rewards[`clone${rank}`];
     if (amount > 0) {
       lines.push(
-        `<:whitearrow:1532531439445344547> ${rankEmojis[rank]} **${amount}x** ${pluralize(amount, `${rank} Clone`, `${rank} Clones`)}`
+        `<:whitearrow:1532531439445344547> ${rankEmojis[rank]} **${amount}x** ` +
+        `${amount === 1 ? `${rank} Clone` : `${rank} Clones`}`
       );
     }
   }
