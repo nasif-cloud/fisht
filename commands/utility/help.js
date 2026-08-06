@@ -14,7 +14,7 @@ module.exports = {
     async execute(interactionOrMessage) {
    const embed = new EmbedBuilder()
   .setTitle("Help menu: Commands")
-  .setDescription("**Cards**\n`pull`, `info`, `copies`, `eat`, `collection`, `mycard`, `allcards`,\n\n**Economy**\n`balance`, `daily`, `shop`, `buy`\n\n**Utility**\n`help`, `profile`, `timers`, `settings`, `quests`, `leaderboard`\n\n**Fun**\n`trivia`,`manga`\n\n**Combat**\n`team`, `autoteam`, `teamadd`, `teamremove`, `battle`, `duel`\n\n**Items**\n...\n\n**Admin**\n`allow`, `disallow`")
+  .setDescription("**Cards**\n`pull`, `info`, `copies`, `eat`, `collection`, `mycard`, `allcards`,\n\n**Economy**\n`balance`, `daily`, `shop`, `buy`, `inventory`\n\n**Utility**\n`help`, `profile`, `timers`, `settings`, `quests`, `leaderboard`\n\n**Fun**\n`trivia`,`manga`\n\n**Combat**\n`team`, `autoteam`, `teamadd`, `teamremove`, `battle`, `duel`\n\n**Admin**\n`allow`, `disallow`")
   .setColor(0xffffff);
 
      // Check if its a slash command

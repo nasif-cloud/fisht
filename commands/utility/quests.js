@@ -78,7 +78,7 @@ function buildComponents(userData, disabled = false) {
       type: 10,
       content:
         `Each quest gives **${QUEST_REWARD_BELI.toLocaleString('en-US')}** <:SilverCoin:1534757841867374782> and **${QUEST_REWARD_XP} XP**.` +
-        ` Claim all ${quests.length} for **${ALL_QUESTS_REWARD_MEAT}** <:Meat:1534757966119567501> Meat.`
+        ` Claim all ${quests.length} for **${ALL_QUESTS_REWARD_MEAT}** <:Ham:1534995152605548585> Meat.`
     }
   );
 
@@ -167,7 +167,7 @@ module.exports = {
         ];
         if (result.allClaimed) {
           rewardLines.push(
-            `You claimed all three quests and received **${ALL_QUESTS_REWARD_MEAT}** <:Meat:1534757966119567501> Meat!`
+            `You claimed all three quests and received **${ALL_QUESTS_REWARD_MEAT}** <:Ham:1534995152605548585> Meat`
           );
         }
         if (xpResult.levelsGained > 0) {

@@ -34,7 +34,7 @@ module.exports = {
       title: `${user.username}'s Balance`,
       description:
         `<:whitearrow:1532531439445344547> Berries: **${berriesFormatted}** <:SilverCoin:1534757841867374782>\n` +
-        `<:whitearrow:1532531439445344547> Meat: **${meatFormatted}** <:Meat:1534757966119567501>`,
+        `<:whitearrow:1532531439445344547> Meat: **${meatFormatted}** <:Ham:1534995152605548585>`,
       thumbnail: { url: user.displayAvatarURL({ dynamic: true }) },
       color: 0xFFFFFF
     };

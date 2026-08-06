@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
   // In-game Meat resource. Spent with the eat command to reset pull count.
   meat: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
 
+  // Inventory items used by the battle and duel reset commands.
+  wine: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  beer: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+
   // Whether this user has already received their welcome DM and starter rewards.
   // Set to true the first time they run any command, so rewards are only given once.
   accountCreated: { type: Boolean, default: false },
