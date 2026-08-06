@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema({
   wine: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   beer: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   chests: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  crates: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  gems: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   cloneD: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   cloneC: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   cloneB: { type: Number, default: 0, min: 0, set: nonNegativeNumber },

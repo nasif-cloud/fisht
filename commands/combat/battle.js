@@ -24,6 +24,7 @@ const {
   sendLevelUpNotifications
 } = require('../../utils/levels');
 const { getLevelProgress } = require('../../utils/levels');
+const { tryAwardCrate } = require('../../utils/crateRewards');
 
 const ROUND_TIMEOUT_MS = 30_000;
 const BATTLE_COOLDOWN_MS = 30 * 60 * 1000;
@@ -124,8 +125,9 @@ async function awardBattleReward(playerId) {
 
   const xpResult = addXp(userData, BATTLE_REWARD_XP);
   userData.balance = (Number(userData.balance) || 0) + BATTLE_REWARD_BELI;
+  const crateAwarded = tryAwardCrate(userData);
   await userData.save();
-  return { userData, xpResult };
+  return { userData, xpResult, crateAwarded };
 }
 
 function getPlayerSelection(state) {
@@ -245,6 +247,9 @@ module.exports = {
           let content =
             `**${state.challenger.username} wins**\n` +
             `Reward: **${BATTLE_REWARD_XP} XP** and **${BATTLE_REWARD_BELI.toLocaleString('en-US')}**<:SilverCoin:1534757841867374782> Beli`;
+          if (reward?.crateAwarded) {
+            content += `\n<:whitearrow:1532531439445344547> You received **1x** <:Crate:1534758387621957804> Crate`;
+          }
           if (xpResult?.levelsGained > 0) {
             content += `\nYou reached level **${xpResult.after.level}**`;
           }

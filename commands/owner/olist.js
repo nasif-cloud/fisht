@@ -13,8 +13,8 @@ module.exports = {
     const list = [
       '─── OWNER COMMANDS ───',
       '',
-      'op ogive @user [item] [amount]  — give beli, meat, wine, beer, or chest',
-      'op nogive @user [item] [amount] — remove beli, meat, wine, beer, or chest',
+      'op ogive @user [item] [amount]  — give beli, meat, wine, beer, chest, crate, or gem',
+      'op nogive @user [item] [amount] — remove beli, meat, wine, beer, chest, crate, or gem',
       'op obeli @user [amount]         — give Berries to a user (legacy)',
       'op nobeli @user [amount]        — remove Berries from a user (legacy)',
       'op omeat @user [amount]         — give Meat to a user (legacy)',

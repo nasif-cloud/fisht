@@ -15,6 +15,8 @@ const { rankEmojis } = require('../../data/cards');
 
 const BASIC_ITEMS = [
   INVENTORY_ITEMS.chest,
+  INVENTORY_ITEMS.crate,
+  INVENTORY_ITEMS.gem,
   INVENTORY_ITEMS.meat,
   INVENTORY_ITEMS.wine,
   INVENTORY_ITEMS.beer

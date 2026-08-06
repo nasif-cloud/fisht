@@ -39,6 +39,20 @@ const INVENTORY_ITEMS = {
     name: 'Chest',
     aliases: ['chests'],
     emoji: '<:Chest:1534758406944985302>'
+  },
+  crate: {
+    id: 'crate',
+    field: 'crates',
+    name: 'Crate',
+    aliases: ['crates'],
+    emoji: '<:Crate:1534758387621957804>'
+  },
+  gem: {
+    id: 'gem',
+    field: 'gems',
+    name: 'Gem',
+    aliases: ['gems'],
+    emoji: '<:Diamond:1534758134592045116>'
   }
 };
 

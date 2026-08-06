@@ -27,6 +27,7 @@ const {
   sendLevelUpNotifications,
   formatXpReward
 } = require('../../utils/levels');
+const { tryAwardCrate } = require('../../utils/crateRewards');
 const { updateQuestProgress } = require('../../utils/quests');
 
 // ─────────────────────────────────────────────
@@ -168,6 +169,7 @@ module.exports = {
       const userAnswer = interaction.component.label;
       const isCorrect  = userAnswer === correctAnswer;
       let xpResult = null;
+      let crateAwarded = false;
 
       // Acknowledge immediately to stay within Discord's 3-second window
       await interaction.deferUpdate();
@@ -179,17 +181,21 @@ module.exports = {
           userData.balance += REWARD;
           updateQuestProgress(userData, 'trivia_correct', 1);
           xpResult = addXp(userData, 10);
+          crateAwarded = tryAwardCrate(userData);
           await userData.save();
         }
       }
 
       // Build the result embed
-      const resultDesc = isCorrect
+      let resultDesc = isCorrect
         ? `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\n` +
           `<:whitearrow:1532531439445344547> You received **${REWARD}** <:SilverCoin:1534757841867374782>\n` +
           formatXpReward(xpResult)
         : `The answer was **${correctAnswer}**, you answered **${userAnswer}**.\n\n` +
           `Better luck next time.`;
+      if (isCorrect && crateAwarded) {
+        resultDesc += `\n<:whitearrow:1532531439445344547> You received **1x** <:Crate:1534758387621957804> Crate`;
+      }
 
       const resultEmbed = new EmbedBuilder()
         .setTitle('Vegapunk\'s Trivia Challenge')
