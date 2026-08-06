@@ -26,13 +26,14 @@ const { generateShinyImage, generateShinyIcon } = require('./shinyImage');
 const { computeBoosts } = require('./boosts');
 
 const DROP_CLAIM_LIFETIME_MS = 60 * 1000;
-const DROP_TEASER_COOLDOWN_MS = 60 * 1000;
+const DROP_CHARGE_WINDOW_MS = 60 * 1000;
 const DROP_CHECK_INTERVAL_MS = 15 * 1000;
 const MINIMUM_MESSAGES_FOR_SCHEDULED_DROP = 3;
 const DESERT_ACTIVITY_WINDOW_MS = 6 * 60 * 60 * 1000;
 const DROP_COOLDOWN_MS = 60 * 1000;
 const SHINY_DROP_CHANCE = 0.8;
 const SHINY_EMOJI = '<:holo:1533666993637687466>';
+const CHARGE_EMOJI = '<:charge:1534734619516076140>';
 
 // Charge 0 is intentionally the slowest schedule. A channel with almost no
 // conversation is also blocked by the desert checks below, so it can go
@@ -149,6 +150,36 @@ function createClaimRow(dropId) {
   );
 }
 
+function createChargeRow(dropId, chargeCount = 0) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`card_drop_charge:${dropId}`)
+      .setLabel('charge')
+      .setEmoji(CHARGE_EMOJI)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`card_drop_charge_count:${dropId}`)
+      .setLabel(String(chargeCount))
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true)
+  );
+}
+
+function buildChargePayload(drop) {
+  const embed = new EmbedBuilder()
+    .setTitle('A drop is ready')
+    .setDescription(
+      'Click this button to charge up the drop. More charges = better card.\n' +
+      '-# sends in 1 minute'
+    )
+    .setColor(0x2b2d31);
+
+  return {
+    embeds: [embed],
+    components: [createChargeRow(drop._id.toString(), drop.chargeCount || 0)]
+  };
+}
+
 async function buildDropPayload(drop, card, rank, stats, { claimable = true } = {}) {
   const visual = rankConfig[rank]?.M1 || rankConfig.D.M1;
   const title = drop.isShiny ? `${SHINY_EMOJI} ${card.name}` : card.name;
@@ -234,16 +265,21 @@ async function getPendingDrop(config) {
     return null;
   }
 
-  if (
-    ['teaser', 'pending'].includes(drop.status) &&
-    drop.expiresAt > new Date()
-  ) {
+  const now = new Date();
+  // Keep charging records visible to the scheduler even after chargeEndsAt.
+  // The scheduler needs to see the record in order to atomically roll the
+  // collected charge count into the final card.
+  const isCharging = drop.status === 'charging';
+  const isLegacyTeaser = drop.status === 'teaser' && drop.expiresAt > now;
+  const isClaimable = drop.status === 'pending' && drop.expiresAt > now;
+
+  if (isCharging || isLegacyTeaser || isClaimable) {
     return drop;
   }
 
-  if (['teaser', 'pending'].includes(drop.status)) {
+  if (['charging', 'teaser', 'pending'].includes(drop.status)) {
     await CardDrop.updateOne(
-      { _id: drop._id, status: { $in: ['teaser', 'pending'] } },
+      { _id: drop._id, status: { $in: ['charging', 'teaser', 'pending'] } },
       { $set: { status: 'expired' } }
     );
   }
@@ -268,7 +304,7 @@ async function sendDropToChannel(channel, options = {}) {
     if (pending && !options.force) return null;
     if (pending && options.force) {
       await CardDrop.updateOne(
-        { _id: pending._id, status: { $in: ['teaser', 'pending'] } },
+        { _id: pending._id, status: { $in: ['charging', 'teaser', 'pending'] } },
         { $set: { status: 'expired' } }
       );
       await ChannelDrop.updateOne(
@@ -277,22 +313,13 @@ async function sendDropToChannel(channel, options = {}) {
       );
     }
 
-    const charge = options.force ? 0 : getCharge(config);
-    const { card, rank } = pickDropCard(charge);
-    const isShiny = Math.random() < SHINY_DROP_CHANCE;
-    const stats = getDropStats(card, rank);
     const now = new Date();
     const drop = await CardDrop.create({
       guildId: channel.guildId,
       channelId: channel.id,
-      cardName: card.name,
-      rank,
-      isShiny,
-      imageUrl: card.image,
-      title: card.title || '',
-      ...stats,
-      claimAt: new Date(now.getTime() + DROP_TEASER_COOLDOWN_MS),
-      expiresAt: new Date(now.getTime() + DROP_TEASER_COOLDOWN_MS + DROP_CLAIM_LIFETIME_MS)
+      chargeEndsAt: new Date(now.getTime() + DROP_CHARGE_WINDOW_MS),
+      chargeCount: 0,
+      chargeUserIds: []
     });
 
     // Reserve the channel before doing image work or sending. The conditional
@@ -309,14 +336,14 @@ async function sendDropToChannel(channel, options = {}) {
     );
     if (!reserved) {
       await CardDrop.updateOne(
-        { _id: drop._id, status: 'teaser' },
+        { _id: drop._id, status: 'charging' },
         { $set: { status: 'expired' } }
       );
       return null;
     }
 
     try {
-      const payload = await buildDropPayload(drop, card, rank, stats, { claimable: false });
+      const payload = buildChargePayload(drop);
       const sent = await channel.send(payload);
       drop.teaserMessageId = sent.id;
       await drop.save();
@@ -336,7 +363,7 @@ async function sendDropToChannel(channel, options = {}) {
       return sent;
     } catch (error) {
       await CardDrop.updateOne(
-        { _id: drop._id, status: { $in: ['teaser', 'pending'] } },
+        { _id: drop._id, status: { $in: ['charging', 'teaser', 'pending'] } },
         { $set: { status: 'expired' } }
       );
       await ChannelDrop.updateOne(
@@ -351,43 +378,36 @@ async function sendDropToChannel(channel, options = {}) {
 }
 
 async function activateDrop(channel, drop) {
-  if (!drop || drop.status !== 'teaser' || drop.claimAt > new Date()) return null;
+  if (!drop || drop.status !== 'charging' || drop.chargeEndsAt > new Date()) return null;
   const activationNow = new Date();
+  const charge = Math.max(0, Number(drop.chargeCount) || 0);
+  const { card, rank } = pickDropCard(charge);
+  const isShiny = Math.random() < SHINY_DROP_CHANCE;
+  const stats = getDropStats(card, rank);
   const claimedActivation = await CardDrop.findOneAndUpdate(
     {
       _id: drop._id,
-      status: 'teaser',
-      claimAt: { $lte: activationNow },
-      expiresAt: { $gt: activationNow }
+      status: 'charging',
+      chargeEndsAt: { $lte: activationNow }
     },
     {
       // Start the full claim window when the claimable message is actually
       // activated, not when the teaser was sent.
       $set: {
         status: 'pending',
+        cardName: card.name,
+        rank,
+        isShiny,
+        imageUrl: card.image,
+        title: card.title || '',
+        ...stats,
+        claimAt: activationNow,
         expiresAt: new Date(activationNow.getTime() + DROP_CLAIM_LIFETIME_MS)
       }
     },
     { new: true }
   );
   if (!claimedActivation) return null;
-
-  const card = cards.find(candidate => candidate.name === claimedActivation.cardName);
-  if (!card) {
-    await CardDrop.updateOne(
-      { _id: claimedActivation._id, status: 'pending' },
-      { $set: { status: 'expired' } }
-    );
-    await ChannelDrop.updateOne(
-      {
-        guildId: claimedActivation.guildId,
-        channelId: claimedActivation.channelId,
-        pendingDropId: claimedActivation._id
-      },
-      { $set: { pendingDropId: null } }
-    );
-    return null;
-  }
 
   return publishClaimableDrop(channel, claimedActivation, card);
 }
@@ -453,7 +473,7 @@ async function configureDropChannel(channel, userId) {
   });
   if (existing?.pendingDropId) {
     await CardDrop.updateOne(
-      { _id: existing.pendingDropId, status: { $in: ['teaser', 'pending'] } },
+      { _id: existing.pendingDropId, status: { $in: ['charging', 'teaser', 'pending'] } },
       { $set: { status: 'expired' } }
     );
   }
@@ -485,7 +505,7 @@ async function disableDropChannel(guildId, channelId) {
   );
   if (config?.pendingDropId) {
     await CardDrop.updateOne(
-      { _id: config.pendingDropId, status: { $in: ['teaser', 'pending'] } },
+      { _id: config.pendingDropId, status: { $in: ['charging', 'teaser', 'pending'] } },
       { $set: { status: 'expired' } }
     );
     await ChannelDrop.updateOne(
@@ -515,17 +535,23 @@ async function recordChannelActivity(message) {
 async function evaluateChannel(config, client) {
   const now = new Date();
   const pending = await getPendingDrop(config);
-    if (pending?.status === 'teaser') {
-      const channel = await client.channels.fetch(config.channelId).catch(() => null);
-      if (channel?.isTextBased?.()) await activateDrop(channel, pending);
-      return;
-    }
-    if (pending?.status === 'pending' && !pending.messageId) {
+  if (pending?.status === 'charging') {
+    if (pending.chargeEndsAt > now) return;
+    const channel = await client.channels.fetch(config.channelId).catch(() => null);
+    if (channel?.isTextBased?.()) await activateDrop(channel, pending);
+    return;
+  }
+  if (pending?.status === 'teaser') {
+    // Legacy records from the pre-charge implementation are allowed to
+    // expire naturally rather than being mistaken for chargeable drops.
+    return;
+  }
+  if (pending?.status === 'pending' && !pending.messageId) {
       const channel = await client.channels.fetch(config.channelId).catch(() => null);
       if (channel?.isTextBased?.()) await publishClaimableDrop(channel, pending);
       return;
-    }
-    if (pending) return;
+  }
+  if (pending) return;
   if (!config.lastDropAt || !config.lastMessageAt) return;
   if ((config.messagesSinceDrop || 0) < MINIMUM_MESSAGES_FOR_SCHEDULED_DROP) return;
   if (now - config.lastMessageAt > DESERT_ACTIVITY_WINDOW_MS) return;
@@ -565,9 +591,13 @@ function startCardDropScheduler(client) {
 }
 
 async function handleDropInteraction(interaction) {
-  if (!interaction.isButton?.() || !interaction.customId.startsWith('card_drop_claim:')) return false;
+  if (!interaction.isButton?.()) return false;
+  const isClaim = interaction.customId.startsWith('card_drop_claim:');
+  const isCharge = interaction.customId.startsWith('card_drop_charge:');
+  if (!isClaim && !isCharge) return false;
 
-  const dropId = interaction.customId.slice('card_drop_claim:'.length);
+  const prefix = isCharge ? 'card_drop_charge:' : 'card_drop_claim:';
+  const dropId = interaction.customId.slice(prefix.length);
   if (!mongoose.isValidObjectId(dropId)) {
     await interaction.reply({ content: 'This card drop is invalid.', flags: 64 });
     return true;
@@ -577,6 +607,37 @@ async function handleDropInteraction(interaction) {
   // involve a new user document and must not consume Discord's short
   // interaction acknowledgement window.
   await interaction.deferUpdate();
+
+  if (isCharge) {
+    const chargedDrop = await CardDrop.findOneAndUpdate(
+      {
+        _id: dropId,
+        status: 'charging',
+        chargeEndsAt: { $gt: new Date() },
+        chargeUserIds: { $ne: interaction.user.id }
+      },
+      {
+        $addToSet: { chargeUserIds: interaction.user.id },
+        $inc: { chargeCount: 1 }
+      },
+      { new: true }
+    );
+
+    if (!chargedDrop) {
+      await interaction.followUp({
+        content: 'You already charged this drop, or charging has ended.',
+        flags: 64
+      });
+      return true;
+    }
+
+    try {
+      await interaction.editReply(buildChargePayload(chargedDrop));
+    } catch (error) {
+      console.warn('[CardDrops] Could not update charge count:', error.message);
+    }
+    return true;
+  }
 
   let claimedDrop = null;
   const session = await mongoose.startSession();
@@ -649,7 +710,7 @@ async function handleDropInteraction(interaction) {
 
 module.exports = {
   DROP_CLAIM_LIFETIME_MS,
-  DROP_TEASER_COOLDOWN_MS,
+  DROP_CHARGE_WINDOW_MS,
   CHARGE_INTERVALS_MS,
   RANK_WEIGHTS_BY_CHARGE,
   getCharge,

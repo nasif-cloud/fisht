@@ -181,7 +181,6 @@ function buildCardEmbed(entry, footerText, user, imageUrl, iconUrl) {
     description: [
       `${cardData.title}`,
       ` `,
-      `**Rank:** ${cardData.rank || card.rank}`,
       `**Health:** ${health}`,
       `**Power:** ${power}`,
       `**Speed:** ${speed}`,

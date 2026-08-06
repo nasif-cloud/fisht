@@ -120,7 +120,6 @@ module.exports = {
         description: [
           `${cardData.title}`,
           ` `,
-          `**Rank:** ${cardData.rank}`,
           `**Health:** ${resolvedHealth}`,
           `**Power:** ${resolvedPower}`,
           `**Speed:** ${resolvedSpeed}`,

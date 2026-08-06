@@ -338,14 +338,20 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  // Card drop claim buttons are handled globally because their messages can
-  // outlive the command execution that created them.
-  if (interaction.isButton?.() && interaction.customId.startsWith('card_drop_claim:')) {
+  // Card drop buttons are handled globally because their messages can outlive
+  // the command execution that created them.
+  if (
+    interaction.isButton?.() &&
+    (
+      interaction.customId.startsWith('card_drop_claim:') ||
+      interaction.customId.startsWith('card_drop_charge:')
+    )
+  ) {
     if (!(await hasServiceLease())) return;
     try {
       await handleDropInteraction(interaction);
     } catch (error) {
-      console.error('[CardDrops] Claim failed:', error);
+      console.error('[CardDrops] Button interaction failed:', error);
       try {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({
