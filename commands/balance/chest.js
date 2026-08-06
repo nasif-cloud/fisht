@@ -8,19 +8,13 @@ const { EmbedBuilder } = require('discord.js');
 const User = require('../../models/user');
 const { CLONE_RANKS, INVENTORY_ITEMS } = require('../../data/inventoryItems');
 const { rankEmojis } = require('../../data/cards');
+const { CHEST_CLONE_ROLLS } = require('../../data/cloneRewards');
 
 const CHEST_EMOJI = INVENTORY_ITEMS.chest.emoji;
 const CONSUMABLE_ROLLS = [
   { field: 'meat', name: 'Meat', emoji: '<:Ham:1534995152605548585>', weight: 40 },
   { field: 'wine', name: 'Wine', emoji: '<:Wine:1534994973835923706>', weight: 50 },
   { field: 'beer', name: 'Beer', emoji: '<:Beer:1534994802385485896>', weight: 10 }
-];
-const CLONE_ROLLS = [
-  { rank: 'D', weight: 60 },
-  { rank: 'C', weight: 30 },
-  { rank: 'B', weight: 8 },
-  { rank: 'A', weight: 1.95 },
-  { rank: 'S', weight: 0.05 }
 ];
 
 function isSlash(interactionOrMessage) {
@@ -81,7 +75,7 @@ function buildChestRewards(amount) {
     rewards.beli += randomInteger(250, 500);
     for (let roll = 0; roll < 3; roll += 1) {
       rewards[chooseWeighted(CONSUMABLE_ROLLS).field] += 1;
-      const clone = chooseWeighted(CLONE_ROLLS);
+      const clone = chooseWeighted(CHEST_CLONE_ROLLS);
       cloneRewards[`clone${clone.rank}`] += 1;
     }
   }
