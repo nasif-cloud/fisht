@@ -65,7 +65,13 @@ for (const rank of CLONE_RANKS) {
     id,
     field: id,
     name: `${rank} Clone`,
-    aliases: [`${rank.toLowerCase()} clone`, `${rank.toLowerCase()} clones`],
+    aliases: [
+      rank.toLowerCase(),
+      `${rank.toLowerCase()} clone`,
+      `${rank.toLowerCase()} clones`,
+      `clone ${rank.toLowerCase()}`,
+      `clone${rank.toLowerCase()}`
+    ],
     emoji: null,
     rank
   };
