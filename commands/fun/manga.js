@@ -52,6 +52,9 @@ const MASKED_COVER_FILENAME = 'manga-cover.png';
 // Keep each cover's palette and generated images in memory. This avoids
 // downloading and processing the same cover again during later rounds.
 const coverAssetCache = new Map();
+// Store in-progress work too, so two users requesting the same cover at the
+// same time share one download and canvas render instead of doing both twice.
+const coverAssetPromises = new Map();
 
 function rgbToNumber(rgb) {
   const [red, green, blue] = rgb;
@@ -72,41 +75,56 @@ function getMostPopularColor(palette) {
 async function loadCoverAssets(imageUrl) {
   if (coverAssetCache.has(imageUrl)) return coverAssetCache.get(imageUrl);
 
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Cover request failed with status ${response.status}`);
+  if (coverAssetPromises.has(imageUrl)) {
+    return coverAssetPromises.get(imageUrl);
   }
 
-  const sourceBuffer = Buffer.from(await response.arrayBuffer());
-  const [sourceImage, palette] = await Promise.all([
-    loadImage(sourceBuffer),
-    Vibrant.from(sourceBuffer).getPalette()
-  ]);
-  const dominantColor = getMostPopularColor(palette);
-  const canvas = createCanvas(sourceImage.width, sourceImage.height);
-  const ctx = canvas.getContext('2d');
+  const assetPromise = (async () => {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Cover request failed with status ${response.status}`);
+    }
 
-  // Render a clean PNG for the answer and timeout states.
-  ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
-  const cleanCover = canvas.toBuffer('image/png');
+    const sourceBuffer = Buffer.from(await response.arrayBuffer());
+    const [sourceImage, palette] = await Promise.all([
+      loadImage(sourceBuffer),
+      Vibrant.from(sourceBuffer).getPalette()
+    ]);
+    const dominantColor = getMostPopularColor(palette);
+    const canvas = createCanvas(sourceImage.width, sourceImage.height);
+    const ctx = canvas.getContext('2d');
 
-  // The volume number sits inside the crescent-like circle in the lower-right
-  // corner. Keep the same proportions for every cover size in the gallery.
-  const maskCenterX = sourceImage.width * 0.86;
-  const maskCenterY = sourceImage.height * 0.88;
-  const maskRadius = sourceImage.width * 0.155;
+    // Render a clean PNG for the answer and timeout states.
+    ctx.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
+    const cleanCover = canvas.toBuffer('image/png');
 
-  ctx.save();
-  ctx.fillStyle = `#${dominantColor.toString(16).padStart(6, '0')}`;
-  ctx.beginPath();
-  ctx.arc(maskCenterX, maskCenterY, maskRadius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+    // The volume number sits inside the crescent-like circle in the lower-right
+    // corner. Keep the same proportions for every cover size in the gallery.
+    const maskCenterX = sourceImage.width * 0.86;
+    const maskCenterY = sourceImage.height * 0.88;
+    const maskRadius = sourceImage.width * 0.155;
 
-  const maskedCover = canvas.toBuffer('image/png');
-  const assets = { cleanCover, maskedCover, dominantColor };
-  coverAssetCache.set(imageUrl, assets);
-  return assets;
+    ctx.save();
+    ctx.fillStyle = `#${dominantColor.toString(16).padStart(6, '0')}`;
+    ctx.beginPath();
+    ctx.arc(maskCenterX, maskCenterY, maskRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const maskedCover = canvas.toBuffer('image/png');
+    const assets = { cleanCover, maskedCover, dominantColor };
+    coverAssetCache.set(imageUrl, assets);
+    coverAssetPromises.delete(imageUrl);
+    return assets;
+  })().catch(error => {
+    // Failed downloads should be retried later instead of permanently
+    // poisoning the in-flight cache.
+    coverAssetPromises.delete(imageUrl);
+    throw error;
+  });
+
+  coverAssetPromises.set(imageUrl, assetPromise);
+  return assetPromise;
 }
 
 function buildCoverAttachment(buffer) {
@@ -162,19 +180,23 @@ module.exports = {
     // ── STEP 2: SET COOLDOWN IMMEDIATELY ──
     // Record the claim time right away so spamming the command before the
     // first save completes can't bypass the cooldown.
-    if (userData) {
-      userData.lastMangaClaim = new Date();
-      updateQuestProgress(userData, 'manga_play', 1);
-      await userData.save();
-    }
-
     // ── STEP 3: PICK A RANDOM MANGA ENTRY ──
     const entry = mangaPool[Math.floor(Math.random() * mangaPool.length)];
 
     // ── STEP 3b: PREPARE THE COVER ──
     // Node Vibrant finds the most common palette colour. The active challenge
     // uses the clean solid mask, while result states use the clean cover.
-    const coverAssets = await loadCoverAssets(entry.image);
+    if (userData) {
+      userData.lastMangaClaim = new Date();
+      updateQuestProgress(userData, 'manga_play', 1);
+    }
+
+    // Start the network and canvas work before waiting for MongoDB. The
+    // command still sends only after this promise resolves, so the hidden
+    // volume number is never exposed by a partially rendered first message.
+    const coverAssetsPromise = loadCoverAssets(entry.image);
+    await userData.save();
+    const coverAssets = await coverAssetsPromise;
     const embedColor = coverAssets.dominantColor;
     const maskedCoverAttachment = buildCoverAttachment(coverAssets.maskedCover);
     const cleanCoverAttachment = buildCoverAttachment(coverAssets.cleanCover);
