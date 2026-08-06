@@ -3347,7 +3347,7 @@ const cards = [
     health: '=',
     power: '+',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/2D8868L.png', 
     
     M2: {
       title: 'Arlong Pirates',
@@ -3355,7 +3355,7 @@ const cards = [
     health: '+',
     power: '++',
     speed: '+',
-    image: '', 
+    image: 'https://i.imgur.com/MhKQQJj.png', 
 },
 
     M3: {
@@ -3364,7 +3364,7 @@ const cards = [
     health: '=',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/yEvM47c.png', 
 }
   },
   {
