@@ -43,45 +43,45 @@ const statRanges = {
 
 const rankConfig = {
   D: {
-    M1: { color: 0xB4B4B4, icon: 'https://files.catbox.moe/idv9j1.png' }, // grey
-    M2: { color: 0xA6A6A6, icon: 'https://files.catbox.moe/de4kvq.png' },
-    M3: { color: 0x737373, icon: 'https://files.catbox.moe/4aawoa.png' }
+    M1: { color: 0xB4B4B4, icon: 'https://i.imgur.com/LOK7uyg.png' }, // grey
+    M2: { color: 0xA6A6A6, icon: 'https://i.imgur.com/cVZOqlS.png' },
+    M3: { color: 0x737373, icon: 'https://i.imgur.com/wqeN5Gr.png' }
   },
 
   C: {
-    M1: { color: 0xFFEB99, icon: 'https://files.catbox.moe/ae1xd0.png' }, // Yellow
-    M2: { color: 0xFFEB99, icon: 'https://files.catbox.moe/rp6v9b.png' },
-    M3: { color: 0xFFDE59, icon: 'https://files.catbox.moe/jv8krn.png' }
+    M1: { color: 0xFFEB99, icon: 'https://i.imgur.com/b3CMIFG.png' }, // Yellow
+    M2: { color: 0xFFEB99, icon: 'https://i.imgur.com/9suDw7k.png' },
+    M3: { color: 0xFFDE59, icon: 'https://i.imgur.com/ibwG542.png' }
   },
 
   B: {
-    M1: { color: 0x99ACFF, icon: 'https://files.catbox.moe/xdqege.png' }, // Blue
-    M2: { color: 0x5271FF, icon: 'https://files.catbox.moe/emlr0x.png' },
-    M3: { color: 0x2F55FF, icon: 'https://files.catbox.moe/cx05wu.png' }
+    M1: { color: 0x99ACFF, icon: 'https://i.imgur.com/JDcPLR4.png' }, // Blue
+    M2: { color: 0x5271FF, icon: 'https://i.imgur.com/ydhpQxJ.png' },
+    M3: { color: 0x2F55FF, icon: 'https://i.imgur.com/XRarnSo.png' }
   },
 
   A: {
-    M1: { color: 0xCEA8F0, icon: 'https://i.postimg.cc/bwFyWyj6/10.png' }, // Purple
-    M2: { color: 0xB174E7, icon: 'https://i.postimg.cc/NjPsSswC/11.png' },
-    M3: { color: 0x9440DD, icon: 'https://i.postimg.cc/Z5Db2bhw/12.png' }
+    M1: { color: 0xCEA8F0, icon: 'https://i.imgur.com/xf6h4lU.png' }, // Purple
+    M2: { color: 0xB174E7, icon: 'https://i.imgur.com/XAUcmii.png' },
+    M3: { color: 0x9440DD, icon: 'https://i.imgur.com/r75Cqao.png' }
   },
 
   S: {
-    M1: { color: 0xFFB6D4, icon: 'https://i.postimg.cc/rwqj3T9j/13.png' }, // Pink
-    M2: { color: 0xFF4090, icon: 'https://i.postimg.cc/qvpwSrGj/14.png' },
-    M3: { color: 0xFF2C97, icon: 'https://i.postimg.cc/mgVjGndC/15.png' }
+    M1: { color: 0xFFB6D4, icon: 'https://i.imgur.com/LSi16t5.png' }, // Pink
+    M2: { color: 0xFF4090, icon: 'https://i.imgur.com/ZzDTtiV.png' },
+    M3: { color: 0xFF2C97, icon: 'https://i.imgur.com/CsHdGxl.png' }
   },
 
   SS: {
-    M1: { color: 0xFA4538, icon: 'https://files.catbox.moe/5urgzt.png' }, // Orange
-    M2: { color: 0xF8210D, icon: 'https://files.catbox.moe/x26s4d.png' },
-    M3: { color: 0xFC3104, icon: 'https://files.catbox.moe/0irfa0.png' }
+    M1: { color: 0xFA4538, icon: 'https://i.imgur.com/6EusJOq.png' }, // Orange
+    M2: { color: 0xF8210D, icon: 'https://i.imgur.com/Pquq1Dv.png' },
+    M3: { color: 0xFC3104, icon: 'https://i.imgur.com/rZMC6cJ.png' }
   },
 
   UR: {
-    M1: { color: 0xFE5986, icon: 'https://files.catbox.moe/fr5wdg.png' }, // Rainbow
-    M2: { color: 0xE4442B, icon: 'https://files.catbox.moe/wwfwi3.png' },
-    M3: { color: 0xB560F5, icon: 'https://files.catbox.moe/ndi2le.png' }
+    M1: { color: 0xFE5986, icon: 'https://i.imgur.com/yx3OL8d.png' }, // Rainbow
+    M2: { color: 0xE4442B, icon: 'https://i.imgur.com/fkHvpGE.png' },
+    M3: { color: 0xB560F5, icon: 'https://i.imgur.com/TcerXlq.png' }
   }
 };
 
