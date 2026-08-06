@@ -59,6 +59,10 @@ function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function pluralize(amount, singular, plural = `${singular}s`) {
+  return `${amount} ${amount === 1 ? singular : plural}`;
+}
+
 function buildChestRewards(amount) {
   const rewards = {
     beli: 0,
@@ -87,7 +91,7 @@ function buildChestRewards(amount) {
 
 function buildRewardLines(rewards) {
   const lines = [
-    `<:whitearrow:1532531439445344547> <:SilverCoin:1534757841867374782> Beli ${rewards.beli.toLocaleString('en-US')}`
+    `<:whitearrow:1532531439445344547> <:SilverCoin:1534757841867374782> ${rewards.beli.toLocaleString('en-US')} Beli`
   ];
   const itemDetails = [
     ['meat', '<:Ham:1534995152605548585>', 'Meat'],
@@ -97,7 +101,7 @@ function buildRewardLines(rewards) {
   for (const [field, emoji, name] of itemDetails) {
     if (rewards[field] > 0) {
       lines.push(
-        `<:whitearrow:1532531439445344547> ${emoji} ${name} ${rewards[field]}`
+        `<:whitearrow:1532531439445344547> ${emoji} ${pluralize(rewards[field], name, name)}`
       );
     }
   }
@@ -105,7 +109,7 @@ function buildRewardLines(rewards) {
     const amount = rewards[`clone${rank}`];
     if (amount > 0) {
       lines.push(
-        `<:whitearrow:1532531439445344547> ${rankEmojis[rank]} ${rank} Clone ${amount}`
+        `<:whitearrow:1532531439445344547> ${rankEmojis[rank]} ${pluralize(amount, `${rank} Clone`, `${rank} Clones`)}`
       );
     }
   }
@@ -117,7 +121,7 @@ function buildOpenedEmbed(rewards, amount, user) {
     .setColor(0xFFFFFF)
     .setTitle('Chest opened')
     .setDescription(buildRewardLines(rewards).join('\n'))
-    .setFooter({ text: `${amount} chests opened by ${user.username}` });
+    .setFooter({ text: `${pluralize(amount, 'Chest', 'Chests')} opened by ${user.username}` });
 }
 
 module.exports = {
@@ -177,7 +181,9 @@ module.exports = {
       return reply(interactionOrMessage, 'Your Chest count changed, please try again');
     }
 
-    const openingContent = `Opening **${amount}x ${CHEST_EMOJI} Chest**`;
+    const openingContent =
+      `Opening **${amount}x ${CHEST_EMOJI} ` +
+      `${amount === 1 ? 'Chest' : 'Chests'} <a:loading:1535021695167889429>**`;
     let response;
     if (isSlash(interactionOrMessage)) {
       response = await interactionOrMessage.reply({
@@ -193,7 +199,7 @@ module.exports = {
 
     // Leave the opening message visible briefly before replacing it with the
     // result embed so the chest-opening action is clear to the player.
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     const embed = buildOpenedEmbed(rewards, amount, user);
     if (isSlash(interactionOrMessage)) {
       return interactionOrMessage.editReply({ content: '', embeds: [embed] });

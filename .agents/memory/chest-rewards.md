@@ -4,7 +4,8 @@ description: Chest inventory storage, opening behavior, and reward tables
 ---
 
 Chests are persistent inventory items and are shown first whenever the user has
-one or more. Opening a chest spends it atomically and grants one independent
+one or more. The Basic Items inventory view includes Beli, Chests, Meat, Wine,
+and Beer, while the Clones view contains only Clone ranks. Opening a chest spends it atomically and grants one independent
 250–500 Beli roll, three independent consumable rolls, and three independent
 Clone-rank rolls.
 
