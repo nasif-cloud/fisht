@@ -167,7 +167,7 @@ function createChargeRow(dropId, chargeCount = 0) {
 
 function buildChargePayload(drop) {
   const embed = new EmbedBuilder()
-    .setTitle('A drop is ready')
+    .setTitle('👀 A drop is ready')
     .setDescription(
       'Click this button to charge up the drop. More charges = better card.\n' +
       '-# sends in 1 minute'
@@ -759,7 +759,7 @@ async function handleDropInteraction(interaction) {
   }
 
   await interaction.channel.send({
-    content: `**${interaction.user.username}** claimed **${rankEmojis[claimedDrop.rank] || claimedDrop.rank} ${claimedDrop.cardName}** card first`
+    content: `**${interaction.user.username}** claimed **${rankEmojis[claimedDrop.rank] || claimedDrop.rank} ${claimedDrop.cardName}** first`
   });
   return true;
 }

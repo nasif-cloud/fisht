@@ -81,7 +81,7 @@ function applyPityPull(userData, preview = previewPityPull(userData)) {
 function formatPityLine(rank, userData) {
   const progress = Math.min(getPityValue(userData, rank), PITY_THRESHOLDS[rank]);
   const emoji = rankEmojis[rank] || '';
-  return `${emoji} **${rank} rank** \`${progress}/${PITY_THRESHOLDS[rank]}\` ${buildProgressBar(progress, PITY_THRESHOLDS[rank], 9)}`;
+  return `${emoji} **${rank}** \`${progress}/${PITY_THRESHOLDS[rank]}\` ${buildProgressBar(progress, PITY_THRESHOLDS[rank], 9)}`;
 }
 
 module.exports = {
