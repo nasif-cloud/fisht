@@ -91,7 +91,7 @@ function buildChestRewards(amount) {
 
 function buildRewardLines(rewards) {
   const lines = [
-    `<:whitearrow:1532531439445344547> <:SilverCoin:1534757841867374782> ${rewards.beli.toLocaleString('en-US')} Beli`
+    `<:whitearrow:1532531439445344547> <:SilverCoin:1534757841867374782> Beli **${rewards.beli.toLocaleString('en-US')}**`
   ];
   const itemDetails = [
     ['meat', '<:Ham:1534995152605548585>', 'Meat'],
@@ -101,7 +101,7 @@ function buildRewardLines(rewards) {
   for (const [field, emoji, name] of itemDetails) {
     if (rewards[field] > 0) {
       lines.push(
-        `<:whitearrow:1532531439445344547> ${emoji} ${pluralize(rewards[field], name, name)}`
+        `<:whitearrow:1532531439445344547> ${emoji} **${rewards[field]}x** ${pluralize(rewards[field], name, name)}`
       );
     }
   }
@@ -109,7 +109,7 @@ function buildRewardLines(rewards) {
     const amount = rewards[`clone${rank}`];
     if (amount > 0) {
       lines.push(
-        `<:whitearrow:1532531439445344547> ${rankEmojis[rank]} ${pluralize(amount, `${rank} Clone`, `${rank} Clones`)}`
+        `<:whitearrow:1532531439445344547> ${rankEmojis[rank]} **${amount}x** ${pluralize(amount, `${rank} Clone`, `${rank} Clones`)}`
       );
     }
   }
