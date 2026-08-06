@@ -6,6 +6,7 @@
 - [Shiny filter behavior](shiny-filter-behavior.md) — shiny toggles must narrow the source list and pagination to shiny-owned entries only
 - [Daily quests](daily-quests.md) — quests are per-user random daily assignments with shared progress hooks and grouped reset notifications
 - [Shop inventory](shop-inventory.md) — shop items are data-driven across image slots, slash choices, and atomic purchases
+- [Consumable inventory visibility](consumable-inventory-visibility.md) — hide zero-count items and only allow cooldown consumables while their cooldown is active
 - [Slash rank filters](rank-filter-behavior.md) — rank filters constrain source lists before search, sorting, and pagination; allcards has no shiny filter
 - [Persistent pity system](pity-system.md) — independent S/SS/UR pity counters persist across daily pull resets and preserve higher-tier progress
 - [Player duel combat](duel-combat.md) — timed PvP sessions use saved teams, hidden card choices, role matchups, and speed tiebreaks

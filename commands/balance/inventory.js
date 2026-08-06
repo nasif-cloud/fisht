@@ -26,18 +26,26 @@ module.exports = {
     const user = interactionOrMessage.user || interactionOrMessage.author;
     const userData = await User.findOne({ userId: user.id });
 
-    const itemLines = DISPLAYED_ITEMS.map(item => {
+    // Do not show empty slots. This keeps the inventory focused on items the
+    // player can actually use right now.
+    const itemLines = DISPLAYED_ITEMS
+      .map(item => {
       const amount = Number(userData?.[item.field]) || 0;
-      return `${item.emoji} **${item.name}** (${amount.toLocaleString('en-US')})`;
-    });
+      return amount > 0
+        ? `${item.emoji} **${item.name}** (${amount.toLocaleString('en-US')})`
+        : null;
+      })
+      .filter(Boolean);
 
     const embed = {
       title: `${user.username}'s Inventory`,
-      description: itemLines.join('\n'),
+      description: itemLines.length > 0
+        ? itemLines.join('\n')
+        : 'Your inventory is empty',
       thumbnail: {
         url: user.displayAvatarURL({ extension: 'png', size: 128 })
       },
-      color: 0x8e44ad
+      color: 0xEB0000
     };
 
     if (interactionOrMessage.isChatInputCommand?.()) {
