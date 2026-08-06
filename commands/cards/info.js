@@ -82,8 +82,9 @@ module.exports = {
     }
 
     // --- STEP 3: Set up the mastery tracker ---
-    // currentMastery tracks which version (M1/M2/M3) is being shown right now.
-    // The Previous/Next buttons change this value.
+    // Some cards only have M1 or M1/M2 data. Use the highest mastery block
+    // actually present instead of assuming every card has all three levels.
+    const maxMastery = foundCard.M3 ? 3 : foundCard.M2 ? 2 : 1;
     let currentMastery = 1;
 
     // --- STEP 5: Helper — build the embed for a given mastery level ---
@@ -126,7 +127,7 @@ module.exports = {
         ].join('\n'),
         footer: {
           icon_url: user.displayAvatarURL({ dynamic: true }),
-          text: `Mastery ${masteryLevel}/3`
+          text: `Mastery ${masteryLevel}/${maxMastery}`
         },
         color: visual.color,
         thumbnail: { url: visual.icon },
@@ -135,8 +136,11 @@ module.exports = {
     };
 
     // --- STEP 6: Helper — build the Previous/Next buttons ---
-    // Buttons are disabled when they'd go out of bounds (can't go below M1 or above M3)
+    // A card with only M1 has no navigation controls. Otherwise, disable
+    // Previous/Next at the actual mastery boundaries for this card.
     const generateButtons = (masteryLevel) => {
+      if (maxMastery === 1) return [];
+
       return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('prev_mastery')
@@ -147,7 +151,7 @@ module.exports = {
           .setCustomId('next_mastery')
           .setLabel('Next')
           .setStyle(ButtonStyle.Primary)
-          .setDisabled(masteryLevel === 3)  // Disable "Next" when already on M3
+          .setDisabled(masteryLevel === maxMastery)  // Disable at the final available mastery
       );
     };
 
@@ -155,10 +159,11 @@ module.exports = {
     // fetchReply: true lets us save the sent message so we can attach a button collector
     const initial = await generateEmbed(currentMastery);
     const initialImage = await getCardImagePayload(initial.image.url);
+    const initialButtons = generateButtons(currentMastery);
     const payload = {
       embeds: [{ ...initial, image: { url: initialImage.imageUrl } }],
       files: initialImage.files,
-      components: [generateButtons(currentMastery)],
+      components: initialButtons.length ? [initialButtons] : [],
       fetchReply: true
     };
 
@@ -184,8 +189,12 @@ module.exports = {
       collector.resetTimer();
 
       // Move one mastery level up or down depending on which button was clicked
-      if (interaction.customId === 'next_mastery') currentMastery++;
-      if (interaction.customId === 'prev_mastery') currentMastery--;
+      if (interaction.customId === 'next_mastery') {
+        currentMastery = Math.min(maxMastery, currentMastery + 1);
+      }
+      if (interaction.customId === 'prev_mastery') {
+        currentMastery = Math.max(1, currentMastery - 1);
+      }
 
       // Image processing happens before the single final update.
       await interaction.deferUpdate();
@@ -193,10 +202,11 @@ module.exports = {
       // Update the message with the new mastery's embed and buttons
       const next = await generateEmbed(currentMastery);
       const nextImage = await getCardImagePayload(next.image.url);
+      const nextButtons = generateButtons(currentMastery);
       await interaction.editReply({
         embeds: [{ ...next, image: { url: nextImage.imageUrl } }],
         files: nextImage.files,
-        components: [generateButtons(currentMastery)]
+        components: nextButtons.length ? [nextButtons] : []
       });
     });
 
