@@ -5,7 +5,7 @@ description: Channel drops use persistent teaser and claim states with atomic Mo
 
 Channel drops must remain recoverable across bot restarts and safe when multiple bot instances are online. Persist the channel reservation and drop state in MongoDB; reserve the channel with a conditional update before sending the charge message, transition charging to pending atomically after the charge window, and claim with a conditional pending-status update inside the user-save transaction.
 
-The charge message is sent immediately with one blue charge button and a disabled grey count button. Each user can charge once per drop; the final card/rank is selected only after the one-minute charge window, and the full claim window starts at activation. Charge and claim buttons must be acknowledged before database work to stay within Discord's interaction timeout.
+The charge message is sent immediately with one blue charge button and a disabled grey count button. Each user can charge once per drop; the final card/rank is selected only after the one-minute charge window, and the full claim window starts at activation. Charge and claim buttons must be acknowledged before database work to stay within Discord's interaction timeout. A fresh card-drop embed should omit its footer entirely, because Discord rejects an empty footer string; expiration then explicitly sets `expired`.
 
 **Why:** Scheduler polling, image processing, database latency, and deployments can all occur between Discord messages. In-memory timers or late button acknowledgements can create duplicate drops, shortened claim windows, or failed-looking interactions.
 

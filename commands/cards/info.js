@@ -159,10 +159,16 @@ module.exports = {
     const initial = await generateEmbed(currentMastery);
     const initialImage = await getCardImagePayload(initial.image.url);
     const initialButtons = generateButtons(currentMastery);
+    const componentRows = buttons =>
+      Array.isArray(buttons)
+        ? (buttons.length ? [buttons] : [])
+        : (buttons ? [buttons] : []);
     const payload = {
       embeds: [{ ...initial, image: { url: initialImage.imageUrl } }],
       files: initialImage.files,
-      components: initialButtons ? [initialButtons] : [],
+      // generateButtons returns an empty array for one-mastery cards. Do not
+      // send [[],] to Discord because it is not a valid component row.
+      components: componentRows(initialButtons),
       fetchReply: true
     };
 
@@ -205,7 +211,7 @@ module.exports = {
       await interaction.editReply({
         embeds: [{ ...next, image: { url: nextImage.imageUrl } }],
         files: nextImage.files,
-        components: nextButtons ? [nextButtons] : []
+        components: componentRows(nextButtons)
       });
     });
 

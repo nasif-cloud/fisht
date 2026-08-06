@@ -180,7 +180,7 @@ function buildChargePayload(drop) {
   };
 }
 
-async function buildDropPayload(drop, card, rank, stats, { claimable = true } = {}) {
+async function buildDropPayload(drop, card, rank, stats) {
   const visual = rankConfig[rank]?.M1 || rankConfig.D.M1;
   const title = drop.isShiny ? `${SHINY_EMOJI} ${card.name}` : card.name;
   const files = [];
@@ -220,30 +220,85 @@ async function buildDropPayload(drop, card, rank, stats, { claimable = true } = 
 
   const embed = new EmbedBuilder()
     .setColor(visual.color)
-    .setTitle(claimable ? 'A card has dropped!' : 'A card drop is incoming!')
+    // Keep the card-drop embed identical to the normal pull embed. The only
+    // difference is that its footer intentionally has no pull counter.
+    .setTitle(title)
     .setDescription(
-      `${title}\n\n` +
-      (drop.title ? `${drop.title}\n\n` : '') + 
-      (claimable
-        ? `**Health:** ${displayedStats.health}\n` +
-          `**Power:** ${displayedStats.power}\n` +
-          `**Speed:** ${displayedStats.speed}\n\n` +
-          'First person to press **Claim** receives this M1 card'
-        : 'The claim button will appear here in 1 minute')
+      `${card.title}\n\n` +
+      `**Health:** ${displayedStats.health}\n` +
+      `**Power:** ${displayedStats.power}\n` +
+      `**Speed:** ${displayedStats.speed}`
     )
     .setThumbnail(iconUrl)
-    .setImage(imageUrl)
-    .setFooter({
-      text: claimable
-        ? 'Card drops are M1 only • Claim window: 1 minute'
-        : 'Card drops are M1 only • Claim unlocks in 1 minute'
-    });
+    .setImage(imageUrl);
 
   return {
     embeds: [embed],
     files,
-    components: claimable ? [createClaimRow(drop._id.toString())] : []
+    components: [createClaimRow(drop._id.toString())]
   };
+}
+
+// Discord removes button components only when the message is edited. For
+// attachment-backed shiny embeds, re-upload the existing attachments while
+// updating the footer so the image stays inside the embed.
+async function expireDropMessage(channel, messageId) {
+  if (!channel || !messageId || !channel.messages?.fetch) return;
+
+  const message = await channel.messages.fetch(messageId).catch(() => null);
+  if (!message) return;
+
+  const latestEmbed = message.embeds[0];
+  if (!latestEmbed) {
+    await message.edit({ components: [] }).catch(() => {});
+    return;
+  }
+
+  const expiredEmbed = EmbedBuilder.from(latestEmbed)
+    .setFooter({ text: 'expired' });
+  const files = [];
+  const attachmentByUrl = new Map();
+
+  for (const attachment of message.attachments.values()) {
+    attachmentByUrl.set(attachment.url, attachment);
+  }
+
+  const preserveAttachment = async (url, setUrl) => {
+    if (!url || !url.includes('/attachments/')) return;
+    const attachment = [...attachmentByUrl.values()].find(item =>
+      url.includes(`/${item.name}`)
+    );
+    if (!attachment) return;
+
+    try {
+      const response = await fetch(attachment.url);
+      if (!response.ok) return;
+      const name = attachment.name || 'drop_asset';
+      files.push(new AttachmentBuilder(
+        Buffer.from(await response.arrayBuffer()),
+        { name }
+      ));
+      setUrl(`attachment://${name}`);
+    } catch {
+      // If Discord's CDN is temporarily unavailable, still remove buttons.
+    }
+  };
+
+  await preserveAttachment(
+    latestEmbed.image?.url,
+    url => expiredEmbed.setImage(url)
+  );
+  await preserveAttachment(
+    latestEmbed.thumbnail?.url,
+    url => expiredEmbed.setThumbnail(url)
+  );
+
+  const editPayload = { embeds: [expiredEmbed], components: [] };
+  if (files.length) editPayload.files = files;
+  await message.edit(editPayload).catch(async () => {
+    // The fallback guarantees that expired buttons do not remain active.
+    await message.edit({ components: [] }).catch(() => {});
+  });
 }
 
 async function clearPendingDrop(config, drop) {
@@ -254,7 +309,7 @@ async function clearPendingDrop(config, drop) {
   );
 }
 
-async function getPendingDrop(config) {
+async function getPendingDrop(config, channelOrClient = null) {
   if (!config.pendingDropId) return null;
   const drop = await CardDrop.findById(config.pendingDropId);
   if (!drop) {
@@ -278,6 +333,14 @@ async function getPendingDrop(config) {
   }
 
   if (['charging', 'teaser', 'pending'].includes(drop.status)) {
+    let channel = channelOrClient;
+    if (!channel?.messages?.fetch && channelOrClient?.channels?.fetch) {
+      channel = await channelOrClient.channels.fetch(config.channelId).catch(() => null);
+    }
+    await expireDropMessage(
+      channel,
+      drop.messageId || drop.teaserMessageId
+    );
     await CardDrop.updateOne(
       { _id: drop._id, status: { $in: ['charging', 'teaser', 'pending'] } },
       { $set: { status: 'expired' } }
@@ -300,7 +363,7 @@ async function sendDropToChannel(channel, options = {}) {
     });
     if (!config) return null;
 
-    const pending = await getPendingDrop(config);
+    const pending = await getPendingDrop(config, channel);
     if (pending && !options.force) return null;
     if (pending && options.force) {
       await CardDrop.updateOne(
@@ -409,12 +472,16 @@ async function activateDrop(channel, drop) {
   );
   if (!claimedActivation) return null;
 
-  return publishClaimableDrop(channel, claimedActivation, card);
+  try {
+    return await publishClaimableDrop(channel, claimedActivation, card);
+  } catch (error) {
+    await expireDropMessage(channel, drop.teaserMessageId);
+    throw error;
+  }
 }
 
-// Publishes the claimable state after the teaser. If the process restarted
-// after the database transition, the scheduler calls this with the same
-// persisted record and safely reconstructs the claim message.
+// Publishes the claimable card as a new message. The original charge message
+// remains in the channel and is separately marked expired.
 async function publishClaimableDrop(channel, drop, card = null) {
   const resolvedCard = card || cards.find(candidate => candidate.name === drop.cardName);
   if (!resolvedCard) throw new Error(`Drop card data is missing for ${drop.cardName}`);
@@ -428,26 +495,15 @@ async function publishClaimableDrop(channel, drop, card = null) {
         health: drop.health,
         power: drop.power,
         speed: drop.speed
-      },
-      { claimable: true }
-    );
-    let sent = null;
-
-    // Prefer editing the teaser so a restart does not create a duplicate
-    // visible drop. The fallback send handles deleted teasers or channels
-    // where message history is unavailable.
-    if (drop.teaserMessageId && channel.messages?.fetch) {
-      const teaser = await channel.messages.fetch(drop.teaserMessageId).catch(() => null);
-      if (teaser) {
-        sent = await teaser.edit({ ...payload, attachments: [] });
       }
-    }
-    if (!sent) sent = await channel.send(payload);
+    );
+    const sent = await channel.send(payload);
 
     await CardDrop.updateOne(
       { _id: drop._id, status: 'pending' },
       { $set: { messageId: sent.id } }
     );
+    await expireDropMessage(channel, drop.teaserMessageId);
     return sent;
   } catch (error) {
     await CardDrop.updateOne(
@@ -534,7 +590,7 @@ async function recordChannelActivity(message) {
 
 async function evaluateChannel(config, client) {
   const now = new Date();
-  const pending = await getPendingDrop(config);
+  const pending = await getPendingDrop(config, client);
   if (pending?.status === 'charging') {
     if (pending.chargeEndsAt > now) return;
     const channel = await client.channels.fetch(config.channelId).catch(() => null);
