@@ -209,7 +209,8 @@ module.exports = {
           team: opponent.team
         },
         selections: {},
-        latestLog: ''
+        // Show the timeout rule before the first card choice is made.
+        latestLog: 'Do nothing to forfeit'
       };
       const renderOptions = {
         botPlayerId: state.target.id,
@@ -327,7 +328,16 @@ module.exports = {
           roundSettled = true;
           await selectionQueue.catch(() => {});
 
-          const result = resolveRound(state);
+          // A missing player selection means the player forfeited this turn.
+          // The AI still resolves its selected attack, but the human gets no
+          // attack of their own for this round.
+          const playerForfeited = reason !== 'selected' &&
+            getPlayerSelection(state) === undefined;
+          const result = resolveRound(state, {
+            idleMessage: playerForfeited
+              ? `◇ **${state.challenger.username}** forfeited this turn`
+              : null
+          });
           if (!result.ended && reason !== 'selected') {
             state.roundLogs.push('◇ The timer expired — the battle continues');
           }
