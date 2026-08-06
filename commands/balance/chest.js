@@ -4,7 +4,7 @@
 // Each Chest gives Beli, three consumable-item rolls, and three Clone-rank
 // rolls. Clones are stored as items for now and have no other behavior.
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const User = require('../../models/user');
 const { CLONE_RANKS, INVENTORY_ITEMS } = require('../../data/inventoryItems');
 const { rankEmojis } = require('../../data/cards');
@@ -126,16 +126,6 @@ function buildOpenedEmbed(rewards, amount, user) {
 }
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('chest')
-    .setDescription('Open your Chests')
-    .addStringOption(option =>
-      option
-        .setName('amount')
-        .setDescription('How many Chests to open, or all')
-        .setRequired(false)
-    ),
-
   name: 'chest',
 
   async execute(interactionOrMessage) {

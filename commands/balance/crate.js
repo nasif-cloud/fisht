@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────
 // Crates award Beli and Gems. Each Crate gets its own independent roll.
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const User = require('../../models/user');
 const { INVENTORY_ITEMS } = require('../../data/inventoryItems');
 
@@ -67,16 +67,6 @@ function buildOpenedEmbed(rewards, amount, user) {
 }
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('crate')
-    .setDescription('Open your Crates')
-    .addStringOption(option =>
-      option
-        .setName('amount')
-        .setDescription('How many Crates to open, or all')
-        .setRequired(false)
-    ),
-
   name: 'crate',
 
   async execute(interactionOrMessage) {
