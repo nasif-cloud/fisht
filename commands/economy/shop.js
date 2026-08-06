@@ -1,8 +1,8 @@
 const {
   ActionRowBuilder,
+  AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder
 } = require('discord.js');
@@ -14,14 +14,19 @@ const SHOP_PAGES = [
 
 const SHOP_PAGE_COUNT = SHOP_PAGES.length;
 
-// Build the shop embed and navigation row for the current page.
-function buildShopPayload(page, expired = false) {
-  const embed = new EmbedBuilder().setImage(SHOP_PAGES[page]);
-
-  if (expired) {
-    embed.setFooter({ text: 'expired' });
+// Download the current page so Discord receives it as a normal image
+// attachment instead of rendering it inside an embed.
+async function getShopImage(page) {
+  const response = await fetch(SHOP_PAGES[page]);
+  if (!response.ok) {
+    throw new Error(`Shop image request failed with status ${response.status}`);
   }
 
+  return Buffer.from(await response.arrayBuffer());
+}
+
+// Build the plain image message and its navigation row.
+function buildShopPayload(page, imageBuffer, expired = false) {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('shop_previous')
@@ -36,7 +41,11 @@ function buildShopPayload(page, expired = false) {
   );
 
   return {
-    embeds: [embed],
+    files: [
+      new AttachmentBuilder(imageBuffer, {
+        name: `shop-page-${page + 1}.png`
+      })
+    ],
     components: expired ? [] : [row]
   };
 }
@@ -54,9 +63,10 @@ module.exports = {
     const isSlash = interactionOrMessage.isChatInputCommand?.();
     let page = 0;
     let response;
+    const imageBuffer = await getShopImage(page);
 
     const payload = {
-      ...buildShopPayload(page),
+      ...buildShopPayload(page, imageBuffer),
       ...(isSlash ? { fetchReply: true } : {})
     };
 
@@ -87,12 +97,13 @@ module.exports = {
         return;
       }
 
-      await interaction.update(buildShopPayload(page));
+      const nextImageBuffer = await getShopImage(page);
+      await interaction.update(buildShopPayload(page, nextImageBuffer));
     });
 
-    // Remove the controls when the shop session expires and mark the embed.
+    // Remove the controls when the image navigation session expires.
     collector.on('end', () => {
-      response.edit(buildShopPayload(page, true)).catch(() => {});
+      response.edit({ components: [] }).catch(() => {});
     });
   }
 };
