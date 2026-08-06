@@ -16,3 +16,4 @@
 - [Attachment embed preservation](attachment-embed-preservation.md) — expiry edits must remove controls only when an embed image comes from a Discord attachment
 - [Portable npm lockfiles](portable-npm-lockfiles.md) — deployment lockfiles must use public registry tarball URLs, not Replit package-firewall hosts
 - [Card image command latency](card-image-command-latency.md) — send original card URLs first; normalize to 573×800 asynchronously and reuse the shared cache
+- [GitHub sync state](github-sync-state.md) — verify ancestry and working-tree state when the managed pull reports a conflict
