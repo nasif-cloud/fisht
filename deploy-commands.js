@@ -1,7 +1,8 @@
 const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
-// Make sure your config file has TOKEN, CLIENT_ID, and optionally GUILD_ID
+// Make sure your config file has TOKEN and CLIENT_ID.
+// GUILD_ID is only needed when using DEPLOY_SCOPE=guild.
 require('dotenv').config();
 
 const commands = [];
@@ -30,29 +31,36 @@ for (const folder of commandFolders) {
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
-// Deploy your commands!
+// Global commands work in every server where the bot is installed. Discord can
+// take up to an hour to show global command changes, so use guild scope while
+// testing a command that needs to appear immediately.
 (async () => {
   try {
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-    // Clear global commands first. This removes stale commands accidentally
-    // deployed by another service; global command deletion can take time to
-    // disappear from Discord everywhere.
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: [] }
-    );
-    console.log('Cleared global application (/) commands.');
+    const deployScope = (process.env.DEPLOY_SCOPE || 'global').toLowerCase();
+    let route;
 
-    // Clear the guild commands too, then register only this project commands.
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: [] }
-    );
-    console.log('Cleared guild application (/) commands.');
+    if (deployScope === 'guild') {
+      if (!process.env.GUILD_ID) {
+        throw new Error('DEPLOY_SCOPE=guild requires GUILD_ID');
+      }
+      route = Routes.applicationGuildCommands(
+        process.env.CLIENT_ID,
+        process.env.GUILD_ID
+      );
+      console.log(`Deploying commands to guild ${process.env.GUILD_ID}`);
+    } else if (deployScope === 'global') {
+      route = Routes.applicationCommands(process.env.CLIENT_ID);
+      console.log('Deploying commands globally to every server with the bot');
+    } else {
+      throw new Error(`Unknown DEPLOY_SCOPE "${deployScope}". Use "global" or "guild".`);
+    }
 
+    // Replacing the complete command set in one request updates existing
+    // commands and adds new ones without repeated delete/create operations.
     const data = await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      route,
       { body: commands },
     );
 

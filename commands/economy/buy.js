@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const User = require('../../models/user');
 const shopItems = require('../../data/shop');
+const { rollCloneRewards } = require('../../data/cloneRewards');
+const { rankEmojis } = require('../../data/cards');
 
 const SUCCESS_REACTION = '<:Success:1533154745731256531>';
 
@@ -38,6 +40,26 @@ function getPrefixArguments(message) {
     itemQuery: (hasAmount ? itemAndAmount.slice(0, -1) : itemAndAmount).join(' '),
     amountText: hasAmount ? lastPart : undefined
   };
+}
+
+function buildRandomCloneLines(rewards) {
+  const lines = [];
+  let remaining = Object.values(rewards).reduce((total, amount) => total + amount, 0);
+  const maxDisplayed = 75;
+
+  for (const [rank, amount] of Object.entries(rewards)) {
+    for (let index = 0; index < amount && lines.length < maxDisplayed; index += 1) {
+      lines.push(`• ${rankEmojis[rank] || rank} **${rank} Clone**`);
+      remaining -= 1;
+    }
+    if (lines.length >= maxDisplayed) break;
+  }
+
+  if (remaining > 0) {
+    lines.push(`• ... and **${remaining}** more Random Clones`);
+  }
+
+  return lines.join('\n');
 }
 
 function slashItemQuery(interaction) {
@@ -100,6 +122,43 @@ module.exports = {
       return isSlash
         ? interactionOrMessage.reply({ content, flags: 64 })
         : interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
+    }
+
+    if (item.type === 'random_clone') {
+      const cloneRewards = rollCloneRewards(amount);
+      const cloneIncrements = Object.fromEntries(
+        Object.entries(cloneRewards).map(([rank, count]) => [`clone${rank}`, count])
+      );
+
+      // Deduct Beli and grant every rolled Clone rank in one atomic update.
+      const clonePurchaseResult = await User.collection.updateOne(
+        { userId: user.id, balance: { $gte: totalCost } },
+        { $inc: { balance: -totalCost, ...cloneIncrements } }
+      );
+
+      if (clonePurchaseResult.matchedCount !== 1) {
+        const currentUser = await User.findOne({ userId: user.id });
+        const balance = Number(currentUser?.balance) || 0;
+        const content =
+          `You need **${formatCost(totalCost)}** <:SilverCoin:1534757841867374782> Berries, ` +
+          `but you only have **${formatCost(balance)}**`;
+        return isSlash
+          ? interactionOrMessage.reply({ content, flags: 64 })
+          : interactionOrMessage.reply({ content, allowedMentions: { repliedUser: false } });
+      }
+
+      const content =
+        `You bought **${amount}x Random Clone${amount === 1 ? '' : 's'}** for ` +
+        `**${formatCost(totalCost)}** <:SilverCoin:1534757841867374782> Berries\n` +
+        buildRandomCloneLines(cloneRewards);
+
+      if (isSlash) {
+        return interactionOrMessage.reply({ content, flags: 64 });
+      }
+      return interactionOrMessage.reply({
+        content,
+        allowedMentions: { repliedUser: false }
+      });
     }
 
     // Use the native collection for this mutation. The User schema's

@@ -36,6 +36,7 @@ const {
   sendLevelUpNotifications,
   formatXpReward
 } = require('../../utils/levels');
+const { tryAwardCrate } = require('../../utils/crateRewards');
 const { updateQuestProgress } = require('../../utils/quests');
 
 // ─────────────────────────────────────────────
@@ -341,10 +342,19 @@ module.exports = {
             xpResult = addXp(userData, 10);
           }
         }
+        let crateAwarded = false;
+        if (userData && reward > 0) {
+          crateAwarded = tryAwardCrate(userData);
+        }
         if (userData && xpResult) {
           resultDesc += `\n${formatXpReward(xpResult)}`;
-          await userData.save();
         } else if (userData && reward > 0) {
+          // Keep the save below for the Beli-only reward path.
+        }
+        if (crateAwarded) {
+          resultDesc += `\n<:whitearrow:1532531439445344547> You received **1x** <:Crate:1534758387621957804> Crate`;
+        }
+        if (userData && (xpResult || reward > 0 || crateAwarded)) {
           await userData.save();
         }
 

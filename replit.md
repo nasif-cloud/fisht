@@ -14,7 +14,7 @@ Set these in the Replit Secrets panel before starting:
 |---|---|
 | `DISCORD_TOKEN` | Bot token from the Discord Developer Portal |
 | `CLIENT_ID` | Application/client ID from the Developer Portal |
-| `GUILD_ID` | Server ID to register slash commands to (for instant testing) |
+| `GUILD_ID` | Server ID used only when `DEPLOY_SCOPE=guild` |
 | `MONGODB_URI` | MongoDB Atlas connection string |
 
 ## Deploying slash commands
@@ -25,7 +25,19 @@ Run this once after adding or changing commands:
 node deploy-commands.js
 ```
 
-This registers slash commands to the server in `GUILD_ID`. To register globally (takes up to an hour), edit `deploy-commands.js` and switch to Option B.
+By default, this registers slash commands globally so they appear in every server where the bot is installed. Global updates can take up to an hour to appear.
+
+For instant testing in one server, run:
+
+```
+DEPLOY_SCOPE=guild node deploy-commands.js
+```
+
+That uses the server ID in `GUILD_ID`. Return to global deployment with:
+
+```
+node deploy-commands.js
+```
 
 ## Project structure
 

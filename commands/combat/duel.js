@@ -247,7 +247,14 @@ function buildBlankSpace() {
   };
 }
 
-function buildButtonRow(duelId, playerId, team, selected, commandPrefix = 'duel') {
+function buildButtonRow(
+  duelId,
+  playerId,
+  team,
+  selected,
+  commandPrefix = 'duel',
+  buttonsDisabled = false
+) {
   return {
     type: 1,
     components: team.map((card, index) => ({
@@ -258,13 +265,14 @@ function buildButtonRow(duelId, playerId, team, selected, commandPrefix = 'duel'
       // before the player chooses a card
       emoji: ROLE_BUTTON_EMOJIS[card.role],
       label: card.name.slice(0, 80),
-      disabled: selected !== undefined || isKnockedOut(card)
+      disabled: buttonsDisabled || selected !== undefined || isKnockedOut(card)
     }))
   };
 }
 
 function buildPlayerComponents(duelId, player, selected, barSegments, options = {}) {
   const components = [];
+  const buttonsDisabled = options.buttonsDisabled === true;
 
   // A type-9 section is used only when the avatar accessory exists.
   // This keeps the username and avatar together without putting images
@@ -299,7 +307,8 @@ function buildPlayerComponents(duelId, player, selected, barSegments, options = 
         player.id,
         player.team,
         selected,
-        options.commandPrefix || 'duel'
+        options.commandPrefix || 'duel',
+        buttonsDisabled
       )
     );
   }
@@ -325,7 +334,10 @@ function getDisplayableTextLength(component) {
 
 function buildBattleComponents(state, logText, barSegments = 5, options = {}) {
   const playerOptions = player => ({
-    showButtons: player.id !== options.botPlayerId,
+    // AI battles show the bot's row for a consistent layout, but those
+    // buttons are permanently disabled and cannot be selected.
+    showButtons: true,
+    buttonsDisabled: player.id === options.botPlayerId,
     commandPrefix: options.commandPrefix || 'duel'
   });
   const players = options.topPlayerId === state.target.id
