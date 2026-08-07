@@ -20,6 +20,8 @@ const {
 } = require('../../utils/duel');
 const { getLastDailyReset, updateQuestProgress } = require('../../utils/quests');
 const { addXp, getLevelProgress } = require('../../utils/levels');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 const ACCEPT_TIMEOUT_MS = 60000;
 const ROUND_TIMEOUT_MS = 30000;
@@ -627,7 +629,9 @@ module.exports = {
       time: ACCEPT_TIMEOUT_MS
     });
 
-    requestCollector.on('collect', async componentInteraction => {
+        requestCollector.on('collect', async componentInteraction => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(componentInteraction.id))) return;
       if (componentInteraction.user.id !== target.id) {
         return componentInteraction.reply({
           content: 'Only the challenged player can respond to this duel',
@@ -717,7 +721,9 @@ module.exports = {
         // being acknowledged.
         let selectionQueue = Promise.resolve();
 
-        roundCollector.on('collect', pickInteraction => {
+        roundCollector.on('collect', async pickInteraction => {
+          if (!isLeaderNow()) return;
+          if (!(await claimInteractionLock(pickInteraction.id))) return;
           selectionQueue = selectionQueue.then(async () => {
             if (roundSettled) return;
 

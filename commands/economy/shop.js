@@ -6,6 +6,8 @@ const {
   MessageFlags,
   SlashCommandBuilder
 } = require('discord.js');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 const SHOP_PAGES = [
   'https://i.imgur.com/cZ9sTGt.png',
@@ -80,6 +82,10 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ time: 300000 });
 
     collector.on('collect', async interaction => {
+      // Only the newest/main deploy may handle this click.
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
+
       if (interaction.user.id !== user.id) {
         return interaction.reply({
           content: `These aren't yours`,

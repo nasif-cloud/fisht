@@ -24,6 +24,8 @@ const {
   getCardImagePayload,
   getNormalizedBuffer
 } = require('../../utils/cardImage');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 // ─── EMOJI CONSTANTS ───
 // SHINY_EMOJI appears before the card name when the card is shiny.
@@ -237,6 +239,8 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ time: 60000 });
 
     collector.on('collect', async (interaction) => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
       // Only the person who ran the command can click the button
       if (interaction.user.id !== user.id) {
         return interaction.reply({ content: `This isn't yours`, flags: 64 });

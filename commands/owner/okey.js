@@ -1,7 +1,9 @@
 // ─────────────────────────────────────────────
-// OGIVE — owner item grant
+// OKEY — owner raid key grant
 // ─────────────────────────────────────────────
-// Usage: op ogive @user [beli|meat|wine|beer|chest|crate|gem|clone rank] [amount]
+// Usage: op okey @user [silver|iron] [amount]
+// Lets the owner top up a player's Silver or Iron keys directly. Golden keys
+// are earned through the raid shop exchange, so they are not grantable here.
 
 const User = require('../../models/user');
 const { findInventoryItem } = require('../../data/inventoryItems');
@@ -9,28 +11,39 @@ const { findInventoryItem } = require('../../data/inventoryItems');
 const OWNER_ID = '1257718161298690119';
 const SUCCESS_REACTION = '<:Success:1533154745731256531>';
 
-function getTarget(message, args) {
-  return message.mentions.users.first() || (args[0] ? { id: args[0] } : null);
+// Only these two keys can be granted — they are the ones spent in the raid shop.
+const GRANTABLE_FIELDS = new Set(['silverKeys', 'ironKeys']);
+
+function getTarget(args) {
+  // A mention is the most common input (op okey @user silver 5).
+  const mentionMatch = args[0]?.match(/^<@!?(\d+)>$/);
+  if (mentionMatch) return { id: mentionMatch[1] };
+
+  // Otherwise allow a raw user ID as the first argument.
+  const raw = args[0] || '';
+  if (/^\d{17,20}$/.test(raw)) return { id: raw };
+  return null;
 }
 
-function getItemAndAmount(message, args) {
-  const targetWasMentioned = message.mentions.users.size > 0;
-  const itemIndex = targetWasMentioned ? 1 : 1;
-  const amountText = args[itemIndex + 1];
+function getItemAndAmount(args) {
+  // When the first arg was a mention, the item is args[1], else args[1].
+  const isMention = /^<@!?\d+>$/.test(args[0] || '');
+  const item = findInventoryItem(args[isMention ? 1 : 1]);
+  const amountText = args[isMention ? 2 : 2];
   return {
-    item: findInventoryItem(args[itemIndex]),
+    item,
     amount: amountText === undefined ? 1 : Number(amountText)
   };
 }
 
 module.exports = {
-  name: 'ogive',
+  name: 'okey',
 
   async execute(message, args) {
     if (message.author.id !== OWNER_ID) return;
 
-    const target = getTarget(message, args);
-    const { item, amount } = getItemAndAmount(message, args);
+    const target = getTarget(args);
+    const { item, amount } = getItemAndAmount(args);
 
     if (!target) {
       return message.reply({
@@ -38,17 +51,9 @@ module.exports = {
         allowedMentions: { repliedUser: false }
       });
     }
-    if (!item) {
+    if (!item || !GRANTABLE_FIELDS.has(item.field)) {
       return message.reply({
-        content: 'Please choose an item: `beli`, `meat`, `wine`, `beer`, `chest`, `crate`, `gem`, `silver`, `iron`, or a Clone rank like `D`.',
-        allowedMentions: { repliedUser: false }
-      });
-    }
-    // Golden keys are stored as a list (one per raid), not a plain count, so
-    // they cannot be granted through this numeric command. Use /raid instead.
-    if (item.field === 'goldKeys') {
-      return message.reply({
-        content: 'You cannot grant Golden keys with this command — they are earned by exchanging keys in the raid shop.',
+        content: 'Please choose a grantable key: `silver` or `iron`.',
         allowedMentions: { repliedUser: false }
       });
     }
@@ -62,7 +67,7 @@ module.exports = {
     const userData = await User.findOne({ userId: target.id });
     if (!userData) {
       return message.reply({
-        content: `${target.username || target.id} has no account yet.`,
+        content: `${target.id} has no account yet.`,
         allowedMentions: { repliedUser: false }
       });
     }

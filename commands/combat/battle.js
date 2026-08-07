@@ -25,6 +25,8 @@ const {
 } = require('../../utils/levels');
 const { getLevelProgress } = require('../../utils/levels');
 const { tryAwardCrate } = require('../../utils/crateRewards');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 const ROUND_TIMEOUT_MS = 30_000;
 const BATTLE_COOLDOWN_MS = 30 * 60 * 1000;
@@ -296,7 +298,9 @@ module.exports = {
         let roundSettled = false;
         let selectionQueue = Promise.resolve();
 
-        roundCollector.on('collect', pickInteraction => {
+        roundCollector.on('collect', async pickInteraction => {
+          if (!isLeaderNow()) return;
+          if (!(await claimInteractionLock(pickInteraction.id))) return;
           selectionQueue = selectionQueue.then(async () => {
             if (roundSettled || pickInteraction.user.id !== player.id) {
               if (pickInteraction.user.id !== player.id) {

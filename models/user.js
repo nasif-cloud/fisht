@@ -30,6 +30,13 @@ const userSchema = new mongoose.Schema({
   beer: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   chests: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   crates: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+
+  // Raid keys. Silver and Iron are simple counts found in Chests and spent to
+  // buy Golden raid keys. Golden keys are per-raid, so they are a list instead
+  // of a single number. Each entry: { raidId, name, rank, cardName, mastery }.
+  silverKeys: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  ironKeys: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
+  goldKeys: [{ raidId: { type: String, required: true } }],
   gems: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   cloneD: { type: Number, default: 0, min: 0, set: nonNegativeNumber },
   cloneC: { type: Number, default: 0, min: 0, set: nonNegativeNumber },

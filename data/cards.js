@@ -4545,119 +4545,56 @@ const cards = [
     image: 'https://i.imgur.com/hsieUtj.png', 
 }
   },
+  /*
   {
-    name: '',
+    name: 'Island Eater',
     aliases: ['',],
 
-    title: '',
-    rank: '',
-    health: '=',
+    title: 'Grand Line',
+    rank: 'C',
+    health: '+',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/mvgYc0f.png', 
 
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
   },
   {
-    name: '',
+    name: 'Yuki',
     aliases: ['',],
 
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
+    title: 'Grand Line',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/b2b9FcN.png', 
 },
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
   {
-    name: '',
+    name: 'Bentham',
     aliases: ['',],
 
-    title: '',
-    rank: '',
+    title: 'Bentham of the Wild',
+    rank: 'A',
     health: '=',
     power: '=',
     speed: '=',
     image: '', 
 
     M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
+      title: 'Prisonner of the Great Prison',
+    rank: 'A',
+    health: '+',
+    power: '+',
+    speed: '+',
     image: '', 
 },
 
     M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
+    title: 'Queen of Newkama Island',
+    rank: 'A',
+    health: '++',
+    power: '++',
+    speed: '++ ',
     image: '', 
 }
   },

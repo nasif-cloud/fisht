@@ -29,6 +29,8 @@ const {
 } = require('../../utils/levels');
 const { tryAwardCrate } = require('../../utils/crateRewards');
 const { updateQuestProgress } = require('../../utils/quests');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -156,6 +158,8 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ time: GAME_TIME_MS });
 
     collector.on('collect', async (interaction) => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
       // Only the command runner can press buttons
       if (interaction.user.id !== user.id) {
         return interaction.reply({ content: "This isn't yours", flags: 64 });

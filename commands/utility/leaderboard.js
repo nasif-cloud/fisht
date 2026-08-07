@@ -20,6 +20,8 @@ const {
 const { computeBoosts } = require('../../utils/boosts');
 const { getLevelProgress } = require('../../utils/levels');
 const { updateQuestProgress } = require('../../utils/quests');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 const PAGE_SIZE = 10;
 const MAX_ENTRIES = 100;
@@ -306,6 +308,8 @@ module.exports = {
     });
 
     collector.on('collect', async componentInteraction => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(componentInteraction.id))) return;
       if (componentInteraction.user.id !== user.id) {
         return componentInteraction.reply({
           content: `These aren't yours`,

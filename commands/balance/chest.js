@@ -11,10 +11,15 @@ const { rankEmojis } = require('../../data/cards');
 const { CHEST_CLONE_ROLLS } = require('../../data/cloneRewards');
 
 const CHEST_EMOJI = INVENTORY_ITEMS.chest.emoji;
+// Each Chest rolls three items. The weights below total 100%:
+//   Meat 39% · Wine 49% · Beer 9% · Silver Key 2.5% · Iron Key 0.5%
+// Silver and Iron keys are what players spend to buy Golden raid keys.
 const CONSUMABLE_ROLLS = [
-  { field: 'meat', name: 'Meat', emoji: '<:Ham:1534995152605548585>', weight: 40 },
-  { field: 'wine', name: 'Wine', emoji: '<:Wine:1534994973835923706>', weight: 50 },
-  { field: 'beer', name: 'Beer', emoji: '<:Beer:1534994802385485896>', weight: 10 }
+  { field: 'meat', name: 'Meat', emoji: '<:Ham:1534995152605548585>', weight: 39 },
+  { field: 'wine', name: 'Wine', emoji: '<:Wine:1534994973835923706>', weight: 49 },
+  { field: 'beer', name: 'Beer', emoji: '<:Beer:1534994802385485896>', weight: 9 },
+  { field: 'silverKeys', name: 'Silver Key', emoji: '<:SilverKey:1534757738645553233>', weight: 2.5 },
+  { field: 'ironKeys', name: 'Iron Key', emoji: '<:IronKey:1534757764398579722>', weight: 0.5 }
 ];
 
 function isSlash(interactionOrMessage) {
@@ -62,7 +67,9 @@ function buildChestRewards(amount) {
     beli: 0,
     meat: 0,
     wine: 0,
-    beer: 0
+    beer: 0,
+    silverKeys: 0,
+    ironKeys: 0
   };
   const cloneRewards = Object.fromEntries(
     CLONE_RANKS.map(rank => [`clone${rank}`, 0])
@@ -90,7 +97,9 @@ function buildRewardLines(rewards) {
   const itemDetails = [
     ['meat', '<:Ham:1534995152605548585>', 'Meat'],
     ['wine', '<:Wine:1534994973835923706>', 'Wine'],
-    ['beer', '<:Beer:1534994802385485896>', 'Beer']
+    ['beer', '<:Beer:1534994802385485896>', 'Beer'],
+    ['silverKeys', '<:SilverKey:1534757738645553233>', 'Silver Key'],
+    ['ironKeys', '<:IronKey:1534757764398579722>', 'Iron Key']
   ];
   for (const [field, emoji, name] of itemDetails) {
     if (rewards[field] > 0) {
@@ -149,7 +158,9 @@ module.exports = {
         balance: rewards.beli,
         meat: rewards.meat,
         wine: rewards.wine,
-        beer: rewards.beer
+        beer: rewards.beer,
+        silverKeys: rewards.silverKeys,
+        ironKeys: rewards.ironKeys
       }
     };
     for (const rank of CLONE_RANKS) {

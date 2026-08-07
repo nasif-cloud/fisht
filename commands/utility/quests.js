@@ -19,6 +19,8 @@ const {
   addXp,
   sendLevelUpNotifications
 } = require('../../utils/levels');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 const SESSION_TIME_MS = 300000;
 
@@ -137,6 +139,8 @@ module.exports = {
     });
 
     collector.on('collect', async interaction => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
       if (interaction.user.id !== user.id) {
         return interaction.reply(getReplyPayload(`These aren't your quests.`));
       }

@@ -7,6 +7,8 @@ const { getCardAutocompleteChoices } = require('../../utils/cardAutocomplete');
 const User = require('../../models/user');
 const { getCardImagePayload } = require('../../utils/cardImage');
 const { updateQuestProgress } = require('../../utils/quests');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 
 module.exports = {
@@ -184,6 +186,8 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ time: 60000 });
 
     collector.on('collect', async (interaction) => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
       // Only the person who ran the command can click the buttons
       if (interaction.user.id !== user.id) {
         return interaction.reply({ content: `This isn't yours`, flags: 64 });

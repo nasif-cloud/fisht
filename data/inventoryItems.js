@@ -40,6 +40,30 @@ const INVENTORY_ITEMS = {
     aliases: ['chests'],
     emoji: '<:Chest:1534758406944985302>'
   },
+  // Raid keys — Silver and Iron are spent to buy Golden raid keys.
+  // Golden keys are each tied to one specific raid and are stored as a list,
+  // so their field ("goldKeys") is an array rather than a simple count.
+  silverKey: {
+    id: 'silverKey',
+    field: 'silverKeys',
+    name: 'Silver Key',
+    aliases: ['silver', 'silver key', 'silver keys', 'sk'],
+    emoji: '<:SilverKey:1534757738645553233>'
+  },
+  ironKey: {
+    id: 'ironKey',
+    field: 'ironKeys',
+    name: 'Iron Key',
+    aliases: ['iron', 'iron key', 'iron keys', 'ik'],
+    emoji: '<:IronKey:1534757764398579722>'
+  },
+  goldKey: {
+    id: 'goldKey',
+    field: 'goldKeys',
+    name: 'Gold Key',
+    aliases: ['gold', 'gold key', 'gold keys', 'golden', 'golden key'],
+    emoji: '<:GoldenKey:1534757781490499634>'
+  },
   crate: {
     id: 'crate',
     field: 'crates',

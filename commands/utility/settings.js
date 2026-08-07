@@ -14,6 +14,8 @@
 
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const User = require('../../models/user');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 const SETTINGS_PAGE_COUNT = 2;
 
@@ -209,6 +211,8 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ time: 300000 });
 
     collector.on('collect', async interaction => {
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
       if (interaction.user.id !== user.id) {
         return interaction.reply({
           content: `These aren't yours`,

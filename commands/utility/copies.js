@@ -24,6 +24,8 @@ const { cards, safeRank, rankEmojis: RANK_EMOJIS } = require('../../data/cards')
 
 // User model so we can read the player's saved card collection from MongoDB
 const User = require('../../models/user');
+const { isLeaderNow } = require('../../utils/leadership');
+const { claimInteractionLock } = require('../../utils/interactionLock');
 
 // ─────────────────────────────────────────────
 // CONFIGURATION
@@ -285,6 +287,10 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ time: 120000 });
 
     collector.on('collect', async (interaction) => {
+      // Only the newest/main deploy may handle this click.
+      if (!isLeaderNow()) return;
+      if (!(await claimInteractionLock(interaction.id))) return;
+
       // Reject clicks from anyone other than the command user
       if (interaction.user.id !== user.id) {
         return interaction.reply({ content: "This isn't yours.", flags: 64 });
