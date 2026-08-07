@@ -3951,7 +3951,7 @@ const cards = [
     health: '=',
     power: '+',
     speed: '=',
-    image: 'https://i.imgur.com/mzSPJyc.png', 
+    image: 'https://i.imgur.com/FjapTBd.jpeg', 
     
     M2: {
       title: 'Baroque Works',
