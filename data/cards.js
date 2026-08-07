@@ -270,9 +270,9 @@ speed: 50 - 60 */
 
 // --- 2. CARD LIBRARY ---
 const cards = [
-  
+
   {
-  
+
     name: 'Gill Bastar',
     aliases: ['Gill Bastar',],
 
@@ -283,8 +283,8 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.postimg.cc/bY0XF90f/6.png', 
-    
-  
+
+
     M2: {
       title: 'Outlaw - Wanted!',
       rank: 'A', 
@@ -293,8 +293,8 @@ const cards = [
       speed: '-',
       image: 'https://i.postimg.cc/yxywg76L/4.png'
     },
-    
- 
+
+
     M3: {
       title: 'Criminal - Wanted!',
       rank: 'A',
@@ -305,7 +305,7 @@ const cards = [
     }
   },
   {
-  
+
     name: 'Cyrano',
     aliases: ['Cyrano',],
 
@@ -316,8 +316,8 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.postimg.cc/66Vs1fVt/7.png', 
-    
-  
+
+
     M2: {
       title: 'Swordsman - MONSTERS',
       rank: 'B', 
@@ -326,8 +326,8 @@ const cards = [
       speed: '+',
       image: 'https://i.postimg.cc/DfQVYPQ2/8.png'
     },
-    
- 
+
+
     M3: {
       title: 'Swordsman',
       rank: 'A',
@@ -338,7 +338,7 @@ const cards = [
     }
   },
   {
-  
+
     name: 'Flare',
     aliases: ['Flare',],
 
@@ -349,8 +349,8 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/J73wd53t/13.png', 
-    
-  
+
+
     M2: {
       title: 'Waitress - MONSTERS',
       rank: 'D', 
@@ -359,8 +359,8 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/1R0xYr0N/14.png'
     },
-    
- 
+
+
     M3: {
       title: 'Waitress',
       rank: 'C',
@@ -380,7 +380,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.postimg.cc/QNgLnJgt/10.png', 
-    
+
     M2: {
       title: 'Swordsman - MONSTERS',
       rank: 'B', 
@@ -389,7 +389,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/3rjMbFjk/11.png'
     }, 
-  
+
     M3: {
       title: 'Swordsman - MONSTERS',
       rank: 'A',
@@ -410,7 +410,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.postimg.cc/zDwmPFwS/19.png', 
-    
+
     M2: {
       title: 'Buggy Pirates',
       rank: 'B', 
@@ -419,7 +419,7 @@ const cards = [
       speed: '-',
       image: 'https://i.postimg.cc/MZ0krm0m/20.png'
     }, 
-  
+
     M3: {
       title: 'Cross Guild',
       rank: 'A',
@@ -439,7 +439,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.postimg.cc/pLLpdTVC/53.png', 
-    
+
     M2: {
       title: 'Zoro\'s Friend',
       rank: 'C', 
@@ -448,7 +448,7 @@ const cards = [
       speed: '+',
       image: 'https://i.postimg.cc/HkkVLxWB/54.png'
     }, 
-  
+
     M3: {
       title: 'Swordswoman',
       rank: 'B',
@@ -468,7 +468,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.postimg.cc/MppvGTZY/50.png', 
-    
+
     M2: {
       title: 'Marine Lieutenant Commander',
       rank: 'B', 
@@ -477,7 +477,7 @@ const cards = [
       speed: '-',
       image: 'https://i.postimg.cc/8zzjC5km/51.png'
     }, 
-  
+
     M3: {
       title: 'Marine Captain',
       rank: 'B',
@@ -497,7 +497,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/VkkdN6sM/47.png', 
-    
+
     M2: {
       title: 'Rika\'s Mother',
       rank: 'D', 
@@ -506,7 +506,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/5226t098/48.png'
     }, 
-  
+
     M3: {
       title: 'Rika\'s Mother',
       rank: 'D',
@@ -526,7 +526,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/SxxJKsQX/43.png', 
-    
+
     M2: {
       title: 'Chief Petty Officer',
       rank: 'C', 
@@ -535,7 +535,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/Njj50MGr/44.png'
     }, 
-  
+
     M3: {
       title: 'Lieutenant Commander',
       rank: 'B',
@@ -555,7 +555,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/CLNRYD0b/40.png', 
-    
+
     M2: {
       title: 'Young Girl from Shells Town',
       rank: 'D', 
@@ -564,7 +564,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/bNTZ8bPQ/41.png'
     }, 
-  
+
     M3: {
       title: 'Marine Waitress',
       rank: 'C',
@@ -595,7 +595,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.postimg.cc/dtBhvdFk/37.png', 
-    
+
     M2: {
       title: 'Worst Generation Pirate',
       rank: 'A', 
@@ -604,7 +604,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/J4qsmJ8k/38.png'
     }, 
-  
+
     M3: {
       title: 'King of Hell',
       rank: 'SS',
@@ -624,7 +624,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/zXjy5WNf/34.png', 
-    
+
     M2: {
       title: 'Alvida Pirates',
       rank: 'D', 
@@ -633,7 +633,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/7YV5D74C/35.png'
     }, 
-  
+
     M3: {
       title: 'Alvida Pirates',
       rank: 'D',
@@ -653,7 +653,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/5N3X1vJb/31.png', 
-    
+
     M2: {
       title: 'Alvida Pirates',
       rank: 'D', 
@@ -662,7 +662,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/m2wPRM4b/32.png'
     }, 
-  
+
     M3: {
       title: 'Alvida Pirates',
       rank: 'D',
@@ -682,7 +682,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/159xxVM0/28.png', 
-    
+
     M2: {
       title: 'Alvida Pirates',
       rank: 'D', 
@@ -691,7 +691,7 @@ const cards = [
       speed: '=',
       image: 'https://i.postimg.cc/ZKTkkvjF/30.png'
     }, 
-  
+
     M3: {
       title: 'Alvida Pirates',
       rank: 'D',
@@ -711,7 +711,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/L6HddgvP/25.png', 
-    
+
     M2: {
       title: 'Master Chief Petty Officer',
     rank: 'B',
@@ -720,7 +720,7 @@ const cards = [
     speed: '-',
     image: 'https://i.postimg.cc/vHQRRxXf/26.png', 
     }, 
-  
+
     M3: {
       title: 'Marine Captain',
       rank: 'S', 
@@ -740,7 +740,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/X7VMMBxB/22.png', 
-    
+
     M2: {
       title: 'Strawhat Pirates',
       rank: 'A', 
@@ -749,7 +749,7 @@ const cards = [
       speed: '-',
       image: 'https://i.postimg.cc/KvZXX3Qg/23.png'
     }, 
-  
+
     M3: {
       title: 'Strawhat Pirates',
       rank: 'S',
@@ -769,7 +769,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/s2tXK4YS/86.png', 
-    
+
     M2: {
     title: 'Partys Bar Owner',
     rank: 'C',
@@ -778,7 +778,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/VN364WqB/87.png', 
     }, 
-  
+
     M3: {
     title: 'Partys Bar Owner',
     rank: 'B',
@@ -798,7 +798,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/aih8k3.png', 
-    
+
     M2: {
     title: 'Red Hair Pirates',
     rank: 'B',
@@ -807,7 +807,7 @@ const cards = [
     speed: '+',
     image: 'https://i.postimg.cc/5tZ0pSBz/84.png', 
     }, 
-  
+
     M3: {
     title: 'Red Hair Pirates',
     rank: 'A',
@@ -827,7 +827,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.postimg.cc/0N6jpBwY/80.png', 
-    
+
     M2: {
     title: 'Red Hair Pirates',
     rank: 'B',
@@ -836,7 +836,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/QMBCpyTg/81.png', 
     }, 
-  
+
     M3: {
     title: 'Red Hair Pirates',
     rank: 'A',
@@ -856,7 +856,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/g0wjvTZh/77.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -865,7 +865,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/cJKCQbnw/78.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -885,7 +885,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/25qy4KZy/74.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -894,7 +894,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/3wyNgcvW/75.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -914,7 +914,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/Bv8bxVK0/71.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -923,7 +923,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/q7tq853p/72.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -943,7 +943,7 @@ const cards = [
     power: '+',
     speed: '+',
     image: 'https://files.catbox.moe/m9r917.png', 
-    
+
     M2: {
     title: 'Emperor of the Sea',
     rank: 'SS',
@@ -952,7 +952,7 @@ const cards = [
     speed: '++',
     image: 'https://files.catbox.moe/j0roco.png', 
     }, 
-  
+
     M3: {
     title: 'Emperor of the New World',
     rank: 'UR',
@@ -972,7 +972,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.postimg.cc/L8Qhgpnd/65.png', 
-    
+
     M2: {
     title: 'Marine Commander',
     rank: 'C',
@@ -981,7 +981,7 @@ const cards = [
     speed: '+',
     image: 'https://i.postimg.cc/Mp3XfSvS/66.png', 
     }, 
-  
+
     M3: {
     title: 'Marine Commander',
     rank: 'B',
@@ -1001,7 +1001,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.postimg.cc/T3Nh56hN/62.png', 
-    
+
     M2: {
     title: 'The Genius Jester',
     rank: 'A',
@@ -1010,7 +1010,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/x1pqN2qB/63.png', 
     }, 
-  
+
     M3: {
     title: 'Emperor of the New World',
     rank: 'S',
@@ -1030,7 +1030,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.postimg.cc/P55Pqxf0/59.png', 
-    
+
     M2: {
     title: 'Marine Seasman Recruit',
     rank: 'D',
@@ -1039,7 +1039,7 @@ const cards = [
     speed: '+',
     image: 'https://i.postimg.cc/RZpqJBqX/60.png', 
     }, 
-  
+
     M3: {
     title: 'Marine Seasman Recruit',
     rank: 'D',
@@ -1059,7 +1059,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.postimg.cc/7ZZfL6PB/56.png', 
-    
+
     M2: {
     title: 'Marine Lieutenant Junior Grade',
     rank: 'D',
@@ -1068,7 +1068,7 @@ const cards = [
     speed: '+',
     image: 'https://i.postimg.cc/P55PqxfF/57.png', 
     }, 
-  
+
     M3: {
     title: 'Marine Lieutenant Junior Grade',
     rank: 'C',
@@ -1088,7 +1088,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/d1r0fZnk/98.png', 
-    
+
     M2: {
     title: 'Foosha Village Mayor',
     rank: 'C',
@@ -1097,7 +1097,7 @@ const cards = [
     speed: '=',
     image: 'https://i.postimg.cc/D0hz3fYz/99.png', 
     }, 
-  
+
     M3: {
     title: 'Foosha Village Mayor',
     rank: 'B',
@@ -1117,7 +1117,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/713jan.webp', 
-    
+
     M2: {
     title: 'Higuma Bandits leader',
     rank: 'C',
@@ -1126,7 +1126,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/qpqrbg.webp', 
     }, 
-  
+
     M3: {
     title: 'Higuma Bandits leader',
     rank: 'C',
@@ -1146,7 +1146,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.postimg.cc/pdgTkJf7/89.png', 
-    
+
     M2: {
     title: 'Red Hair Pirates',
     rank: 'B',
@@ -1155,7 +1155,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/ri8tf4.webp', 
     }, 
-  
+
     M3: {
     title: 'Red Hair Pirates',
     rank: 'A',
@@ -1175,7 +1175,7 @@ const cards = [
     power: 90,
     speed: 40,
     image: 'https://files.catbox.moe/7w06ob.jpg', 
-    
+
     M2: {
     title: 'Red Hair Pirates',
     rank: 'SS',
@@ -1184,7 +1184,7 @@ const cards = [
     speed: 41,
     image: 'https://files.catbox.moe/5im0b6.webp', 
     }, 
-  
+
     M3: {
     title: 'Red Hair Pirates',
     rank: 'SS',
@@ -1194,7 +1194,7 @@ const cards = [
     image: 'https://files.catbox.moe/ho9b7z.webp', 
     }
   },
-  
+
   {
     name: 'Acrobatic Fuwa 1',
     aliases: ['',],
@@ -1205,7 +1205,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/lfq6s6.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1214,7 +1214,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/0klqia.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'C',
@@ -1234,7 +1234,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/0o3whl.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1243,7 +1243,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/orxg5a.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'C',
@@ -1263,7 +1263,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/yh46hk.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1272,7 +1272,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/h4c0aj.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'C',
@@ -1292,7 +1292,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/uyszd1.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1301,7 +1301,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/i4rhj5.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'C',
@@ -1321,7 +1321,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://files.catbox.moe/7eaa9e.png', 
-    
+
     M2: {
     title: 'Usopp\'s Mother',
     rank: 'D',
@@ -1341,7 +1341,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://files.catbox.moe/u0vao2.png', 
-    
+
     M2: {
     title: 'Mayor of Orange town',
     rank: 'C',
@@ -1350,7 +1350,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/e3918i.png', 
     }, 
-  
+
     M3: {
     title: 'Mayor of Orange town',
     rank: 'B',
@@ -1370,7 +1370,7 @@ const cards = [
     power: '+',
     speed: '+',
     image: 'https://files.catbox.moe/ga132i.png', 
-    
+
     M2: {
     title: 'Black Cat Pirates',
     rank: 'C',
@@ -1379,7 +1379,7 @@ const cards = [
     speed: '++',
     image: 'https://files.catbox.moe/2s8lbf.png', 
     }, 
-  
+
     M3: {
     title: 'Black Cat Pirates',
     rank: 'B',
@@ -1399,7 +1399,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/1787of.png', 
-    
+
     M2: {
     title: 'Red Hair Pirates',
     rank: 'A',
@@ -1408,7 +1408,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/dvgi02.png', 
     }, 
-  
+
     M3: {
     title: 'Red Hair Pirates',
     rank: 'A',
@@ -1428,7 +1428,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/97lpbi.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'B',
@@ -1437,7 +1437,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/z0wumw.png', 
     }, 
-  
+
     M3: {
     title: 'Cross Guild',
     rank: 'A',
@@ -1457,7 +1457,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/04gx4w.png', 
-    
+
     M2: {
     title: 'Pet Shop Keeper',
     rank: 'D',
@@ -1466,7 +1466,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/tbnxs5.png', 
     }, 
-  
+
     M3: {
     title: 'Pet Shop Keeper',
     rank: 'C',
@@ -1486,7 +1486,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/050jwf.png', 
-    
+
     M2: {
     title: 'Black Cat Pirates',
     rank: 'C',
@@ -1495,7 +1495,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/93qnsv.png', 
     }, 
-  
+
     M3: {
     title: 'Black Cat Pirates',
     rank: 'B',
@@ -1515,7 +1515,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://files.catbox.moe/hz6wyj.png', 
-    
+
     M2: {
     title: 'Pet Shop Owner',
     rank: 'D',
@@ -1524,7 +1524,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/mu40gf.png', 
     }, 
-  
+
     M3: {
     title: 'Pet Shop Owner',
     rank: 'D',
@@ -1544,7 +1544,7 @@ const cards = [
     power: '+',
     speed: '-',
     image: 'https://files.catbox.moe/wh81on.png', 
-    
+
     M2: {
     title: '"One Two" Django',
     rank: 'B',
@@ -1553,7 +1553,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/n6n1dy.png', 
     }, 
-  
+
     M3: {
     title: 'Marine Lieutenant',
     rank: 'A',
@@ -1573,7 +1573,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://files.catbox.moe/f7a8xv.png', 
-    
+
     M2: {
     title: 'Syrup Village',
     rank: 'C',
@@ -1582,7 +1582,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/av6jol.png', 
     }, 
-  
+
     M3: {
     title: 'Medical Student',
     rank: 'B',
@@ -1602,7 +1602,7 @@ const cards = [
     power: '+',
     speed: '+',
     image: 'https://files.catbox.moe/niu5k9.jpg', 
-    
+
     M2: {
     title: 'Captain of the Black Cat Pirates',
     rank: 'B',
@@ -1611,7 +1611,7 @@ const cards = [
     speed: '++',
     image: 'https://files.catbox.moe/fq03jl.jpg', 
     }, 
-  
+
     M3: {
     title: 'Captain of the Black Cat Pirates',
     rank: 'A',
@@ -1631,7 +1631,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://files.catbox.moe/s36ner.png', 
-    
+
     M2: {
     title: 'Foosha Village\'s local Sea King',
     rank: 'C',
@@ -1640,7 +1640,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/qqcx96.png', 
     }, 
-  
+
     M3: {
     title: 'Foosha Village\'s local Sea King',
     rank: 'B',
@@ -1660,7 +1660,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/lt0c2h.png', 
-    
+
     M2: {
     title: 'Kaya\'s security Guard',
     rank: 'D',
@@ -1669,7 +1669,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/icjvii.png', 
     }, 
-  
+
     M3: {
     title: 'Kaya\'s security Guard',
     rank: 'D',
@@ -1689,7 +1689,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/haxqrd.png', 
-    
+
     M2: {
     title: 'Kaya\'s security Guard',
     rank: 'D',
@@ -1698,7 +1698,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/ne1clc.png', 
     }, 
-  
+
     M3: {
     title: 'kaya\'s security Guard',
     rank: 'D',
@@ -1718,7 +1718,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://files.catbox.moe/w1zwcm.png', 
-    
+
     M2: {
     title: 'Butler',
     rank: 'C',
@@ -1727,7 +1727,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/bx7jlm.png', 
     }, 
-  
+
     M3: {
     title: 'Butler',
     rank: 'B',
@@ -1747,7 +1747,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/y8zkf7.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'B',
@@ -1756,7 +1756,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/nrbinf.png', 
     }, 
-  
+
     M3: {
     title: 'Cross Guild - Fat Chud',
     rank: 'B',
@@ -1776,7 +1776,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/sbns17.png', 
-    
+
     M2: {
     title: 'Usopp Security Force',
     rank: 'D',
@@ -1785,7 +1785,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/99hsmz.png', 
     }, 
-  
+
     M3: {
     title: 'Usopp Security Force',
     rank: 'C',
@@ -1816,7 +1816,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/qbioo7.png', 
-    
+
     M2: {
     title: 'Usopp security Force',
     rank: 'D',
@@ -1825,7 +1825,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/g27sa9.png', 
     }, 
-  
+
     M3: {
     title: 'Security Force',
     rank: 'C',
@@ -1845,7 +1845,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/h5e1cr.png', 
-    
+
     M2: {
     title: 'Monstrous Bird',
     rank: 'D',
@@ -1854,7 +1854,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/7zdukf.png', 
     }, 
-  
+
     M3: {
     title: 'Monstrous Bird',
     rank: 'D',
@@ -1874,7 +1874,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://files.catbox.moe/d24drj.png', 
-    
+
     M2: {
     title: 'Bookstore Owner',
     rank: 'D',
@@ -1883,7 +1883,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/m649yu.png', 
     }, 
-  
+
     M3: {
     title: 'Bookstore Owner',
     rank: 'C',
@@ -1903,7 +1903,7 @@ const cards = [
     power: '+',
     speed: '+',
     image: 'https://files.catbox.moe/l8gfu8.png', 
-    
+
     M2: {
     title: 'Dark King',
     rank: 'SS',
@@ -1912,7 +1912,7 @@ const cards = [
     speed: '++',
     image: 'https://files.catbox.moe/z8o8bw.png', 
     }, 
-  
+
     M3: {
     title: 'Right Hand of the Pirate King',
     rank: 'UR',
@@ -1932,7 +1932,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/afyit4.jpg', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'B',
@@ -1941,7 +1941,7 @@ const cards = [
     speed: '+',
     image: 'https://files.catbox.moe/snvibu.jpg', 
     }, 
-  
+
     M3: {
     title: 'Cross Guild - Fat chud',
     rank: 'B',
@@ -1961,7 +1961,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/ook9sn.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1970,7 +1970,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/hv10w2.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1990,7 +1990,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/uz3l3g.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -1999,7 +1999,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/usrvvg.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -2019,7 +2019,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/ncxm3i.png', 
-    
+
     M2: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -2028,7 +2028,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/8yzt8l.png', 
     }, 
-  
+
     M3: {
     title: 'Buggy Pirates',
     rank: 'D',
@@ -2048,7 +2048,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://files.catbox.moe/wpn841.png', 
-    
+
     M2: {
     title: 'Usopp Security Force',
     rank: 'D',
@@ -2057,7 +2057,7 @@ const cards = [
     speed: '=',
     image: 'https://files.catbox.moe/9viijb.png', 
     }, 
-  
+
     M3: {
     title: 'Usopp Security Force',
     rank: 'C',
@@ -2077,7 +2077,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://files.catbox.moe/tfbf2x.png', 
-    
+
     M2: {
     title: 'Sogeking',
     rank: 'B',
@@ -2086,7 +2086,7 @@ const cards = [
     speed: '-',
     image: 'https://files.catbox.moe/w24pj8.png', 
     }, 
-  
+
     M3: {
     title: 'Strawhat Pirates',
     rank: 'A',
@@ -2716,7 +2716,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/ckN36B0.png', 
-    
+
     M2: {
     title: 'Wrestler',
     rank: 'A',
@@ -2725,7 +2725,7 @@ const cards = [
     speed: '=',
     image: 'https://i.imgur.com/PmxM0RQ.png', 
     }, 
-  
+
     M3: {
     title: 'Wrestler',
     rank: 'A',
@@ -2745,7 +2745,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/jNBh9Th.png', 
-    
+
     M2: {
     title: 'Island of Rare Animals',
     rank: 'D',
@@ -2765,7 +2765,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/FFjfnUO.png', 
-    
+
     M2: {
     title: 'Island of Rare Animals',
     rank: 'D',
@@ -2774,8 +2774,8 @@ const cards = [
     speed: '+',
     image: 'https://i.imgur.com/3a6TQ58.png', 
     }, 
-  
-     
+
+
   },
   {
     name: 'Lionbuta',
@@ -2787,7 +2787,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/L0QuHq5.png', 
-    
+
     M2: {
     title: 'Island of Rare Animals',
     rank: 'D',
@@ -2796,8 +2796,8 @@ const cards = [
     speed: '+',
     image: 'https://i.imgur.com/eyIatr7.png', 
     }, 
-  
-     
+
+
   },
   {
     name: 'Kirinikodanuki',
@@ -2809,7 +2809,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/6K4OfZL.png', 
-    
+
   },
   {
     name: 'Duck-Poodle',
@@ -2821,7 +2821,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/kduJcP1.png', 
-     
+
   },
   {
     name: 'Gaimon',
@@ -2833,7 +2833,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/8ZzDuyo.png', 
-    
+
     M2: {
     title: 'Guardian of Island of Rare Animals',
     rank: 'C',
@@ -2842,7 +2842,7 @@ const cards = [
     speed: '=',
     image: 'https://i.imgur.com/zPHOHps.png', 
     }, 
-  
+
     M3: {
     title: 'Pirate',
     rank: 'C',
@@ -2862,7 +2862,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/AK7Rry9.png', 
-    
+
     M2: {
     title: '',
     rank: 'B',
@@ -2871,7 +2871,7 @@ const cards = [
     speed: '=',
     image: 'https://i.imgur.com/hhTp271.png', 
     }, 
-  
+
     M3: {
     title: '',
     rank: 'B',
@@ -2891,7 +2891,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/9D0bH1B.png', 
-    
+
     M2: {
     title: 'Bounty Hunter',
     rank: 'C',
@@ -2900,7 +2900,7 @@ const cards = [
     speed: '+',
     image: 'https://i.imgur.com/a5iG3pU.png', 
     }, 
-  
+
     M3: {
     title: 'Fisherman',
     rank: 'C',
@@ -2920,7 +2920,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/AE1dmOk.png', 
-    
+
     M2: {
     title: 'Bounty Hunter',
     rank: 'C',
@@ -2929,7 +2929,7 @@ const cards = [
     speed: '+',
     image: 'https://i.imgur.com/uXLW9n1.png', 
     }, 
-  
+
     M3: {
     title: 'Fisherman',
     rank: 'C',
@@ -2960,7 +2960,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/aU6H524.png', 
-    
+
     M2: {
       title: 'Fullbody\'s girlfriend',
     rank: 'D',
@@ -2989,7 +2989,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/ZfSHm40.png', 
-    
+
     M2: {
       title: 'Seasman Recruit',
     rank: 'C',
@@ -3018,7 +3018,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/qBdAE6J.png', 
-    
+
     M2: {
       title: 'Head Chef of Baratie',
     rank: 'C',
@@ -3047,7 +3047,7 @@ const cards = [
     power: '+',
     speed: '+',
     image: 'https://i.imgur.com/3GemnCH.png', 
-    
+
     M2: {
       title: 'Black Leg',
     rank: 'A',
@@ -3087,7 +3087,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/PUDGdxZ.png', 
-    
+
     M2: {
       title: 'Patissier',
     rank: 'C',
@@ -3116,7 +3116,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/Tg0JDCB.png', 
-    
+
     M2: {
       title: 'Marine Seasman First Class',
     rank: 'D',
@@ -3145,7 +3145,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/oFCk2ow.png', 
-    
+
     M2: {
       title: 'Krieg Pirates',
     rank: 'C',
@@ -3174,7 +3174,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/rO6mQcX.png', 
-    
+
     M2: {
       title: 'Charcutier',
     rank: 'D',
@@ -3203,7 +3203,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/iR8KqlU.png', 
-    
+
     M2: {
       title: 'Captain of the Kreig Pirates',
     rank: 'B',
@@ -3232,7 +3232,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/V5gB7Po.png', 
-    
+
     M2: {
       title: 'Krieg Pirates',
     rank: 'C',
@@ -3261,7 +3261,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/IpgWS1P.png', 
-    
+
     M2: {
       title: 'Marine Captain',
     rank: 'C',
@@ -3290,7 +3290,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.imgur.com/ZiGx6R1.png', 
-    
+
     M2: {
       title: 'Captain of the Arlong Pirates',
     rank: 'B',
@@ -3319,7 +3319,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.imgur.com/gwVJg42.png', 
-    
+
     M2: {
       title: 'Arlong Pirates',
     rank: 'C',
@@ -3348,7 +3348,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.imgur.com/2D8868L.png', 
-    
+
     M2: {
       title: 'Arlong Pirates',
     rank: 'C',
@@ -3377,7 +3377,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.imgur.com/3yTpPr5.png', 
-    
+
     M2: {
       title: 'Takoyaki Seller',
     rank: 'B',
@@ -3406,7 +3406,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/BKeekqw.png', 
-    
+
     M2: {
       title: 'Conomi Islands',
     rank: 'D',
@@ -3435,7 +3435,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/0IchU9o.png', 
-    
+
     M2: {
       title: 'Mikan Farmer',
     rank: 'D',
@@ -3464,7 +3464,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/qyHzVho.png', 
-    
+
     M2: {
       title: 'Arlong Pirates',
     rank: 'C',
@@ -3493,7 +3493,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/OeOoF7n.png', 
-    
+
     M2: {
       title: 'Mikan Farmer',
     rank: 'C',
@@ -3522,7 +3522,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/pREMBBv.png', 
-    
+
     M2: {
       title: 'Sherrif',
     rank: 'C',
@@ -3551,7 +3551,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/jG0CrJh.png', 
-    
+
     M2: {
       title: 'Doctor',
     rank: 'D',
@@ -3580,7 +3580,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/y4WG9sK.png', 
-  
+
   },
   {
     name: 'Pisaro',
@@ -3592,7 +3592,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/AS8G5bH.png', 
-    
+
   },
   {
     name: 'Shioyaki',
@@ -3604,7 +3604,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/4zzm6uD.png', 
-   
+
   },
   {
     name: 'Take',
@@ -3638,7 +3638,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/cZaa9A2.png', 
-    
+
     M2: {
       title: 'Commodore',
     rank: 'B',
@@ -3667,7 +3667,7 @@ const cards = [
     power: '+',
     speed: '-',
     image: 'https://i.imgur.com/bEBU61x.png', 
-    
+
     M2: {
       title: 'Vice Admiral',
     rank: 'A',
@@ -3696,7 +3696,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/gIQnWZ2.png', 
-    
+
     M2: {
       title: 'Monster (Ikki Yako)',
     rank: 'C',
@@ -3725,7 +3725,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/hif7ECV.png', 
-    
+
     M2: {
       title: 'Bounty Hunter',
     rank: 'C',
@@ -3754,7 +3754,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/VyIvnrv.png', 
-    
+
   },
   {
     name: 'Kumate Tribe Member 1',
@@ -3813,7 +3813,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/jdIpu3d.png', 
-    
+
     M2: {
       title: 'Captain of the Royal Guard',
     rank: 'C',
@@ -3842,7 +3842,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/HcjotxR.png', 
-    
+
     M2: {
       title: 'Baroque Works',
     rank: 'C',
@@ -3871,7 +3871,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/kyN9I1i.png', 
-  
+
   },
   {
     name: 'Nefertari Vivi',
@@ -3883,7 +3883,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/NwkrLOx.png', 
-    
+
     M2: {
       title: 'Princess of Arabasta',
     rank: 'B',
@@ -3923,7 +3923,7 @@ const cards = [
     power: '-',
     speed: '+',
     image: 'https://i.imgur.com/vdFKtN2.png', 
-    
+
     M2: {
       title: 'Arabasta Kingdom Guard Squad',
     rank: 'C',
@@ -3951,8 +3951,8 @@ const cards = [
     health: '=',
     power: '+',
     speed: '=',
-    image: 'https://i.imgur.com/mzSPJyc.png', 
-    
+    image: 'https://i.imgur.com/FjapTBd.jpeg', 
+
     M2: {
       title: 'Baroque Works',
     rank: 'C',
@@ -3981,7 +3981,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/BCjatvd.png', 
-    
+
     M2: {
       title: 'Baroque Works',
     rank: 'C',
@@ -4010,7 +4010,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/IxCp2og.jpeg', 
-    
+
     M2: {
       title: 'Light of the Revolution',
     rank: 'A',
@@ -4039,7 +4039,7 @@ const cards = [
     power: '-',
     speed: '+',
     image: 'https://i.imgur.com/nCt8vdi.jpeg', 
-    
+
     M2: {
       title: 'Baroque Works',
     rank: 'C',
@@ -4059,7 +4059,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/tttuE2k.png', 
-    
+
     M2: {
       title: 'Commissioned Marine Officer',
     rank: 'S',
@@ -4088,8 +4088,8 @@ const cards = [
     power: '-',
     speed: '++',
     image: 'https://i.imgur.com/i7itgRt.png', 
-    
-    
+
+
   },
   {
     name: 'Galdino',
@@ -4101,7 +4101,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/yW9zIFX.png', 
-    
+
     M2: {
       title: 'Buggy Pirates',
     rank: 'A',
@@ -4130,7 +4130,7 @@ const cards = [
     power: '=',
     speed: '-',
     image: 'https://i.imgur.com/M2bczWI.png', 
-    
+
     M2: {
       title: 'Baroque Works',
     rank: 'C',
@@ -4159,7 +4159,7 @@ const cards = [
     power: '-',
     speed: '-',
     image: 'https://i.imgur.com/bDJzrsN.jpeg', 
-    
+
   },
   {
     name: 'Brontosaurus',
@@ -4171,7 +4171,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://static.wikia.nocookie.net/onepiece/images/0/0d/Brontosaurus_in_the_Digitally_Colored_Manga.png/revision/latest?cb=20201005202953', 
-    
+
   },
   {
     name: 'Brogy',
@@ -4183,7 +4183,7 @@ const cards = [
     power: '+',
     speed: '-',
     image: 'https://i.imgur.com/tGcnrWP.png', 
-    
+
     M2: {
       title: 'Giant Warrior Pirates',
     rank: 'S',
@@ -4212,7 +4212,7 @@ const cards = [
     power: '+',
     speed: '-',
     image: 'https://i.imgur.com/kfiCTzK.png', 
-    
+
     M2: {
       title: 'Giant Warrior Pirates',
     rank: 'S',
@@ -4242,7 +4242,7 @@ const cards = [
     power: '+',
     speed: '=',
     image: 'https://i.imgur.com/J2htoZf.jpeg', 
-    
+
     M2: {
       title: 'Desert King',
     rank: 'A',
@@ -4271,7 +4271,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: 'https://i.imgur.com/UuqjH6c.png', 
-    
+
     M2: {
       title: 'Commodore',
     rank: 'A',
@@ -4290,7 +4290,261 @@ const cards = [
     image: 'https://i.imgur.com/ZvZKj31.png', 
 }
   },
-  /*
+  {
+    name: 'Mashikaku',
+    aliases: ['',],
+
+    title: 'Chief Petty Officer',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/EkcE9Ca.png', 
+
+    M2: {
+      title: 'Chief Petty Officer',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/nnbyFXN.png', 
+},
+
+    M3: {
+    title: 'Chief Petty Officer',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/dwG80zQ.png', 
+}
+  },
+  {
+    name: 'Yu',
+    aliases: ['',],
+
+    title: 'Loguetown',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/VQjtno5.png', 
+
+  },
+  {
+    name: 'Gally',
+    aliases: ['',],
+
+    title: 'Captain of the Galley Pirates',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/4/4c/Gally_Manga_Infobox.png/revision/latest/scale-to-width-down/1000?cb=20250823002842', 
+
+  },
+  {
+    name: 'Tashigi',
+    aliases: ['',],
+
+    title: 'Master Chief Petty Officer',
+    rank: 'B',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/m8vQUdj.png', 
+
+    M2: {
+      title: 'Enseign',
+    rank: 'B',
+    health: '=',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/5Nd34wh.png', 
+},
+
+    M3: {
+    title: 'Captain',
+    rank: 'A',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/9FqFZlV.png', 
+}
+  },
+  {
+    name: 'Koze',
+    aliases: ['',],
+
+    title: 'Yes Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/jElUuNp.png', 
+
+  },
+  {
+    name: 'Packy',
+    aliases: ['',],
+
+    title: 'Yes Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/n3OKmdh.png', 
+
+  },
+  {
+    name: 'Ipponmatsu',
+    aliases: ['',],
+
+    title: 'Arm Shop Proprietor',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/PvjPoL2.png', 
+
+    M2: {
+      title: 'Arm Shop Proprietor',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/0TcWC6n.png', 
+},
+  },
+  {
+    name: 'Ipponume',
+    aliases: ['',],
+
+    title: 'Arm Shop Proprietress',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/bvgOvwC.png', 
+
+  },
+  {
+    name: 'Daddy Masterson',
+    aliases: ['',],
+
+    title: 'Bounty Hunter',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/Jgo9tSw.jpeg', 
+
+  },
+  {
+    name: 'Carol',
+    aliases: ['',],
+
+    title: 'Loguetown',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/hM3UF4O.png', 
+
+  },
+  {
+    name: 'Minatomo',
+    aliases: ['',],
+
+    title: 'Carpenter',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '+',
+    image: 'https://i.imgur.com/F5LBctD.jpeg',
+  },
+  {
+    name: 'Sapi',
+    aliases: ['',],
+
+    title: 'Fishmonger',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/QsCyAlZ.png', 
+
+  },
+  {
+    name: 'Sam',
+    aliases: ['',],
+
+    title: 'Cocoyasi Village',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/c/ca/Sam_Digitally_Colored_Manga.png/revision/latest?cb=20260304223845', 
+
+  },
+  {
+    name: 'Laboon',
+    aliases: ['',],
+
+    title: 'Reverse Mountain',
+    rank: 'B',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/M2AoqJ9.png', 
+
+    M2: {
+      title: 'Reverse Mountain',
+    rank: 'B',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/9ECUVur.png', 
+},
+
+    M3: {
+    title: 'Reverse Mountain',
+    rank: 'A',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/q6F4c0D.png', 
+}
+  },
+  {
+    name: 'Crocus',
+    aliases: ['',],
+
+    title: 'Lighthouse Keeper',
+    rank: 'C',
+    health: '-',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/fceZYLK.png', 
+
+    M2: {
+      title: 'Doctor',
+    rank: 'C',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/m9O3wTf.png', 
+},
+
+    M3: {
+    title: 'Roger Pirates',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/hsieUtj.png', 
+}
+  },
   {
     name: '',
     aliases: ['',],
@@ -4301,7 +4555,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4330,7 +4584,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4359,7 +4613,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4388,7 +4642,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4417,7 +4671,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4446,7 +4700,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4475,442 +4729,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
 
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
     M2: {
       title: '',
     rank: '',
@@ -4940,7 +4759,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4969,7 +4788,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -4998,7 +4817,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -5028,7 +4847,7 @@ const cards = [
     power: '=',
     speed: '=',
     image: '', 
-    
+
     M2: {
       title: '',
     rank: '',
@@ -5048,8 +4867,8 @@ const cards = [
 }
   },
   */
- 
-  
+
+
 ];
 
 // Run validation once at startup — logs warnings for any bad card data
