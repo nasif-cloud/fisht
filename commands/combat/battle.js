@@ -209,7 +209,8 @@ module.exports = {
           team: opponent.team
         },
         selections: {},
-        latestLog: ''
+        // Show the timeout rule before the first card choice is made.
+        latestLog: 'Do nothing to forfeit'
       };
       const renderOptions = {
         botPlayerId: state.target.id,
@@ -327,10 +328,16 @@ module.exports = {
           roundSettled = true;
           await selectionQueue.catch(() => {});
 
-          const result = resolveRound(state);
-          if (!result.ended && reason !== 'selected') {
-            state.roundLogs.push('◇ The timer expired — the battle continues');
+          // In an AI battle, doing nothing is an immediate forfeit rather than
+          // a normal combat round. The opponent wins as soon as the timer ends.
+          if (reason !== 'selected' && getPlayerSelection(state) === undefined) {
+            state.roundLogs.push(`◇ **${state.challenger.username}** forfeited the battle`);
+            state.latestLog = state.roundLogs.join('\n');
+            await finishBattle({ ended: true, winner: state.target, reason: 'forfeit' });
+            return;
           }
+
+          const result = resolveRound(state);
           state.latestLog = state.roundLogs.join('\n');
 
           if (result.ended) {

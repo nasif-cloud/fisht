@@ -226,22 +226,29 @@ async function loadCardImage(entry) {
   // Keep normal and shiny versions in separate canvas caches.
   const cacheKey = `${imageUrl}|${entry.isShiny ? 'shiny' : 'normal'}`;
   try {
-    if (imageBufferCache.has(cacheKey)) {
-      const cached = imageBufferCache.get(cacheKey);
-      return cached ? await loadImage(cached) : null;
+    if (!imageBufferCache.has(cacheKey)) {
+      // Cache the whole operation, not just its final buffer. This makes
+      // simultaneous team requests share downloads, image processing, and
+      // decoding instead of repeating the slowest part of the command.
+      const imagePromise = (async () => {
+        // A shiny-owned card must use the generated holographic image, not the
+        // original card URL. The generator has its own buffer cache as well.
+        const buffer = entry.isShiny
+          ? await generateShinyImage(imageUrl, entry.card.name)
+          : await fetchImageBuffer(imageUrl);
+        return getNormalizedBuffer(
+          buffer,
+          `${entry.isShiny ? 'shiny' : 'normal'}:${imageUrl}`
+        );
+      })().catch(error => {
+        imageBufferCache.delete(cacheKey);
+        throw error;
+      });
+      imageBufferCache.set(cacheKey, imagePromise);
     }
 
-    // A shiny-owned card must use the generated holographic image, not the
-    // original card URL. The generator has its own buffer cache as well.
-    const buffer = entry.isShiny
-      ? await generateShinyImage(imageUrl, entry.card.name)
-      : await fetchImageBuffer(imageUrl);
-    const finalBuffer = await getNormalizedBuffer(
-      buffer,
-      `${entry.isShiny ? 'shiny' : 'normal'}:${imageUrl}`
-    );
-    imageBufferCache.set(cacheKey, finalBuffer);
-    return await loadImage(finalBuffer);
+    const cachedBuffer = await imageBufferCache.get(cacheKey);
+    return cachedBuffer ? await loadImage(cachedBuffer) : null;
   } catch (error) {
     console.warn(`[Crew] Failed to load image for ${entry.card.name}: ${error.message}`);
     imageBufferCache.set(cacheKey, null);
@@ -578,8 +585,11 @@ module.exports = {
 
     const teamEntries = resolveDisplayTeam(userData, ownedCards);
     userData.lastTeamTime = new Date(now);
+    // Rendering is the slow part of this command. Start it before waiting for
+    // the cooldown save so the database round-trip and image work overlap.
+    const payloadPromise = buildTeamPayload(user, teamEntries);
     await userData.save().catch(() => {});
-    const payload = await buildTeamPayload(user, teamEntries);
+    const payload = await payloadPromise;
 
     if (isSlash) {
       return interactionOrMessage.editReply(payload);

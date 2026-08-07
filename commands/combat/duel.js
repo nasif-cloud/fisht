@@ -433,7 +433,7 @@ function addRoundLog(state, text) {
   state.roundLogs.push(text);
 }
 
-function resolveRound(state) {
+function resolveRound(state, options = {}) {
   const attacker = getSelectedCard(state.challenger, state.selections);
   const defender = getSelectedCard(state.target, state.selections);
 
@@ -447,7 +447,10 @@ function resolveRound(state) {
     const defendingPlayer = attacker ? state.target : state.challenger;
     const fallbackDefender = getFirstLivingCard(defendingPlayer);
 
-    addRoundLog(state, `◇ **${idlePlayer.username}** did nothing this round.`);
+    addRoundLog(
+      state,
+      options.idleMessage || `◇ **${idlePlayer.username}** did nothing this round.`
+    );
 
     if (!activeCard || !fallbackDefender) {
       return { ended: false };
