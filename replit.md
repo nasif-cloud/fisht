@@ -4,7 +4,16 @@ A One Piece–themed Discord bot with an economy and card-pulling system, built 
 
 ## How to run
 
-The **Start application** workflow runs `node index.js`. Start or restart it from the Replit interface.
+The **Start application** workflow runs `npm start`. Start or restart it from the Replit interface.
+There is only one workflow, so the bot does not start through a nested parent process.
+
+The project is configured to use fewer free-tier resources without changing bot
+features:
+
+- Unused TensorFlow and face-recognition packages are not installed
+- Sharp uses one image-processing worker and a small cache
+- Service-lease checks run every 5 seconds instead of every second
+- Card-drop checks run every 60 seconds because drops have multi-hour cooldowns
 
 ## Required secrets
 

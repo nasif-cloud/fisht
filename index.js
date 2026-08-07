@@ -64,8 +64,10 @@ const GLOBAL_COOLDOWN_MS = 2000; // 2 seconds between repeated uses of the same 
 const globalCooldowns    = new Map();
 
 const SERVICE_LEASE_ID = 'fisht-command-handler';
-const SERVICE_LEASE_HEARTBEAT_MS = 1000;
-const SERVICE_LEASE_STALE_MS = 4000;
+// A five-second heartbeat is enough to prevent duplicate bot instances while
+// avoiding a MongoDB write every second on a small Replit deployment.
+const SERVICE_LEASE_HEARTBEAT_MS = 5000;
+const SERVICE_LEASE_STALE_MS = 20000;
 const SERVICE_INSTANCE_ID = randomUUID();
 const SERVICE_STARTED_AT = new Date();
 let leaseHeartbeatTimer = null;

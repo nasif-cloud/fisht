@@ -27,7 +27,9 @@ const { computeBoosts } = require('./boosts');
 
 const DROP_CLAIM_LIFETIME_MS = 60 * 1000;
 const DROP_CHARGE_WINDOW_MS = 60 * 1000;
-const DROP_CHECK_INTERVAL_MS = 15 * 1000;
+// Drops have multi-hour cooldowns, so checking once per minute is enough and
+// avoids unnecessary database reads on the always-on bot process.
+const DROP_CHECK_INTERVAL_MS = 60 * 1000;
 const MINIMUM_MESSAGES_FOR_SCHEDULED_DROP = 3;
 const DESERT_ACTIVITY_WINDOW_MS = 6 * 60 * 60 * 1000;
 const SHINY_BASE_CHANCE = 0.5;

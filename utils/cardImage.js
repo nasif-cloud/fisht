@@ -8,6 +8,11 @@
 
 const sharp = require('sharp');
 
+// Keep Sharp from creating a large native worker pool on small deployments.
+// Image commands still work, but they use a predictable amount of CPU.
+sharp.concurrency(1);
+sharp.cache({ memory: 32, files: 0, items: 100 });
+
 const imageCache = new Map();
 const IMAGE_FETCH_TIMEOUT_MS = 10_000;
 const CARD_WIDTH = 573;
