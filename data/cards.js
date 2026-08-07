@@ -4290,440 +4290,259 @@ const cards = [
     image: 'https://i.imgur.com/ZvZKj31.png', 
 }
   },
-  /*
   {
-    name: '',
+    name: 'Mashikaku',
     aliases: ['',],
 
-    title: '',
-    rank: '',
+    title: 'Chief Petty Officer',
+    rank: 'C',
     health: '=',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/EkcE9Ca.png', 
     
     M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
+      title: 'Chief Petty Officer',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/nnbyFXN.png', 
 },
 
     M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
+    title: 'Chief Petty Officer',
+    rank: 'C',
+    health: '++',
+    power: '++',
+    speed: '++',
+    image: 'https://i.imgur.com/dwG80zQ.png', 
 }
   },
   {
-    name: '',
+    name: 'Yu',
     aliases: ['',],
 
-    title: '',
-    rank: '',
-    health: '=',
+    title: 'Loguetown',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/VQjtno5.png', 
+    
+  },
+  {
+    name: 'Gally',
+    aliases: ['',],
+
+    title: 'Captain of the Galley Pirates',
+    rank: 'C',
+    health: '+',
+    power: '+',
+    speed: '+',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/4/4c/Gally_Manga_Infobox.png/revision/latest/scale-to-width-down/1000?cb=20250823002842', 
+    
+  },
+  {
+    name: 'Tashigi',
+    aliases: ['',],
+
+    title: 'Master Chief Petty Officer',
+    rank: 'B',
+    health: '-',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/m8vQUdj.png', 
     
     M2: {
-      title: '',
-    rank: '',
+      title: 'Enseign',
+    rank: 'B',
     health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
+    power: '+',
+    speed: '+',
+    image: 'https://i.imgur.com/5Nd34wh.png', 
 },
 
     M3: {
-    title: '',
-    rank: '',
-    health: '=',
+    title: 'Captain',
+    rank: 'A',
+    health: '-',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/9FqFZlV.png', 
 }
   },
   {
-    name: '',
+    name: 'Koze',
     aliases: ['',],
 
-    title: '',
-    rank: '',
+    title: 'Yes Pirates',
+    rank: 'D',
     health: '=',
-    power: '=',
+    power: '+',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/jElUuNp.png', 
+    
+  },
+  {
+    name: 'Packy',
+    aliases: ['',],
+
+    title: 'Yes Pirates',
+    rank: 'D',
+    health: '=',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/n3OKmdh.png', 
+    
+  },
+  {
+    name: 'Ipponmatsu',
+    aliases: ['',],
+
+    title: 'Arm Shop Proprietor',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/PvjPoL2.png', 
     
     M2: {
-      title: '',
-    rank: '',
+      title: 'Arm Shop Proprietor',
+    rank: 'D',
     health: '=',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/0TcWC6n.png', 
+},
+  },
+  {
+    name: 'Ipponume',
+    aliases: ['',],
+
+    title: 'Arm Shop Proprietress',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://i.imgur.com/bvgOvwC.png', 
+    
+  },
+  {
+    name: 'Daddy Masterson',
+    aliases: ['',],
+
+    title: 'Bounty Hunter',
+    rank: 'B',
+    health: '=',
+    power: '=',
+    speed: '-',
+    image: 'https://i.imgur.com/Jgo9tSw.jpeg', 
+    
+  },
+  {
+    name: 'Carol',
+    aliases: ['',],
+
+    title: 'Loguetown',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/hM3UF4O.png', 
+    
+  },
+  {
+    name: 'Minatomo',
+    aliases: ['',],
+
+    title: 'Carpenter',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '+',
+    image: 'https://i.imgur.com/F5LBctD.jpeg',
+  },
+  {
+    name: 'Sapi',
+    aliases: ['',],
+
+    title: 'Fishmonger',
+    rank: 'D',
+    health: '=',
+    power: '=',
+    speed: '=',
+    image: 'https://i.imgur.com/QsCyAlZ.png', 
+    
+  },
+  {
+    name: 'Sam',
+    aliases: ['',],
+
+    title: 'Cocoyasi Village',
+    rank: 'D',
+    health: '-',
+    power: '-',
+    speed: '-',
+    image: 'https://static.wikia.nocookie.net/onepiece/images/c/ca/Sam_Digitally_Colored_Manga.png/revision/latest?cb=20260304223845', 
+    
+  },
+  {
+    name: 'Laboon',
+    aliases: ['',],
+
+    title: 'Reverse Mountain',
+    rank: 'B',
+    health: '+',
+    power: '+',
+    speed: '=',
+    image: 'https://i.imgur.com/M2AoqJ9.png', 
+    
+    M2: {
+      title: 'Reverse Mountain',
+    rank: 'B',
+    health: '++',
+    power: '++',
+    speed: '+',
+    image: 'https://i.imgur.com/9ECUVur.png', 
 },
 
     M3: {
-    title: '',
-    rank: '',
+    title: 'Reverse Mountain',
+    rank: 'A',
     health: '=',
     power: '=',
-    speed: '=',
-    image: '', 
+    speed: '-',
+    image: 'https://i.imgur.com/q6F4c0D.png', 
 }
   },
   {
-    name: '',
+    name: 'Crocus',
     aliases: ['',],
 
-    title: '',
-    rank: '',
-    health: '=',
+    title: 'Lighthouse Keeper',
+    rank: 'C',
+    health: '-',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/fceZYLK.png', 
     
     M2: {
-      title: '',
-    rank: '',
+      title: 'Doctor',
+    rank: 'C',
     health: '=',
     power: '=',
     speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/m9O3wTf.png', 
 },
 
     M3: {
-    title: '',
-    rank: '',
+    title: 'Roger Pirates',
+    rank: 'B',
     health: '=',
     power: '=',
     speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-}
-  },
-  {
-    name: '',
-    aliases: ['',],
-
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-    
-    M2: {
-      title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
-},
-
-    M3: {
-    title: '',
-    rank: '',
-    health: '=',
-    power: '=',
-    speed: '=',
-    image: '', 
+    image: 'https://i.imgur.com/hsieUtj.png', 
 }
   },
   {
